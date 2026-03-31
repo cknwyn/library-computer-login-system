@@ -1,0 +1,37 @@
+# ============================================================
+# Library Computer Login System — .gitignore
+# ============================================================
+
+# Node.js dependencies — regenerated with: npm install
+node_modules/
+npm-debug.log*
+yarn-error.log
+
+# Electron build output
+client/dist/
+
+# Environment files — contain secrets, copy from .env.example
+client/.env
+server/config.local.php
+
+# XAMPP / PHP
+*.log
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# IDE
+.vscode/
+.idea/
+*.suo
+*.user
+
+# Watchdog log
+watchdog/watchdog.log
+watchdog/watchdog.log.old
+
+# Temp
+*.tmp
+*.bak

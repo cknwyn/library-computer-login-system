@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="Content-Security-Policy"
+    content="default-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; script-src 'self' 'unsafe-inline'; connect-src *;">
+  <title>Session Active</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="session-bar.css">
+</head>
+<body>
+  <div class="bar">
+
+    <div class="bar-left">
+      <span class="icon">📚</span>
+      <div class="brand">
+        <span class="brand-name">Library Computer</span>
+        <span class="brand-terminal" id="bar-terminal">—</span>
+      </div>
+    </div>
+
+    <div class="bar-center">
+      <div class="avatar" id="bar-avatar">?</div>
+      <div class="user-info">
+        <span class="user-name" id="bar-user-name">—</span>
+        <span class="user-meta">
+          <span class="user-role" id="bar-role">—</span>
+          <span class="sep">·</span>
+          <span class="user-id" id="bar-uid">—</span>
+        </span>
+      </div>
+    </div>
+
+    <div class="bar-right">
+      <div class="timer-block">
+        <span class="timer-label">Session</span>
+        <span class="timer" id="bar-timer">00:00:00</span>
+      </div>
+      <div class="hb-dot" id="hb-dot" title="Connected"></div>
+      <button class="btn-end" id="btn-end">End Session</button>
+    </div>
+
+  </div>
+  <script src="session-bar.js"></script>
+</body>
+</html>
