@@ -1,192 +1,114 @@
 # 📚 Library Computer Login System
 
-A full-stack library computer management system for **nComputing vSpace** thin-client environments.  
-Includes a kiosk Electron client and a PHP/MySQL admin panel (XAMPP).
+[![Project Status](https://img.shields.io/badge/Status-Production--Ready-success?style=flat-square)](https://github.com/cknwyn/library-computer-login-system)
+[![Platform](https://img.shields.io/badge/Platform-Windows-blue?style=flat-square&logo=windows)](https://dotnet.microsoft.com/en-us/apps/desktop/wpf)
+[![Admin UI](https://img.shields.io/badge/Theme-Admin--Modernized-6366f1?style=flat-square)](https://lucide.dev/)
+
+A professional, full-stack library computer management and session tracking system designed specifically for **nComputing vSpace** thin-client environments.  
+
+This ecosystem features a high-performance **C# WPF/XAML Kiosk Client** for terminal lockdown and a modernized **PHP/MySQL Admin Dashboard** for real-time monitoring and advanced analytics.
 
 ---
 
-## Tech Stack
+## ✨ Key Features
 
-| Component | Technology |
-|---|---|
-| Kiosk Client | Electron.js (Node.js) |
-| Admin Panel | PHP 8+ |
-| Database | MySQL (via XAMPP) |
-| Fonts | Inter (Google Fonts) |
+- **🔐 Robust Kiosk Lockdown**: Native Windows integration (WPF) with low-level keyboard hooks to block OS shortcuts (Alt+F4, WinKey, etc.).
+- **💂 Native Watchdog**: A background `KioskGuard` service that ensures the kiosk is always running and automatically recovers from crashes.
+- **🎨 Modern Admin UI**: A premium, "SaaS-style" light theme dashboard featuring **Lucide** icons and responsive design.
+- **📊 Advanced Analytics**: Real-time session feed, usage heatmaps, CSV exports, and detailed user/terminal management.
+- **🛡️ Security First**: PDO-secured API, Bcrypt-hashed credentials, and cryptographically secure session tokens.
 
 ---
 
-## Project Structure
+## 🛠️ Technology Stack
 
-```
+| Component | Technology | Description |
+|---|---|---|
+| **Kiosk Client** | .NET 10.0 (WPF) | High-performance C# Windows Shell |
+| **Watchdog** | Console Service | Lightweight process monitor |
+| **Admin Panel** | PHP 8.2+ | Modernized Dashboard with Vanilla CSS |
+| **Database** | MySQL 8.0+ | Relational schema with optimized indexing |
+| **Icons** | Lucide | Professional SVG Vector Icons |
+| **Typography** | Inter | High-legibility modern typeface |
+
+---
+
+## 📂 Project Structure
+
+```text
 library-computer-login-system/
-├── client/              # Electron kiosk app
-│   ├── src/
-│   │   ├── main.js      # Main process
-│   │   ├── preload.js   # Secure IPC bridge
-│   │   └── renderer/    # Login + Dashboard UI
-│   ├── .env.example     # Copy to .env and configure
-│   └── package.json
+├── client-wpf/          # Native Windows Infrastructure
+│   ├── LibraryKiosk/    # Primary WPF Application (C#/XAML)
+│   ├── KioskGuard/      # C# Watchdog Monitor
+│   └── assets/          # Embedded Branding (Logo & Background)
 │
-├── server/              # PHP app → copy to htdocs/library-system/
-│   ├── api/             # REST API (used by Electron)
-│   ├── admin/           # Admin web panel
-│   ├── includes/        # Shared PHP helpers
-│   ├── assets/          # CSS + JS for admin panel
-│   └── config.php       # Configuration
+├── server/              # PHP Web Infrastructure
+│   ├── admin/           # Premium Modern Dashboard (Themed)
+│   ├── api/             # RESTful API Endpoints
+│   ├── includes/        # Shared DB & Auth Core
+│   └── assets/          # Clean CSS & ES6 JS Modules
 │
 └── database/
-    ├── schema.sql       # Full DB schema
-    └── seed.sql         # Default admin + sample data
+    ├── schema.sql       # Optimized DB Structure
+    └── seed.sql         # Default credentials & Sample Data
 ```
 
 ---
 
-## 🚀 Local Setup (for testing)
+## 🚀 Deployment Guide
 
-### Step 1 — Database
+### 1. Server-Side (XAMPP/Direct)
 
-1. Start **XAMPP** → Apache + MySQL
-2. Open **phpMyAdmin** at `http://localhost/phpmyadmin`
-3. Import `database/schema.sql` first
-4. Import `database/seed.sql` next
+1. **Database**: Import `database/schema.sql` and `database/seed.sql` via phpMyAdmin or MySQL CLI.
+2. **Web Content**: Copy the contents of the `server/` directory to your web root (e.g., `C:\xampp\htdocs\server\`).
+3. **Configuration**: Edit `server/config.php` to match your environment.
 
-**Default admin login:** `admin` / `Admin@1234`  
-**Default user password:** `Password@123`
+### 2. WPF Kiosk Configuration
 
-### Step 2 — PHP Server
-
-1. Copy the entire `server/` folder to `C:\xampp\htdocs\library-system\`
-2. Open `server/config.php` and confirm settings (defaults work for XAMPP)
-3. Visit `http://localhost/library-system/admin/` to access the admin panel
-
-### Step 3 — Electron Client
-
-```powershell
-cd client
-
-# Copy and configure environment
-copy .env.example .env
-
-# Install dependencies
-npm install
-
-# Run in dev mode (no kiosk lockdown, window is resizable)
-npm run dev
-```
-
-The `.env` defaults are set for local testing:
-```
-API_BASE_URL=http://localhost/library-system/api
-TERMINAL_CODE=LOCAL-TEST
-KIOSK_MODE=false
-```
+1. **Setup**: Navigate to `client-wpf/LibraryKiosk/`.
+2. **Secrets**: Update `appsettings.json` with your Server API URL:
+   ```json
+   {
+     "ApiBaseUrl": "http://your-server-ip/server/api",
+     "TerminalCode": "PC-01"
+   }
+   ```
+3. **Build**: Build the solution using Visual Studio 2022/2026 or `dotnet build`.
+4. **Deploy**: Copy the `bin/Release` output to the target terminal.
 
 ---
 
-## 🖥️ nComputing Deployment
+## 🔑 Access Credentials
 
-### Server-side setup
+> [!CAUTION]
+> **Production Security**: Immediately change administrator passwords upon deployment.
 
-1. Install XAMPP on the nComputing server
-2. Copy `server/` to `htdocs/library-system/`
-3. Import the database via phpMyAdmin
-4. Update `client/.env`:
-   ```
-   API_BASE_URL=http://localhost/library-system/api
-   TERMINAL_CODE=PC-01        ← Match terminal in admin panel
-   KIOSK_MODE=true
-   ```
-5. Build the Electron app:
-   ```powershell
-   cd client
-   npm run build
-   ```
-6. Install the generated `.exe` from `client/dist/`
-
-### Auto-start on user session login (nComputing)
-
-Add a registry key to auto-launch for each user session:
-- Open `regedit`
-- Go to `HKCU\Software\Microsoft\Windows\CurrentVersion\Run`
-- Add: `LibraryKiosk` → path to the installed `Library Kiosk.exe`
-
-> **Note:** Because nComputing sessions are per-user on a shared server, the `HKCU` run key means each user's session auto-starts the kiosk. The `TERMINAL_CODE` in `.env` must be set to match the terminal's code in the admin panel.
-
----
-
-## 📊 Admin Panel Pages
-
-| Page | URL | Description |
+| Role | Username / ID | Default Password |
 |---|---|---|
-| Login | `/admin/index.php` | Admin authentication |
-| Dashboard | `/admin/dashboard.php` | Live stats + active sessions |
-| Users | `/admin/users.php` | Add/edit/suspend users |
-| Sessions | `/admin/sessions.php` | History + force-end sessions |
-| App Requests | `/admin/apps.php` | Approve/deny requests |
-| Terminals | `/admin/terminals.php` | Manage nComputing stations |
-| Reports | `/admin/reports.php` | Usage stats + CSV export |
+| **System Administrator** | `admin` | `Admin@1234` |
+| **Student (Sample)** | `2021-00001` | `Password@123` |
+| **Staff (Sample)** | `STAFF-001` | `Password@123` |
 
 ---
 
-## 🔑 Default Credentials
+## 🛡️ OS-Level Lockdown
 
-> **Change all passwords immediately in production!**
-
-| Account | ID | Password |
-|---|---|---|
-| Admin (panel) | `admin` | `Admin@1234` |
-| Sample student | `2021-00001` | `Password@123` |
-| Sample staff | `STAFF-001` | `Password@123` |
+The WPF client implements advanced Windows-native security:
+- **Registry Interaction**: Can be configured to override the Explorer shell.
+- **Hooking**: Utilizes `SetWindowsHookEx` for deep keyboard interception.
+- **Watchdog Sync**: The `KioskGuard` monitors the `LibraryKiosk` process every 5 seconds and restarts it if it is terminated.
 
 ---
 
-## 📡 REST API (Electron → PHP)
+## 📈 Data Insight & Reports
 
-All endpoints are under `/library-system/api/`.  
-The Electron app sends `X-Session-Token: <token>` in all authenticated requests.
-
-| Method | Endpoint | Auth | Description |
-|---|---|---|---|
-| POST | `/login.php` | No | Authenticate + create session |
-| POST | `/logout.php` | Token | End session |
-| POST | `/heartbeat.php` | Token | Keep session alive |
-| GET | `/session.php` | Token | Get session info |
-| GET | `/apps.php` | Token | List available apps |
-| POST | `/apps.php` | Token | Submit app request |
+The system tracks **Live Session Metadata** including:
+- Real-time heartbeat monitoring.
+- Automated "Abandoned Session" detection (>2 min silence).
+- User role classification (Student/Staff differentiation).
+- CSV Exporting for institutional auditing and spreadsheet integration.
 
 ---
 
-## 🔒 Security Notes
-
-- All passwords hashed with **bcrypt** (cost 12)
-- Session tokens are **cryptographically random** (256-bit)
-- API uses **PDO prepared statements** (SQL injection protected)
-- Kiosk mode blocks: Alt+F4, Alt+Tab, Ctrl+W, Ctrl+Shift+I, F5, Windows key
-- Admin panel uses PHP sessions with **inactivity timeout** (1 hour)
-- Set `DEBUG_MODE = false` in `config.php` for production
-
----
-
-## 📈 Session Data Collected
-
-| Field | Description |
-|---|---|
-| `login_time` | When the user logged in |
-| `logout_time` | When the user logged out (or was force-ended) |
-| `duration_seconds` | Total session duration |
-| `last_heartbeat` | Last ping from kiosk client |
-| `status` | active / completed / force_ended / abandoned |
-| Terminal info | Which PC was used |
-
-Sessions with no heartbeat for >2 minutes are automatically marked **abandoned** on the next admin panel page load.
-
----
-
-## 📋 Data Reports
-
-The **Reports** page supports:
-- Filter by **date range**
-- Group by **day**, **user**, or **terminal**
-- **Bar chart** visualization (Chart.js)
-- **CSV export** for spreadsheet analysis
+Developed for **AUF Library Systems**.
+Modernized by **Antigravity AI**.
