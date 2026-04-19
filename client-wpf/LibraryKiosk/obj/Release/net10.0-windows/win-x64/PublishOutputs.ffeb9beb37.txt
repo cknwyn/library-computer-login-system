@@ -1,4 +1,0 @@
-F:\Projects\library-computer-login-system\client-wpf\dist-wpf\LibraryKiosk\LibraryKiosk.pdb
-F:\Projects\library-computer-login-system\client-wpf\dist-wpf\LibraryKiosk\appsettings.json
-F:\Projects\library-computer-login-system\client-wpf\dist-wpf\LibraryKiosk\assets\background.png
-F:\Projects\library-computer-login-system\client-wpf\dist-wpf\LibraryKiosk\LibraryKiosk.exe

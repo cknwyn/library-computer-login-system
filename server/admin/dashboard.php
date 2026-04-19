@@ -50,117 +50,109 @@ include __DIR__ . '/partials/header.php';
 
 <!-- Stats Grid -->
 <div class="stats-grid">
-  <div class="stat-card green">
+  <div class="stat-card">
     <span class="stat-label">Active Sessions</span>
     <span class="stat-value"><?= $active_sessions ?></span>
     <span class="stat-sub">Currently logged in</span>
   </div>
-  <div class="stat-card gold">
+  <div class="stat-card">
     <span class="stat-label">Sessions Today</span>
     <span class="stat-value"><?= $today_sessions ?></span>
     <span class="stat-sub">Since midnight</span>
   </div>
-  <div class="stat-card blue">
+  <div class="stat-card">
     <span class="stat-label">Registered Users</span>
     <span class="stat-value"><?= $total_users ?></span>
     <span class="stat-sub">Active accounts</span>
   </div>
-  <div class="stat-card <?= $pending_requests > 0 ? 'red' : 'gray' ?>" style="<?= $pending_requests === 0 ? '--danger:var(--text-muted)' : '' ?>">
+  <div class="stat-card">
     <span class="stat-label">Pending Requests</span>
-    <span class="stat-value" style="<?= $pending_requests === 0 ? 'color:var(--text-muted)' : '' ?>"><?= $pending_requests ?></span>
-    <span class="stat-sub">App install/uninstall</span>
+    <span class="stat-value" style="<?= $pending_requests > 0 ? 'color:var(--danger)' : '' ?>"><?= $pending_requests ?></span>
+    <span class="stat-sub">Software deployment</span>
   </div>
 </div>
 
-<!-- Active Sessions -->
-<div class="card">
-  <div class="card-header">
-    <span class="card-title">🟢 Active Sessions</span>
-    <div class="live-badge"><span class="live-dot"></span> Live</div>
-  </div>
-  <?php if (empty($active_rows)): ?>
-    <div class="empty-state">
-      <div class="empty-icon">🖥️</div>
-      <p>No active sessions right now.</p>
+<div class="dashboard-grid">
+  <!-- Left Column: Active Sessions -->
+  <div class="card">
+    <div class="card-header">
+      <span class="card-title">Live Session Feed</span>
+      <div class="live-badge"><span class="live-dot"></span> Active</div>
     </div>
-  <?php else: ?>
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr>
-          <th>#</th><th>User</th><th>Role</th><th>Terminal</th>
-          <th>Location</th><th>Duration</th><th>Last Seen</th><th>Action</th>
-        </tr>
-      </thead>
-      <tbody>
-        <?php foreach ($active_rows as $r): ?>
-        <tr>
-          <td class="td-muted mono"><?= $r['id'] ?></td>
-          <td>
-            <div style="font-weight:600"><?= h($r['user_name']) ?></div>
-            <div class="td-muted mono" style="font-size:11px"><?= h($r['user_code']) ?></div>
-          </td>
-          <td>
-            <span class="badge <?= $r['role']==='staff' ? 'badge-blue' : 'badge-gold' ?>">
-              <?= ucfirst($r['role']) ?>
-            </span>
-          </td>
-          <td class="mono"><?= h($r['terminal_code']) ?></td>
-          <td class="td-muted"><?= h($r['location'] ?? '—') ?></td>
-          <td data-login-time="<?= h($r['login_time']) ?>">
-            <?= format_duration(elapsed_since($r['login_time'])) ?>
-          </td>
-          <td class="td-muted" style="font-size:11px">
-            <?= $r['last_heartbeat'] ? date('H:i:s', strtotime($r['last_heartbeat'])) : '—' ?>
-          </td>
-          <td>
-            <form method="POST" action="sessions.php" onsubmit="return confirm('Force-end this session?')">
-              <input type="hidden" name="action" value="force_end">
-              <input type="hidden" name="session_id" value="<?= $r['id'] ?>">
-              <button type="submit" class="btn btn-danger btn-sm">Force End</button>
-            </form>
-          </td>
-        </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
+    <div class="card-body">
+      <?php if (empty($active_rows)): ?>
+        <div class="empty-state">
+          <div class="empty-icon"><i data-lucide="monitor-off"></i></div>
+          <p>No active sessions right now.</p>
+        </div>
+      <?php else: ?>
+        <div class="feed-list">
+          <?php foreach ($active_rows as $r): ?>
+          <div class="feed-item">
+            <div class="feed-icon"><i data-lucide="<?= $r['role']==='staff' ? 'user-check' : 'user' ?>"></i></div>
+            <div class="feed-content">
+              <div class="feed-title"><?= h($r['user_name']) ?> <span class="td-muted" style="font-weight:400; font-size:12px">• <?= h($r['terminal_code']) ?></span></div>
+              <div class="feed-meta"><?= ucfirst($r['role']) ?> • In session for <?= format_duration(elapsed_since($r['login_time'])) ?></div>
+            </div>
+            <div class="feed-actions">
+              <form method="POST" action="sessions.php" onsubmit="return confirm('Force-end this session?')">
+                <input type="hidden" name="action" value="force_end">
+                <input type="hidden" name="session_id" value="<?= $r['id'] ?>">
+                <button type="submit" class="btn btn-secondary btn-sm" title="Force End">
+                  <i data-lucide="power" style="width:14px; height:14px"></i>
+                </button>
+              </form>
+            </div>
+          </div>
+          <?php endforeach; ?>
+        </div>
+      <?php endif; ?>
+    </div>
   </div>
-  <?php endif; ?>
+
+  <!-- Right Column: Recent Activity -->
+    <div class="card-header">
+      <span class="card-title">Recent Activity</span>
+      <a href="sessions.php" class="btn btn-outline btn-sm">
+        <i data-lucide="arrow-right" style="width:14px;vertical-align:middle;margin-right:2px"></i> View All
+      </a>
+    </div>
+
+    <div class="card-body" style="padding: 0">
+      <div class="table-wrap">
+        <table style="font-size: 13px">
+          <thead>
+            <tr>
+              <th style="padding-left: 32px">User</th>
+              <th>Status</th>
+              <th style="padding-right: 32px">Time</th>
+            </tr>
+          </thead>
+          <tbody>
+            <?php foreach ($recent_rows as $r): ?>
+            <tr style="border-bottom: 1px solid var(--border-light)">
+              <td style="padding-left: 32px">
+                <div style="font-weight:700"><?= h($r['user_name']) ?></div>
+                <div class="td-muted mono" style="font-size:11px"><?= h($r['user_code']) ?></div>
+              </td>
+              <td>
+                <?php
+                  $badges = ['active'=>'badge-green','completed'=>'badge-gray','force_ended'=>'badge-red','abandoned'=>'badge-yellow'];
+                  $b = $badges[$r['status']] ?? 'badge-gray';
+                  echo '<span class="badge '.$b.'">'.ucfirst(str_replace('_',' ',$r['status'])).'</span>';
+                ?>
+              </td>
+              <td class="td-muted" style="padding-right: 32px">
+                <?= date('H:i', strtotime($r['login_time'])) ?>
+              </td>
+            </tr>
+            <?php endforeach; ?>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </div>
 </div>
 
-<!-- Recent Sessions -->
-<div class="card">
-  <div class="card-header">
-    <span class="card-title">📋 Recent Sessions</span>
-    <a href="sessions.php" class="btn btn-outline btn-sm">View All</a>
-  </div>
-  <div class="table-wrap">
-    <table>
-      <thead>
-        <tr><th>#</th><th>User</th><th>Terminal</th><th>Login</th><th>Logout</th><th>Duration</th><th>Status</th></tr>
-      </thead>
-      <tbody>
-        <?php foreach ($recent_rows as $r): ?>
-        <tr>
-          <td class="td-muted mono"><?= $r['id'] ?></td>
-          <td>
-            <div style="font-weight:600"><?= h($r['user_name']) ?></div>
-            <div class="td-muted mono" style="font-size:11px"><?= h($r['user_code']) ?></div>
-          </td>
-          <td class="mono"><?= h($r['terminal_code']) ?></td>
-          <td class="td-muted"><?= date('M d, H:i', strtotime($r['login_time'])) ?></td>
-          <td class="td-muted"><?= $r['logout_time'] ? date('H:i', strtotime($r['logout_time'])) : '—' ?></td>
-          <td><?= $r['duration_seconds'] !== null ? format_duration((int)$r['duration_seconds']) : '<span class="td-muted">Active</span>' ?></td>
-          <td><?php
-            $badges = ['active'=>'badge-green','completed'=>'badge-gray','force_ended'=>'badge-red','abandoned'=>'badge-yellow'];
-            $b = $badges[$r['status']] ?? 'badge-gray';
-            echo '<span class="badge '.$b.'"><span class="badge-dot"></span>'.ucfirst(str_replace('_',' ',$r['status'])).'</span>';
-          ?></td>
-        </tr>
-        <?php endforeach; ?>
-      </tbody>
-    </table>
-  </div>
-</div>
 
 <?php include __DIR__ . '/partials/footer.php'; ?>

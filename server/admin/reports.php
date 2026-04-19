@@ -122,38 +122,42 @@ include __DIR__ . '/partials/header.php';
       </select>
       <button type="submit" class="btn btn-primary">Generate</button>
       <a href="?date_from=<?= $date_from ?>&date_to=<?= $date_to ?>&group_by=<?= $group_by ?>&export=1"
-         class="btn btn-outline">⬇ Export CSV</a>
+         class="btn btn-outline"><i data-lucide="download" style="width:16px;vertical-align:middle;margin-right:4px"></i> Export CSV</a>
+
     </form>
   </div>
 </div>
 
 <!-- Summary Stats -->
-<div class="stats-grid" style="margin-bottom:24px">
-  <div class="stat-card gold">
+<div class="stats-grid" style="margin-bottom:32px">
+  <div class="stat-card">
     <span class="stat-label">Total Sessions</span>
     <span class="stat-value"><?= number_format((int)($stats['total_sessions']??0)) ?></span>
-    <span class="stat-sub"><?= h($date_from) ?> – <?= h($date_to) ?></span>
+    <span class="stat-sub"><?= date('M d', strtotime($date_from)) ?> – <?= date('M d', strtotime($date_to)) ?></span>
   </div>
-  <div class="stat-card blue">
+  <div class="stat-card">
     <span class="stat-label">Unique Users</span>
     <span class="stat-value"><?= (int)($stats['unique_users']??0) ?></span>
+    <span class="stat-sub">Distinct individuals</span>
   </div>
-  <div class="stat-card green">
+  <div class="stat-card">
     <span class="stat-label">Avg. Duration</span>
-    <span class="stat-value" style="font-size:22px"><?= format_duration((int)($stats['avg_duration']??0)) ?></span>
+    <span class="stat-value" style="font-size:24px"><?= format_duration((int)($stats['avg_duration']??0)) ?></span>
+    <span class="stat-sub">Per session</span>
   </div>
-  <div class="stat-card blue" style="--info:#A78BFA">
+  <div class="stat-card">
     <span class="stat-label">Total Time Used</span>
-    <span class="stat-value" style="font-size:22px"><?= format_duration((int)($stats['total_duration']??0)) ?></span>
+    <span class="stat-value" style="font-size:24px"><?= format_duration((int)($stats['total_duration']??0)) ?></span>
+    <span class="stat-sub">Cumulative</span>
   </div>
 </div>
 
 <!-- Chart -->
 <?php if (!empty($breakdown) && $group_by === 'day'): ?>
-<div class="card" style="margin-bottom:24px">
-  <div class="card-header"><span class="card-title">📈 Sessions per Day</span></div>
+<div class="card" style="margin-bottom:32px">
+  <div class="card-header"><span class="card-title">Volume Distribution</span></div>
   <div class="card-body">
-    <canvas id="chart-sessions" style="max-height:280px"></canvas>
+    <canvas id="chart-sessions" style="max-height:300px"></canvas>
   </div>
 </div>
 <script src="https://cdn.jsdelivr.net/npm/chart.js@4/dist/chart.umd.min.js"></script>
@@ -167,18 +171,18 @@ include __DIR__ . '/partials/header.php';
       datasets: [{
         label: 'Sessions',
         data: <?= json_encode($chart_sessions) ?>,
-        backgroundColor: 'rgba(245,158,11,0.5)',
-        borderColor: 'rgba(245,158,11,1)',
-        borderWidth: 1,
-        borderRadius: 4,
+        backgroundColor: '#005FB8',
+        borderRadius: 6,
+        barThickness: 32
       }]
     },
     options: {
       responsive: true,
-      plugins: { legend: { labels: { color: '#94A3B8' } } },
+      maintainAspectRatio: false,
+      plugins: { legend: { display: false } },
       scales: {
-        x: { ticks: { color: '#64748B' }, grid: { color: '#1E2438' } },
-        y: { ticks: { color: '#64748B' }, grid: { color: '#1E2438' }, beginAtZero: true }
+        x: { ticks: { color: '#64748B', font: { weight: '600' } }, grid: { display: false } },
+        y: { ticks: { color: '#64748B' }, grid: { color: '#F1F5F9' }, beginAtZero: true }
       }
     }
   });
@@ -186,13 +190,16 @@ include __DIR__ . '/partials/header.php';
 </script>
 <?php endif; ?>
 
+
 <!-- Breakdown Table -->
 <div class="card">
   <div class="card-header">
-    <span class="card-title">📊 Breakdown by <?= ucfirst($group_by) ?></span>
+    <span class="card-title"><i data-lucide="bar-chart-2" style="width:18px;vertical-align:middle;margin-right:4px"></i> Breakdown by <?= ucfirst($group_by) ?></span>
+
   </div>
   <?php if (empty($breakdown)): ?>
-    <div class="empty-state"><div class="empty-icon">📭</div><p>No completed sessions in this range.</p></div>
+    <div class="empty-state"><div class="empty-icon"><i data-lucide="inbox"></i></div><p>No completed sessions in this range.</p></div>
+
   <?php else: ?>
   <div class="table-wrap">
     <table>

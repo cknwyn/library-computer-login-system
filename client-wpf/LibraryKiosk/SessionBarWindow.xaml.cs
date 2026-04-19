@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using System.Windows.Threading;
 using System.Windows.Forms;
@@ -91,7 +91,7 @@ namespace LibraryKiosk
                 _notifyIcon?.Dispose();
                 
                 // Return to login
-                var login = new LoginWindow();
+                var login = new LoginWindow(_apiService, _apiService.TerminalCode);
                 login.Show();
                 this.Close();
             }

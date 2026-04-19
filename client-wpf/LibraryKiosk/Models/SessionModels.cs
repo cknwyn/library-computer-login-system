@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Text.Json.Serialization;
 
 namespace LibraryKiosk.Models
@@ -39,12 +39,18 @@ namespace LibraryKiosk.Models
     public class UserInfo
     {
         [JsonPropertyName("id")]
-        public string Id { get; set; } = string.Empty;
+        public int Id { get; set; }
 
-        [JsonPropertyName("full_name")]
+        [JsonPropertyName("user_id")]
+        public string StudentId { get; set; } = string.Empty;
+
+        [JsonPropertyName("name")]
         public string FullName { get; set; } = string.Empty;
 
         [JsonPropertyName("role")]
         public string Role { get; set; } = string.Empty;
+
+        [JsonPropertyName("department")]
+        public string? Department { get; set; }
     }
 }

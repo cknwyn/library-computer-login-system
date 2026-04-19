@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Windows;
 using LibraryKiosk.Services;
 
@@ -7,13 +7,13 @@ namespace LibraryKiosk
     public partial class LoginWindow : Window
     {
         private readonly ApiService _apiService;
+        private readonly string _terminalCode;
 
-        public LoginWindow()
+        public LoginWindow(ApiService apiService, string terminalCode)
         {
             InitializeComponent();
-            
-            // Assume static config for now
-            _apiService = new ApiService("http://localhost/library-system/api", "PC-04");
+            _apiService = apiService;
+            _terminalCode = terminalCode;
         }
 
         private async void LoginBtn_Click(object sender, RoutedEventArgs e)

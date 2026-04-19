@@ -98,15 +98,17 @@ include __DIR__ . '/partials/header.php';
 ?>
 
 <?php if ($flash): ?>
-  <div class="flash flash-<?= $flash_type === 'error' ? 'error' : 'success' ?>"><?= h($flash) ?></div>
+  <div class="flash flash-<?= $flash_type === 'error' ? 'error' : 'success' ?> fade-in">
+    <i data-lucide="<?= $flash_type === 'error' ? 'alert-circle' : 'check-circle' ?>" style="width:18px"></i> <?= h($flash) ?>
+  </div>
 <?php endif; ?>
 
 <!-- Actions Bar -->
 <div class="filter-bar">
   <form method="GET" style="display:contents">
     <div class="search-wrap">
-      <span class="search-icon">🔍</span>
-      <input class="search-input" name="q" placeholder="Search by ID, name, or email…" value="<?= h($search) ?>">
+      <span class="search-icon"><i data-lucide="search" style="width:18px"></i></span>
+      <input class="form-control search-input" name="q" placeholder="Look up identity or department..." value="<?= h($search) ?>">
     </div>
     <select name="role" class="form-control" style="max-width:140px">
       <option value="">All Roles</option>
@@ -120,58 +122,67 @@ include __DIR__ . '/partials/header.php';
       <option value="suspended" <?= $status_f==='suspended'?'selected':'' ?>>Suspended</option>
     </select>
     <button type="submit" class="btn btn-outline">Filter</button>
-    <a href="users.php" class="btn btn-outline">Reset</a>
   </form>
-  <button class="btn btn-primary" onclick="openModal('modal-create')">+ Add User</button>
+  <button class="btn btn-primary" onclick="openModal('modal-create')">
+    <i data-lucide="user-plus" style="width:18px"></i> Register User
+  </button>
 </div>
 
 <!-- Users Table -->
 <div class="card">
   <div class="card-header">
-    <span class="card-title">👤 Users <span class="badge badge-gray" style="margin-left:8px"><?= count($users) ?></span></span>
+    <span class="card-title">Collective Users <span class="badge badge-gray" style="margin-left:8px"><?= count($users) ?></span></span>
   </div>
   <?php if (empty($users)): ?>
-    <div class="empty-state"><div class="empty-icon">👤</div><p>No users found.</p></div>
+    <div class="empty-state">
+      <div class="empty-icon"><i data-lucide="users-2"></i></div>
+      <p>No identities found in this directory.</p>
+    </div>
   <?php else: ?>
   <div class="table-wrap">
     <table id="users-table">
       <thead>
-        <tr><th>ID / Code</th><th>Name</th><th>Role</th><th>Department</th><th>Email</th><th>Sessions</th><th>Status</th><th>Actions</th></tr>
+        <tr><th>Identity</th><th>Role</th><th>Dept / Email</th><th>Engagement</th><th>Status</th><th>Actions</th></tr>
       </thead>
       <tbody>
         <?php foreach ($users as $u): ?>
         <tr>
-          <td class="mono" style="font-weight:600"><?= h($u['user_id']) ?></td>
-          <td style="font-weight:600"><?= h($u['name']) ?></td>
-          <td><span class="badge <?= $u['role']==='staff'?'badge-blue':'badge-gold' ?>"><?= ucfirst($u['role']) ?></span></td>
-          <td class="td-muted"><?= h($u['department'] ?? '—') ?></td>
-          <td class="td-muted"><?= h($u['email'] ?? '—') ?></td>
           <td>
-            <?= $u['total_sessions'] ?>
-            <?php if ($u['active_sessions'] > 0): ?>
-              <span class="badge badge-green" style="margin-left:4px;font-size:10px">Active</span>
-            <?php endif; ?>
+            <div style="font-weight:700"><?= h($u['name']) ?></div>
+            <div class="td-muted mono" style="font-size:11px"><?= h($u['user_id']) ?></div>
+          </td>
+          <td><span class="badge <?= $u['role']==='staff'?'badge-blue':'badge-yellow' ?>"><?= ucfirst($u['role']) ?></span></td>
+          <td>
+            <div style="font-size:13px; font-weight: 500"><?= h($u['department'] ?? '—') ?></div>
+            <div class="td-muted" style="font-size:11px"><?= h($u['email'] ?? 'No email') ?></div>
+          </td>
+          <td>
+            <div style="display:flex; align-items: center; gap: 8px">
+              <span style="font-weight:700"><?= $u['total_sessions'] ?></span>
+              <?php if ($u['active_sessions'] > 0): ?>
+                <span class="badge badge-green" style="font-size:9px">Online</span>
+              <?php endif; ?>
+            </div>
           </td>
           <td><?php
             $b = ['active'=>'badge-green','inactive'=>'badge-gray','suspended'=>'badge-red'];
             echo '<span class="badge '.($b[$u['status']]??'badge-gray').'"><span class="badge-dot"></span>'.ucfirst($u['status']).'</span>';
           ?></td>
           <td>
-            <div style="display:flex;gap:6px;flex-wrap:wrap">
-              <!-- Change status -->
+            <div style="display:flex;gap:8px;align-items:center">
               <form method="POST" style="display:inline">
                 <input type="hidden" name="action" value="update_status">
                 <input type="hidden" name="id" value="<?= $u['id'] ?>">
-                <select name="status" class="form-control" style="padding:4px 8px;font-size:11px;max-width:100px" onchange="this.form.submit()">
+                <select name="status" class="form-control" style="padding:4px 8px;font-size:11px;max-width:105px;background:white;border:1px solid var(--border)" onchange="this.form.submit()">
                   <option value="active"    <?= $u['status']==='active'?'selected':'' ?>>Active</option>
                   <option value="inactive"  <?= $u['status']==='inactive'?'selected':'' ?>>Inactive</option>
                   <option value="suspended" <?= $u['status']==='suspended'?'selected':'' ?>>Suspend</option>
                 </select>
               </form>
-              <!-- Reset password -->
-              <button class="btn btn-outline btn-sm"
-                onclick="document.getElementById('rp-uid').value=<?= $u['id'] ?>;document.getElementById('rp-name').textContent='<?= addslashes(h($u['name'])) ?>';openModal('modal-reset-pw')">
-                🔑
+              <button class="btn btn-outline btn-sm" style="padding: 5px" 
+                onclick="document.getElementById('rp-uid').value=<?= $u['id'] ?>;document.getElementById('rp-name').textContent='<?= addslashes(h($u['name'])) ?>';openModal('modal-reset-pw')"
+                title="Reset Password">
+                <i data-lucide="key" style="width:14px"></i>
               </button>
             </div>
           </td>
@@ -187,19 +198,19 @@ include __DIR__ . '/partials/header.php';
 <div class="modal-backdrop" id="modal-create">
   <div class="modal">
     <div class="modal-header">
-      <span class="modal-title">Add New User</span>
-      <button class="btn-close" onclick="closeModal('modal-create')">✕</button>
+      <span class="modal-title">Register Identity</span>
+      <button class="btn-close" onclick="closeModal('modal-create')"><i data-lucide="x" style="width:16px"></i></button>
     </div>
     <form method="POST">
       <input type="hidden" name="action" value="create">
       <div class="modal-body">
         <div class="form-row">
           <div class="form-group">
-            <label class="form-label">Student/Staff ID *</label>
-            <input name="user_id" class="form-control" placeholder="2024-00001" required>
+            <label class="form-label">System ID</label>
+            <input name="user_id" class="form-control" placeholder="2024-001" required>
           </div>
           <div class="form-group">
-            <label class="form-label">Role *</label>
+            <label class="form-label">Classification</label>
             <select name="role" class="form-control">
               <option value="student">Student</option>
               <option value="staff">Staff</option>
@@ -207,27 +218,27 @@ include __DIR__ . '/partials/header.php';
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Full Name *</label>
-          <input name="name" class="form-control" placeholder="Juan dela Cruz" required>
+          <label class="form-label">Full Name</label>
+          <input name="name" class="form-control" placeholder="Identity name..." required>
         </div>
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">Department</label>
-            <input name="department" class="form-control" placeholder="Computer Science">
+            <input name="department" class="form-control" placeholder="e.g. CAS">
           </div>
           <div class="form-group">
             <label class="form-label">Email</label>
-            <input name="email" type="email" class="form-control" placeholder="juan@student.edu">
+            <input name="email" type="email" class="form-control" placeholder="name@edu.ph">
           </div>
         </div>
         <div class="form-group">
-          <label class="form-label">Password *</label>
-          <input name="password" type="password" class="form-control" placeholder="At least 8 characters" required>
+          <label class="form-label">Initial Password</label>
+          <input name="password" type="password" class="form-control" placeholder="Min. 8 characters" required>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" onclick="closeModal('modal-create')">Cancel</button>
-        <button type="submit" class="btn btn-primary">Create User</button>
+        <button type="submit" class="btn btn-primary">Enroll User</button>
       </div>
     </form>
   </div>
@@ -237,24 +248,25 @@ include __DIR__ . '/partials/header.php';
 <div class="modal-backdrop" id="modal-reset-pw">
   <div class="modal">
     <div class="modal-header">
-      <span class="modal-title">Reset Password — <span id="rp-name"></span></span>
-      <button class="btn-close" onclick="closeModal('modal-reset-pw')">✕</button>
+      <span class="modal-title">Reset - <span id="rp-name"></span></span>
+      <button class="btn-close" onclick="closeModal('modal-reset-pw')"><i data-lucide="x" style="width:16px"></i></button>
     </div>
     <form method="POST">
       <input type="hidden" name="action" value="reset_password">
       <input type="hidden" name="id" id="rp-uid">
       <div class="modal-body">
         <div class="form-group">
-          <label class="form-label">New Password</label>
-          <input name="new_password" type="password" class="form-control" placeholder="At least 6 characters" required>
+          <label class="form-label">New Credential</label>
+          <input name="new_password" type="password" class="form-control" placeholder="Min. 6 characters" required>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" onclick="closeModal('modal-reset-pw')">Cancel</button>
-        <button type="submit" class="btn btn-primary">Reset Password</button>
+        <button type="submit" class="btn btn-primary">Update Password</button>
       </div>
     </form>
   </div>
 </div>
+
 
 <?php include __DIR__ . '/partials/footer.php'; ?>

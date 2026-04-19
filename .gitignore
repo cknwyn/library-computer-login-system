@@ -32,6 +32,24 @@ desktop.ini
 watchdog/watchdog.log
 watchdog/watchdog.log.old
 
+# .NET / WPF
+bin/
+obj/
+dist-wpf/
+*.exe
+*.pdb
+*.msi
+*.msix
+*.appx
+
+
+# Visual Studio
+.vs/
+*.user
+*.suo
+*.sln.docstates
+
 # Temp
 *.tmp
 *.bak
+

@@ -66,66 +66,75 @@ include __DIR__ . '/partials/header.php';
 <?php endif; ?>
 
 <!-- Stats row -->
-<div class="stats-grid" style="grid-template-columns:repeat(auto-fit,minmax(160px,1fr));margin-bottom:24px">
-  <div class="stat-card green">
+<div class="stats-grid" style="margin-bottom:32px">
+  <div class="stat-card">
     <span class="stat-label">Active Now</span>
-    <span class="stat-value"><?= $active_count ?></span>
+    <span class="stat-value" style="color: var(--success)"><?= $active_count ?></span>
+    <span class="stat-sub">Live sessions</span>
   </div>
-  <div class="stat-card gold">
-    <span class="stat-label">In Range</span>
+  <div class="stat-card">
+    <span class="stat-label">Total in Range</span>
     <span class="stat-value"><?= count($sessions) ?></span>
+    <span class="stat-sub">Historical data</span>
   </div>
 </div>
 
 <!-- Filter bar -->
 <div class="card">
   <div class="card-header">
-    <span class="card-title">🖥️ Session History</span>
-    <span class="td-muted" style="font-size:12px">Showing up to 200 records</span>
+    <span class="card-title">Access Log History</span>
+    <div style="display: flex; gap: 8px">
+       <span class="badge badge-gray"><?= count($sessions) ?> records</span>
+    </div>
   </div>
-  <div class="card-body" style="padding-bottom:0">
+  <div class="card-body" style="padding-bottom:12px; border-bottom: 1px solid var(--border-light)">
     <form method="GET" class="filter-bar" style="margin-bottom:0">
       <div class="search-wrap">
-        <span class="search-icon">🔍</span>
-        <input class="search-input" name="q" placeholder="User ID, name, or terminal…" value="<?= h($search) ?>">
+        <span class="search-icon"><i data-lucide="search" style="width:18px"></i></span>
+        <input class="form-control search-input" name="q" placeholder="Identity, name, or terminal..." value="<?= h($search) ?>">
       </div>
       <input type="date" name="date_from" class="form-control" style="max-width:150px" value="<?= h($date_from) ?>">
       <input type="date" name="date_to"   class="form-control" style="max-width:150px" value="<?= h($date_to) ?>">
       <select name="status" class="form-control" style="max-width:140px">
-        <option value="">All Status</option>
+        <option value="">All States</option>
         <option value="active"      <?= $status_f==='active'?'selected':'' ?>>Active</option>
         <option value="completed"   <?= $status_f==='completed'?'selected':'' ?>>Completed</option>
-        <option value="force_ended" <?= $status_f==='force_ended'?'selected':'' ?>>Force Ended</option>
+        <option value="force_ended" <?= $status_f==='force_ended'?'selected':'' ?>>Terminated</option>
         <option value="abandoned"   <?= $status_f==='abandoned'?'selected':'' ?>>Abandoned</option>
       </select>
-      <button type="submit" class="btn btn-primary">Filter</button>
-      <a href="sessions.php" class="btn btn-outline">Reset</a>
+      <button type="submit" class="btn btn-primary">Sync View</button>
     </form>
   </div>
 
   <?php if (empty($sessions)): ?>
-    <div class="empty-state"><div class="empty-icon">📭</div><p>No sessions match your filters.</p></div>
+    <div class="empty-state">
+      <div class="empty-icon"><i data-lucide="ghost"></i></div>
+      <p>No activity records match your criteria.</p>
+    </div>
   <?php else: ?>
   <div class="table-wrap">
     <table id="sessions-table">
       <thead>
-        <tr><th>#</th><th>User</th><th>Role</th><th>Terminal</th><th>Login Time</th><th>Logout Time</th><th>Duration</th><th>Status</th><th>Action</th></tr>
+        <tr><th>Identity</th><th>Classification</th><th>Access Point</th><th>Timeline</th><th>Duration</th><th>Status</th><th>Operation</th></tr>
       </thead>
       <tbody>
         <?php foreach ($sessions as $s): ?>
         <?php $status_badges = ['active'=>'badge-green','completed'=>'badge-gray','force_ended'=>'badge-red','abandoned'=>'badge-yellow']; ?>
         <tr>
-          <td class="mono td-muted"><?= $s['id'] ?></td>
           <td>
-            <div style="font-weight:600"><?= h($s['user_name']) ?></div>
+            <div style="font-weight:700"><?= h($s['user_name']) ?></div>
             <div class="mono td-muted" style="font-size:11px"><?= h($s['user_code']) ?></div>
           </td>
-          <td><span class="badge <?= $s['role']==='staff'?'badge-blue':'badge-gold' ?>"><?= ucfirst($s['role']) ?></span></td>
-          <td class="mono"><?= h($s['terminal_code']) ?><br><span class="td-muted" style="font-size:10px"><?= h($s['location']??'') ?></span></td>
-          <td><?= date('M d Y', strtotime($s['login_time'])) ?><br>
-              <span class="td-muted"><?= date('H:i:s', strtotime($s['login_time'])) ?></span></td>
-          <td><?= $s['logout_time'] ? date('H:i:s', strtotime($s['logout_time'])) : '—' ?></td>
+          <td><span class="badge <?= $s['role']==='staff'?'badge-blue':'badge-yellow' ?>"><?= ucfirst($s['role']) ?></span></td>
           <td>
+             <div style="font-weight:700"><?= h($s['terminal_code']) ?></div>
+             <div class="td-muted" style="font-size:11px"><?= h($s['location']??'Unspecified') ?></div>
+          </td>
+          <td>
+             <div style="font-size:13px; font-weight: 500"><?= date('M d, H:i', strtotime($s['login_time'])) ?></div>
+             <div class="td-muted" style="font-size:11px"><?= $s['logout_time'] ? 'End: '.date('H:i', strtotime($s['logout_time'])) : 'Active Now' ?></div>
+          </td>
+          <td style="font-weight: 600">
             <?php if ($s['status']==='active'): ?>
               <span data-login-time="<?= h($s['login_time']) ?>"><?= format_duration(elapsed_since($s['login_time'])) ?></span>
             <?php else: ?>
@@ -135,10 +144,10 @@ include __DIR__ . '/partials/header.php';
           <td><span class="badge <?= $status_badges[$s['status']]??'badge-gray' ?>"><span class="badge-dot"></span><?= ucfirst(str_replace('_',' ',$s['status'])) ?></span></td>
           <td>
             <?php if ($s['status']==='active'): ?>
-            <form method="POST" onsubmit="return confirm('Force-end session #<?= $s['id'] ?>?')">
+            <form method="POST" onsubmit="return confirm('Force-terminate session #<?= $s['id'] ?>?')">
               <input type="hidden" name="action" value="force_end">
               <input type="hidden" name="session_id" value="<?= $s['id'] ?>">
-              <button class="btn btn-danger btn-sm">End</button>
+              <button class="btn btn-secondary btn-sm" title="Force Terminate"><i data-lucide="power" style="width:14px"></i></button>
             </form>
             <?php else: ?>
               <span class="td-muted">—</span>
@@ -151,6 +160,7 @@ include __DIR__ . '/partials/header.php';
   </div>
   <?php endif; ?>
 </div>
+
 
 <script>autoRefresh(30);</script>
 <?php include __DIR__ . '/partials/footer.php'; ?>

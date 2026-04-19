@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.Net.Http;
 using System.Net.Http.Json;
 using System.Text.Json;
@@ -11,13 +11,13 @@ namespace LibraryKiosk.Services
     {
         private readonly HttpClient _httpClient;
         private readonly string _apiBaseUrl;
-        private readonly string _terminalCode;
+        public string TerminalCode { get; }
 
         public ApiService(string apiBaseUrl, string terminalCode)
         {
             _httpClient = new HttpClient();
             _apiBaseUrl = apiBaseUrl.TrimEnd('/');
-            _terminalCode = terminalCode;
+            TerminalCode = terminalCode;
         }
 
         public async Task<ApiResponse<UserInfo>> LoginAsync(string userId, string password)
@@ -26,7 +26,7 @@ namespace LibraryKiosk.Services
             {
                 UserId = userId,
                 Password = password,
-                TerminalCode = _terminalCode
+                TerminalCode = TerminalCode
             };
 
             try

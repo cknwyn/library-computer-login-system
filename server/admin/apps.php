@@ -82,56 +82,65 @@ include __DIR__ . '/partials/header.php';
 <?php if ($flash): ?><div class="flash flash-success"><?= h($flash) ?></div><?php endif; ?>
 
 <!-- Tab nav -->
-<div style="display:flex;gap:8px;margin-bottom:24px">
-  <a href="?status=pending"   class="btn <?= $filter_status==='pending'  ?'btn-primary':'btn-outline' ?>">
-    Pending <?php if ($pending_count>0): ?><span class="badge badge-red" style="margin-left:4px"><?= $pending_count ?></span><?php endif; ?>
+<div style="display:flex;gap:12px;margin-bottom:32px;flex-wrap:wrap">
+  <a href="?status=pending"   class="btn <?= $filter_status==='pending'  ?'btn-primary':'btn-outline' ?>" style="position:relative">
+    Pending Status <?php if ($pending_count>0): ?><span class="badge badge-red" style="margin-left:8px"><?= $pending_count ?></span><?php endif; ?>
   </a>
-  <a href="?status=approved"  class="btn <?= $filter_status==='approved' ?'btn-primary':'btn-outline' ?>">Approved</a>
-  <a href="?status=denied"    class="btn <?= $filter_status==='denied'   ?'btn-primary':'btn-outline' ?>">Denied</a>
-  <a href="?status=completed" class="btn <?= $filter_status==='completed'?'btn-primary':'btn-outline' ?>">Completed</a>
-  <a href="?status="          class="btn <?= $filter_status===''         ?'btn-primary':'btn-outline' ?>">All</a>
+  <a href="?status=approved"  class="btn <?= $filter_status==='approved' ?'btn-primary':'btn-outline' ?>">Deployment Phase</a>
+  <a href="?status=denied"    class="btn <?= $filter_status==='denied'   ?'btn-primary':'btn-outline' ?>">Rejected</a>
+  <a href="?status=completed" class="btn <?= $filter_status==='completed'?'btn-primary':'btn-outline' ?>">Installed</a>
+  <a href="?status="          class="btn <?= $filter_status===''         ?'btn-primary':'btn-outline' ?>">Full Universe</a>
   <div style="flex:1"></div>
-  <button class="btn btn-outline" onclick="openModal('modal-catalog')">📋 App Catalog</button>
-  <button class="btn btn-primary" onclick="openModal('modal-add-app')">+ Add App</button>
+  <button class="btn btn-outline" onclick="openModal('modal-catalog')"><i data-lucide="book" style="width:16px"></i> Ecosystem Catalog</button>
+  <button class="btn btn-primary" onclick="openModal('modal-add-app')"><i data-lucide="plus-circle" style="width:16px"></i> Register Asset</button>
 </div>
+
 
 <!-- Requests Table -->
 <div class="card">
   <div class="card-header">
-    <span class="card-title">📦 App Requests
-      <span class="badge badge-gray" style="margin-left:8px"><?= count($requests) ?></span>
-    </span>
+    <span class="card-title">Provisioning Requests <span class="badge badge-gray" style="margin-left:8px"><?= count($requests) ?></span></span>
   </div>
   <?php if (empty($requests)): ?>
-    <div class="empty-state"><div class="empty-icon">📭</div><p>No <?= $filter_status ?: '' ?> requests.</p></div>
+    <div class="empty-state">
+      <div class="empty-icon"><i data-lucide="package"></i></div>
+      <p>No active requests found in this classification.</p>
+    </div>
   <?php else: ?>
   <div class="table-wrap">
     <table>
       <thead>
-        <tr><th>User</th><th>App Name</th><th>Type</th><th>Reason</th><th>Requested</th><th>Status</th><th>Action</th></tr>
+        <tr><th>Identity</th><th>Domain Asset</th><th>Action</th><th>Context</th><th>Status</th><th>Operation</th></tr>
       </thead>
       <tbody>
         <?php foreach ($requests as $r): ?>
         <tr>
           <td>
-            <div style="font-weight:600"><?= h($r['user_name']) ?></div>
+            <div style="font-weight:700"><?= h($r['user_name']) ?></div>
             <div class="mono td-muted" style="font-size:11px"><?= h($r['user_code']) ?></div>
           </td>
-          <td style="font-weight:600"><?= h($r['app_name']) ?></td>
-          <td><span class="badge <?= $r['request_type']==='install'?'badge-green':'badge-red' ?>"><?= ucfirst($r['request_type']) ?></span></td>
-          <td class="td-muted" style="max-width:200px;font-size:12px"><?= h(mb_strimwidth($r['reason']??'—', 0, 80, '…')) ?></td>
-          <td class="td-muted" style="font-size:12px"><?= date('M d, H:i', strtotime($r['requested_at'])) ?></td>
+          <td>
+            <div style="font-weight:700"><?= h($r['app_name']) ?></div>
+            <div class="td-muted" style="font-size:11px">Software Deployment</div>
+          </td>
+          <td><span class="badge <?= $r['request_type']==='install'?'badge-blue':'badge-red' ?>"><?= strtoupper($r['request_type']) ?></span></td>
+          <td class="td-muted" style="max-width:240px; font-size:12px"><?= h(mb_strimwidth($r['reason']??'Unspecified rationale', 0, 80, '…')) ?></td>
           <td><?php
             $bs=['pending'=>'badge-yellow','approved'=>'badge-green','denied'=>'badge-red','completed'=>'badge-blue'];
             echo '<span class="badge '.($bs[$r['status']]??'badge-gray').'"><span class="badge-dot"></span>'.ucfirst($r['status']).'</span>';
-            if ($r['resolved_by_name']): echo '<br><span class="td-muted" style="font-size:10px">by '.h($r['resolved_by_name']).'</span>'; endif;
           ?></td>
           <td>
             <?php if ($r['status']==='pending'): ?>
-            <button class="btn btn-success btn-sm"
-              onclick="resolveRequest(<?= $r['id'] ?>,'approve','<?= addslashes(h($r['app_name'])) ?>')">✔ Approve</button>
-            <button class="btn btn-danger btn-sm" style="margin-top:4px"
-              onclick="resolveRequest(<?= $r['id'] ?>,'deny','<?= addslashes(h($r['app_name'])) ?>')">✕ Deny</button>
+            <div style="display: flex; gap: 8px">
+              <button class="btn btn-secondary btn-sm" style="padding: 6px" 
+                onclick="resolveRequest(<?= $r['id'] ?>,'approve','<?= addslashes(h($r['app_name'])) ?>')" title="Approve">
+                <i data-lucide="check" style="width:16px"></i>
+              </button>
+              <button class="btn btn-outline btn-sm" style="padding: 6px; border-color: var(--danger); color: var(--danger)" 
+                onclick="resolveRequest(<?= $r['id'] ?>,'deny','<?= addslashes(h($r['app_name'])) ?>')" title="Deny">
+                <i data-lucide="x" style="width:16px"></i>
+              </button>
+            </div>
             <?php else: ?>
               <span class="td-muted" style="font-size:12px"><?= $r['admin_notes'] ? h(mb_strimwidth($r['admin_notes'],0,50,'…')) : '—' ?></span>
             <?php endif; ?>
@@ -144,12 +153,14 @@ include __DIR__ . '/partials/header.php';
   <?php endif; ?>
 </div>
 
+
 <!-- Resolve Modal -->
 <div class="modal-backdrop" id="modal-resolve">
   <div class="modal">
     <div class="modal-header">
       <span class="modal-title" id="resolve-title">Resolve Request</span>
-      <button class="btn-close" onclick="closeModal('modal-resolve')">✕</button>
+      <button class="btn-close" onclick="closeModal('modal-resolve')"><i data-lucide="x" style="width:16px"></i></button>
+
     </div>
     <form method="POST">
       <input type="hidden" name="action" value="resolve">
@@ -173,8 +184,9 @@ include __DIR__ . '/partials/header.php';
 <div class="modal-backdrop" id="modal-catalog" style="align-items:flex-start;padding-top:60px">
   <div class="modal" style="max-width:680px;max-height:80vh;overflow-y:auto">
     <div class="modal-header">
-      <span class="modal-title">📋 Installed App Catalog</span>
-      <button class="btn-close" onclick="closeModal('modal-catalog')">✕</button>
+      <span class="modal-title"><i data-lucide="book" style="width:18px;vertical-align:middle;margin-right:4px"></i> Installed App Catalog</span>
+      <button class="btn-close" onclick="closeModal('modal-catalog')"><i data-lucide="x" style="width:16px"></i></button>
+
     </div>
     <div class="modal-body" style="padding:0">
       <table>
@@ -207,7 +219,8 @@ include __DIR__ . '/partials/header.php';
   <div class="modal">
     <div class="modal-header">
       <span class="modal-title">Add App to Catalog</span>
-      <button class="btn-close" onclick="closeModal('modal-add-app')">✕</button>
+      <button class="btn-close" onclick="closeModal('modal-add-app')"><i data-lucide="x" style="width:16px"></i></button>
+
     </div>
     <form method="POST">
       <input type="hidden" name="action" value="add_app">
@@ -232,9 +245,11 @@ function resolveRequest(id, decision, appName) {
   document.getElementById('resolve-rid').value = id;
   document.getElementById('resolve-status').value = decision === 'approve' ? 'approved' : 'denied';
   document.getElementById('resolve-title').textContent = (decision==='approve'?'Approve':'Deny') + ': ' + appName;
-  document.getElementById('resolve-btn').textContent = decision==='approve' ? '✔ Approve' : '✕ Deny';
+  document.getElementById('resolve-btn').innerHTML = (decision==='approve' ? '<i data-lucide="check" style="width:14px;vertical-align:middle;margin-right:4px"></i> Approve' : '<i data-lucide="x" style="width:14px;vertical-align:middle;margin-right:4px"></i> Deny');
   document.getElementById('resolve-btn').className = 'btn ' + (decision==='approve' ? 'btn-success' : 'btn-danger');
   openModal('modal-resolve');
+  if(window.lucide) lucide.createIcons();
 }
 </script>
+
 <?php include __DIR__ . '/partials/footer.php'; ?>

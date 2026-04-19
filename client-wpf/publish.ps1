@@ -1,15 +1,18 @@
-# Publish script for Library Kiosk System
-# This script creates a self-contained, single-file distribution for 64-bit Windows.
+# Final Publish script for Library Kiosk System
+# This script creates a self-contained, 32-bit (x86) distribution for maximum compatibility.
 
-$distPath = Join-Path $PSScriptRoot "dist-wpf"
-$runtime = "win-x64" # Target 64-bit Windows. Change to win-x86 if needed.
+$runtime = "win-x86"
+$distRoot = Join-Path $PSScriptRoot "dist-wpf"
+$buildPath = Join-Path $distRoot "build-temp"
+$zipPath = Join-Path $distRoot "LibraryKiosk_v1.zip"
 
-# Create dist directory if it doesn't exist
-if (!(Test-Path $distPath)) {
-    New-Item -ItemType Directory -Path $distPath
+# Clean up previous builds
+if (Test-Path $distRoot) {
+    Remove-Item -Recurse -Force $distRoot -ErrorAction SilentlyContinue
 }
+New-Item -ItemType Directory -Path $buildPath
 
-Write-Host "--- Publishing LibraryKiosk ---" -ForegroundColor Cyan
+Write-Host "--- Publishing LibraryKiosk (x86) ---" -ForegroundColor Cyan
 dotnet publish LibraryKiosk/LibraryKiosk.csproj `
     -c Release `
     -r $runtime `
@@ -17,9 +20,9 @@ dotnet publish LibraryKiosk/LibraryKiosk.csproj `
     -p:PublishSingleFile=true `
     -p:PublishReadyToRun=true `
     -p:IncludeNativeLibrariesForSelfExtract=true `
-    -o (Join-Path $distPath "LibraryKiosk")
+    -o $buildPath
 
-Write-Host "`n--- Publishing KioskGuard ---" -ForegroundColor Cyan
+Write-Host "`n--- Publishing KioskGuard (x86) ---" -ForegroundColor Cyan
 dotnet publish KioskGuard/KioskGuard.csproj `
     -c Release `
     -r $runtime `
@@ -27,6 +30,21 @@ dotnet publish KioskGuard/KioskGuard.csproj `
     -p:PublishSingleFile=true `
     -p:PublishReadyToRun=true `
     -p:IncludeNativeLibrariesForSelfExtract=true `
-    -o (Join-Path $distPath "KioskGuard")
+    -o $buildPath
 
-Write-Host "`nDistribution ready in: $distPath" -ForegroundColor Green
+# Ensure appsettings.json has KioskMode = true in the final build
+$configPath = Join-Path $buildPath "appsettings.json"
+if (Test-Path $configPath) {
+    $json = Get-Content $configPath | ConvertFrom-Json
+    $json.LibraryKiosk.KioskMode = $true
+    $json | ConvertTo-Json | Set-Content $configPath
+    Write-Host "Updated appsettings.json: KioskMode = true" -ForegroundColor Yellow
+}
+
+Write-Host "`n--- Creating ZIP Distribution ---" -ForegroundColor Cyan
+if (Test-Path $zipPath) { Remove-Item $zipPath }
+Compress-Archive -Path "$buildPath\*" -DestinationPath $zipPath -Force
+
+Write-Host "`nDistribution ready!" -ForegroundColor Green
+Write-Host "ZIP File: $zipPath" -ForegroundColor White
+Write-Host "NOTE: Upload the .zip file to GitHub, NOT the individual .exe files." -ForegroundColor Red

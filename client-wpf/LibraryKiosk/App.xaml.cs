@@ -1,4 +1,4 @@
-﻿using System;
+using System;
 using System.IO;
 using System.Windows;
 using Microsoft.Extensions.Configuration;
@@ -38,11 +38,17 @@ namespace LibraryKiosk
             _keyboardHook = new KeyboardHook();
             _watchdogService = new WatchdogService();
 
+            var apiService = new ApiService(apiBaseUrl, terminalCode);
+
             if (kioskMode)
             {
                 _keyboardHook.Install();
                 _watchdogService.Start();
             }
+
+            // Show Login Window
+            var loginWindow = new LoginWindow(apiService, terminalCode);
+            loginWindow.Show();
         }
 
         protected override void OnExit(ExitEventArgs e)

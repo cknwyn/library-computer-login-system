@@ -1,8 +1,7 @@
-﻿<Application x:Class="LibraryKiosk.App"
+<Application x:Class="LibraryKiosk.App"
              xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
-             xmlns:local="clr-namespace:LibraryKiosk"
-             StartupUri="LoginWindow.xaml">
+             xmlns:local="clr-namespace:LibraryKiosk">
     <Application.Resources>
         <!-- Colors -->
         <Color x:Key="PrimaryBlue">#004A8D</Color>

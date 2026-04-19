@@ -1,2 +1,0 @@
-F:\Projects\library-computer-login-system\client-wpf\dist-wpf\KioskGuard\KioskGuard.pdb
-F:\Projects\library-computer-login-system\client-wpf\dist-wpf\KioskGuard\KioskGuard.exe

@@ -16,7 +16,20 @@ define('DB_PASS', getenv('DB_PASS') ?: '');           // Default XAMPP root has 
 // ── Application ───────────────────────────────────────────────
 define('APP_NAME',    'Library Computer System');
 define('APP_VERSION', '1.0.0');
-define('APP_URL',     getenv('APP_URL') ?: 'http://localhost/library-system');
+// Auto-detect APP_URL if not set
+if (!getenv('APP_URL')) {
+    $protocol = (!empty($_SERVER['HTTPS']) && $_SERVER['HTTPS'] !== 'off') ? "https" : "http";
+    $host = $_SERVER['HTTP_HOST'] ?? 'localhost';
+    $script = $_SERVER['SCRIPT_NAME'] ?? '';
+    $scriptDir = str_replace('\\', '/', dirname($script));
+    // Strip common subdirectories to find the absolute app root
+    $basePath = preg_replace('/\/(admin|api|includes|assets)($|\/.*)/', '', $scriptDir);
+    define('APP_URL', $protocol . '://' . $host . rtrim($basePath, '/'));
+} else {
+    define('APP_URL', rtrim(getenv('APP_URL'), '/'));
+}
+define('ASSETS_URL',  APP_URL . '/assets');
+
 
 // ── Session ───────────────────────────────────────────────────
 // How many seconds without a heartbeat before a session is declared abandoned

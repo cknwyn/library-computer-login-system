@@ -1,4 +1,4 @@
-﻿<Window x:Class="LibraryKiosk.LoginWindow"
+<Window x:Class="LibraryKiosk.LoginWindow"
         xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
         xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
         xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
@@ -16,7 +16,8 @@
 
     <Grid>
         <!-- Background Image -->
-        <Image Source="assets/background.png" Stretch="UniformToFill">
+        <Image Source="/assets/background.png" Stretch="UniformToFill">
+
             <Image.Effect>
                 <BlurEffect Radius="5"/>
             </Image.Effect>
@@ -26,7 +27,7 @@
         <Border Background="White" Opacity="0.7"/>
 
         <!-- AUF Logo Overlay (Right side) -->
-        <Image Source="assets/logo.png" 
+        <Image Source="/assets/logo.png" 
                HorizontalAlignment="Right" 
                VerticalAlignment="Center" 
                Width="600" 

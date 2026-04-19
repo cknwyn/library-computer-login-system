@@ -81,6 +81,17 @@ function autoRefresh(intervalSeconds) {
 
 // ── Init ────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
+  // 1. Icons first
+  try {
+    if (typeof lucide !== 'undefined') {
+      lucide.createIcons();
+    }
+  } catch (err) {
+    console.error('Lucide error:', err);
+  }
+
+  // 2. Everything else
   startClock(document.getElementById('live-clock'));
   startSessionTimers();
 });
+
