@@ -1,13 +1,14 @@
 {
   "version": 2,
-  "dgSpecHash": "pBNnfVDh82c=",
+  "dgSpecHash": "xdhZ9DdtILM=",
   "success": true,
   "projectFilePath": "F:\\Projects\\library-computer-login-system\\client-wpf\\KioskGuard\\KioskGuard.csproj",
   "expectedPackageFiles": [
-    "C:\\Users\\toffe\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.26\\microsoft.netcore.app.ref.8.0.26.nupkg.sha512",
-    "C:\\Users\\toffe\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.26\\microsoft.windowsdesktop.app.ref.8.0.26.nupkg.sha512",
-    "C:\\Users\\toffe\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.26\\microsoft.aspnetcore.app.ref.8.0.26.nupkg.sha512",
-    "C:\\Users\\toffe\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\8.0.26\\microsoft.netcore.app.host.win-x64.8.0.26.nupkg.sha512"
+    "C:\\Users\\toffe\\.nuget\\packages\\microsoft.net.illink.tasks\\10.0.6\\microsoft.net.illink.tasks.10.0.6.nupkg.sha512",
+    "C:\\Users\\toffe\\.nuget\\packages\\microsoft.netcore.app.runtime.win-x64\\10.0.6\\microsoft.netcore.app.runtime.win-x64.10.0.6.nupkg.sha512",
+    "C:\\Users\\toffe\\.nuget\\packages\\microsoft.windowsdesktop.app.runtime.win-x64\\10.0.6\\microsoft.windowsdesktop.app.runtime.win-x64.10.0.6.nupkg.sha512",
+    "C:\\Users\\toffe\\.nuget\\packages\\microsoft.aspnetcore.app.runtime.win-x64\\10.0.6\\microsoft.aspnetcore.app.runtime.win-x64.10.0.6.nupkg.sha512",
+    "C:\\Users\\toffe\\.nuget\\packages\\microsoft.netcore.app.crossgen2.win-x64\\10.0.6\\microsoft.netcore.app.crossgen2.win-x64.10.0.6.nupkg.sha512"
   ],
   "logs": []
 }

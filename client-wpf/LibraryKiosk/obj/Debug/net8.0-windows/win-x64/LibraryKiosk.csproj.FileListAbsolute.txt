@@ -1,2 +1,0 @@
-F:\Projects\library-computer-login-system\client-wpf\LibraryKiosk\obj\Debug\net8.0-windows\win-x64\LibraryKiosk.csproj.AssemblyReference.cache
-F:\Projects\library-computer-login-system\client-wpf\LibraryKiosk\obj\Debug\net8.0-windows\win-x64\LibraryKiosk_MarkupCompile.cache

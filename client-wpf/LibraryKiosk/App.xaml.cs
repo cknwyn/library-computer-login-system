@@ -1,8 +1,9 @@
-using System;
+﻿using System;
 using System.IO;
 using System.Windows;
 using Microsoft.Extensions.Configuration;
 using LibraryKiosk.Services;
+using Application = System.Windows.Application;
 
 namespace LibraryKiosk
 {
@@ -10,6 +11,11 @@ namespace LibraryKiosk
     {
         private KeyboardHook? _keyboardHook;
         private WatchdogService? _watchdogService;
+        public App()
+        {
+            InitializeComponent();
+        }
+
         public IConfiguration? Configuration { get; private set; }
 
         protected override void OnStartup(StartupEventArgs e)
