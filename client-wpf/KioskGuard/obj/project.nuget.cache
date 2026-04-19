@@ -1,0 +1,13 @@
+{
+  "version": 2,
+  "dgSpecHash": "pBNnfVDh82c=",
+  "success": true,
+  "projectFilePath": "F:\\Projects\\library-computer-login-system\\client-wpf\\KioskGuard\\KioskGuard.csproj",
+  "expectedPackageFiles": [
+    "C:\\Users\\toffe\\.nuget\\packages\\microsoft.netcore.app.ref\\8.0.26\\microsoft.netcore.app.ref.8.0.26.nupkg.sha512",
+    "C:\\Users\\toffe\\.nuget\\packages\\microsoft.windowsdesktop.app.ref\\8.0.26\\microsoft.windowsdesktop.app.ref.8.0.26.nupkg.sha512",
+    "C:\\Users\\toffe\\.nuget\\packages\\microsoft.aspnetcore.app.ref\\8.0.26\\microsoft.aspnetcore.app.ref.8.0.26.nupkg.sha512",
+    "C:\\Users\\toffe\\.nuget\\packages\\microsoft.netcore.app.host.win-x64\\8.0.26\\microsoft.netcore.app.host.win-x64.8.0.26.nupkg.sha512"
+  ],
+  "logs": []
+}

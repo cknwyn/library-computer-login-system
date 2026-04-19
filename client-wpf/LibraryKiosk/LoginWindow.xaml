@@ -1,0 +1,134 @@
+<Window x:Class="LibraryKiosk.LoginWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2000/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2000/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        mc:Ignorable="d"
+        Title="AUF Library Login" 
+        WindowState="Maximized" 
+        WindowStyle="None" 
+        Topmost="True"
+        Background="#F5F7FA">
+    
+    <Window.Resources>
+        <DropShadowEffect x:Key="CardShadow" BlurRadius="40" Direction="270" Opacity="0.1" ShadowDepth="10"/>
+    </Window.Resources>
+
+    <Grid>
+        <!-- Background Image -->
+        <Image Source="assets/background.png" Stretch="UniformToFill">
+            <Image.Effect>
+                <BlurEffect Radius="5"/>
+            </Image.Effect>
+        </Image>
+        
+        <!-- White Gradient Overlay (to match the light theme in screenshot) -->
+        <Border Background="White" Opacity="0.7"/>
+
+        <!-- AUF Logo Overlay (Right side) -->
+        <Image Source="assets/logo.png" 
+               HorizontalAlignment="Right" 
+               VerticalAlignment="Center" 
+               Width="600" 
+               Opacity="0.4"
+               Margin="0,0,-150,0"/>
+
+        <Grid Margin="120,0">
+            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left">
+                <!-- Title -->
+                <TextBlock Text="AUF Library Login" 
+                           FontSize="42" 
+                           FontWeight="Bold" 
+                           Foreground="{StaticResource PrimaryBlueBrush}" 
+                           Margin="0,0,0,40"
+                           HorizontalAlignment="Center"/>
+
+                <!-- Login Card -->
+                <Border Background="White" 
+                        Width="480" 
+                        CornerRadius="16" 
+                        Padding="60,60" 
+                        Effect="{StaticResource CardShadow}">
+                    <StackPanel>
+                        <!-- Student/Staff ID -->
+                        <TextBlock Text="STUDENT ID" 
+                                   FontSize="12" 
+                                   FontWeight="Bold" 
+                                   Foreground="{StaticResource TextLightBrush}" 
+                                   Margin="0,0,0,8"/>
+                        <TextBox x:Name="UserIdInput" 
+                                 Style="{StaticResource KioskInput}" 
+                                 Tag="XX-XXXX-XXX"
+                                 Margin="0,0,0,32"/>
+
+                        <!-- Password -->
+                        <TextBlock Text="PASSWORD" 
+                                   FontSize="12" 
+                                   FontWeight="Bold" 
+                                   Foreground="{StaticResource TextLightBrush}" 
+                                   Margin="0,0,0,8"/>
+                        <PasswordBox x:Name="PasswordInput" 
+                                     Style="{StaticResource KioskPasswordInput}" 
+                                     Margin="0,0,0,48"/>
+
+                        <!-- Footer Actions -->
+                        <Grid>
+                            <TextBlock Text="Forgot credentials?" 
+                                       VerticalAlignment="Center" 
+                                       Foreground="{StaticResource TextLightBrush}" 
+                                       Cursor="Hand"/>
+                            
+                            <Button x:Name="LoginBtn" 
+                                    Content="Login →" 
+                                    Style="{StaticResource PrimaryButton}" 
+                                    HorizontalAlignment="Right"
+                                    Width="160"
+                                    Click="LoginBtn_Click"/>
+                        </Grid>
+
+                        <!-- Error Message -->
+                        <TextBlock x:Name="ErrorMsg" 
+                                   Foreground="{StaticResource ErrorRedBrush}" 
+                                   Margin="0,24,0,0" 
+                                   HorizontalAlignment="Center" 
+                                   Visibility="Collapsed"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
+
+        <!-- Bottom Status Bar -->
+        <Grid VerticalAlignment="Bottom" Margin="0,0,0,60">
+            <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
+                <!-- Terminal Info -->
+                <Border BorderBrush="{StaticResource PrimaryBlueBrush}" 
+                        BorderThickness="2" 
+                        CornerRadius="25" 
+                        Width="50" Height="50" 
+                        Margin="0,0,20,0">
+                    <TextBlock Text="15m" 
+                               VerticalAlignment="Center" 
+                               HorizontalAlignment="Center" 
+                               FontWeight="Bold" 
+                               Foreground="{StaticResource PrimaryBlueBrush}"/>
+                </Border>
+                
+                <StackPanel VerticalAlignment="Center" Margin="0,0,40,0">
+                    <TextBlock Text="SESSION IDLE" FontSize="10" Foreground="{StaticResource TextLightBrush}"/>
+                    <TextBlock Text="Terminal 04 Active" FontWeight="Bold" Foreground="{StaticResource TextDarkBrush}"/>
+                </StackPanel>
+
+                <!-- Status Pill -->
+                <Border Background="#EBF4FF" CornerRadius="4" Padding="12,8">
+                    <StackPanel Orientation="Horizontal">
+                        <Rectangle Width="8" Height="8" Fill="{StaticResource PrimaryBlueBrush}" Margin="0,0,8,0"/>
+                        <TextBlock Text="STATUS: ONLINE" 
+                                   FontSize="10" 
+                                   FontWeight="Bold" 
+                                   Foreground="{StaticResource PrimaryBlueBrush}"/>
+                    </StackPanel>
+                </Border>
+            </StackPanel>
+        </Grid>
+    </Grid>
+</Window>

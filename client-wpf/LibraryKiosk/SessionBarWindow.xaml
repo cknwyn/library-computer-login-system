@@ -1,0 +1,87 @@
+<Window x:Class="LibraryKiosk.SessionBarWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2000/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2000/xaml"
+        Title="Session Bar" 
+        Height="100" Width="380"
+        WindowStyle="None" 
+        AllowsTransparency="True" 
+        Background="Transparent"
+        Topmost="True"
+        ShowInTaskbar="False">
+    
+    <Border Background="White" 
+            CornerRadius="20" 
+            Margin="20" 
+            Padding="20,15"
+            BorderThickness="1" 
+            BorderBrush="#E2E8F0">
+        <Border.Effect>
+            <DropShadowEffect BlurRadius="15" Direction="270" Opacity="0.1" ShadowDepth="5"/>
+        </Border.Effect>
+
+        <Grid>
+            <Grid.ColumnDefinitions>
+                <ColumnDefinition Width="Auto"/>
+                <ColumnDefinition Width="*"/>
+                <ColumnDefinition Width="Auto"/>
+            </Grid.ColumnDefinitions>
+
+            <!-- Timer Icon -->
+            <Border Grid.Column="0" 
+                    Width="40" Height="40" 
+                    Background="#F0F4F8" 
+                    CornerRadius="20"
+                    Margin="0,0,15,0">
+                <TextBlock Text="⏱" 
+                           FontSize="20" 
+                           VerticalAlignment="Center" 
+                           HorizontalAlignment="Center"/>
+            </Border>
+
+            <!-- User Info -->
+            <StackPanel Grid.Column="1" VerticalAlignment="Center">
+                <TextBlock x:Name="TerminalText" 
+                           Text="Terminal 042" 
+                           FontSize="14" 
+                           FontWeight="Bold" 
+                           Foreground="{StaticResource PrimaryBlueBrush}"/>
+                <TextBlock x:Name="UserText" 
+                           Text="Active User: J. Doe" 
+                           FontSize="12" 
+                           Foreground="{StaticResource TextLightBrush}"/>
+                
+                <StackPanel Orientation="Horizontal" Margin="0,2,0,0">
+                    <Ellipse Width="8" Height="8" Fill="#48BB78" Margin="0,0,6,0"/>
+                    <TextBlock Text="SESSION SECURE" 
+                               FontSize="10" 
+                               FontWeight="ExtraBold" 
+                               Foreground="#CBD5E0"/>
+                </StackPanel>
+            </StackPanel>
+
+            <!-- Settings/Logout Icon -->
+            <Button Grid.Column="2" 
+                    Width="32" Height="32" 
+                    Background="Transparent" 
+                    BorderThickness="1" 
+                    BorderBrush="#E2E8F0"
+                    Click="Settings_Click">
+                <Button.Template>
+                    <ControlTemplate TargetType="Button">
+                        <Border x:Name="brd" Background="{TemplateBinding Background}" 
+                                BorderThickness="{TemplateBinding BorderThickness}" 
+                                BorderBrush="{TemplateBinding BorderBrush}" 
+                                CornerRadius="8">
+                            <TextBlock Text="⚙" FontSize="16" VerticalAlignment="Center" HorizontalAlignment="Center"/>
+                        </Border>
+                        <ControlTemplate.Triggers>
+                            <Trigger Property="IsMouseOver" Value="True">
+                                <Setter TargetName="brd" Property="Background" Value="#F7FAFC"/>
+                            </Trigger>
+                        </ControlTemplate.Triggers>
+                    </ControlTemplate>
+                </Button.Template>
+            </Button>
+        </Grid>
+    </Border>
+</Window>
