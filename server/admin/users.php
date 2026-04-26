@@ -207,7 +207,7 @@ include __DIR__ . '/partials/header.php';
         <div class="form-row">
           <div class="form-group">
             <label class="form-label">System ID</label>
-            <input name="user_id" class="form-control" placeholder="2024-001" required>
+            <input name="user_id" class="form-control" placeholder="24-0000-001" required>
           </div>
           <div class="form-group">
             <label class="form-label">Classification</label>

@@ -42,8 +42,8 @@
       <a href="terminals.php" class="nav-item <?= $page==='terminals' ? 'active' : '' ?>">
         <span class="nav-icon"><i data-lucide="monitor-dot"></i></span> Terminals
       </a>
-      <a href="apps.php" class="nav-item <?= $page==='apps' ? 'active' : '' ?>">
-        <span class="nav-icon"><i data-lucide="package-search"></i></span> App Requests
+      <a href="websites.php" class="nav-item <?= $page==='websites' ? 'active' : '' ?>">
+        <span class="nav-icon"><i data-lucide="globe"></i></span> Website Tracking
       </a>
 
       <span class="nav-section-label">Analytics</span>

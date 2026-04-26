@@ -75,40 +75,19 @@ CREATE TABLE sessions (
 ) ENGINE=InnoDB;
 
 -- ============================================================
--- INSTALLED APPS (Master list managed by admin)
+-- WEBSITE LOGS (Tracking URLs visited during sessions)
 -- ============================================================
-CREATE TABLE installed_apps (
-    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    name        VARCHAR(100) NOT NULL UNIQUE,
-    description TEXT         DEFAULT NULL,
-    version     VARCHAR(50)  DEFAULT NULL,
-    category    VARCHAR(50)  DEFAULT NULL COMMENT 'e.g. Productivity, Research, Media',
-    icon        VARCHAR(255) DEFAULT NULL COMMENT 'Relative path to icon image',
-    status      ENUM('active', 'inactive') NOT NULL DEFAULT 'active',
-    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    INDEX idx_status (status)
-) ENGINE=InnoDB;
-
--- ============================================================
--- APP REQUESTS (User requests to install/uninstall software)
--- ============================================================
-CREATE TABLE app_requests (
+CREATE TABLE website_logs (
     id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    user_id      INT UNSIGNED NOT NULL,
     session_id   INT UNSIGNED NOT NULL,
-    app_name     VARCHAR(100) NOT NULL COMMENT 'Name of app requested (may not be in installed_apps)',
-    request_type ENUM('install', 'uninstall') NOT NULL,
-    reason       TEXT         DEFAULT NULL,
-    status       ENUM('pending', 'approved', 'denied', 'completed') NOT NULL DEFAULT 'pending',
-    admin_notes  TEXT         DEFAULT NULL,
-    requested_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    resolved_at  TIMESTAMP NULL DEFAULT NULL,
-    resolved_by  INT UNSIGNED NULL DEFAULT NULL,
-    FOREIGN KEY (user_id)     REFERENCES users(id)    ON UPDATE CASCADE,
-    FOREIGN KEY (session_id)  REFERENCES sessions(id) ON UPDATE CASCADE,
-    FOREIGN KEY (resolved_by) REFERENCES admins(id)   ON UPDATE CASCADE ON DELETE SET NULL,
-    INDEX idx_status (status),
-    INDEX idx_user_id (user_id)
+    user_id      INT UNSIGNED NOT NULL,
+    url          TEXT         NOT NULL,
+    title        VARCHAR(255) DEFAULT NULL,
+    visited_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (session_id) REFERENCES sessions(id) ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (user_id)    REFERENCES users(id)    ON UPDATE CASCADE,
+    INDEX idx_session_id (session_id),
+    INDEX idx_visited_at (visited_at)
 ) ENGINE=InnoDB;
 
 -- ============================================================

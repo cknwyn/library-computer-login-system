@@ -23,11 +23,11 @@ INSERT INTO admins (username, password_hash, name, email) VALUES
 -- Default password for all: Password@123
 -- ============================================================
 INSERT INTO users (user_id, name, password_hash, role, department, email) VALUES
-('2021-00001', 'Ana Reyes',      '$2y$12$2mVB4/4etVp6XPm7ZqfuyOv0ijPhJiFJKdRMWkrBvXSOHbKZB6suq', 'student', 'Computer Science',    'ana.reyes@student.edu'),
-('2021-00002', 'Ben Santos',     '$2y$12$2mVB4/4etVp6XPm7ZqfuyOv0ijPhJiFJKdRMWkrBvXSOHbKZB6suq', 'student', 'Information Technology','ben.santos@student.edu'),
-('2022-00010', 'Carla Mendoza',  '$2y$12$2mVB4/4etVp6XPm7ZqfuyOv0ijPhJiFJKdRMWkrBvXSOHbKZB6suq', 'student', 'Education',            'carla.mendoza@student.edu'),
-('STAFF-001',  'Dr. Jose Cruz',  '$2y$12$2mVB4/4etVp6XPm7ZqfuyOv0ijPhJiFJKdRMWkrBvXSOHbKZB6suq', 'staff',   'Faculty',              'jose.cruz@library.edu'),
-('STAFF-002',  'Maria Lim',      '$2y$12$2mVB4/4etVp6XPm7ZqfuyOv0ijPhJiFJKdRMWkrBvXSOHbKZB6suq', 'staff',   'Library Services',     'maria.lim@library.edu');
+('21-0000-001', 'Ana Reyes',      '$2y$12$2mVB4/4etVp6XPm7ZqfuyOv0ijPhJiFJKdRMWkrBvXSOHbKZB6suq', 'student', 'Computer Science',    'ana.reyes@student.edu'),
+('21-0000-002', 'Ben Santos',     '$2y$12$2mVB4/4etVp6XPm7ZqfuyOv0ijPhJiFJKdRMWkrBvXSOHbKZB6suq', 'student', 'Information Technology','ben.santos@student.edu'),
+('22-0000-010', 'Carla Mendoza',  '$2y$12$2mVB4/4etVp6XPm7ZqfuyOv0ijPhJiFJKdRMWkrBvXSOHbKZB6suq', 'student', 'Education',            'carla.mendoza@student.edu'),
+('15-0000-001', 'Dr. Jose Cruz',  '$2y$12$2mVB4/4etVp6XPm7ZqfuyOv0ijPhJiFJKdRMWkrBvXSOHbKZB6suq', 'staff',   'Faculty',              'jose.cruz@library.edu'),
+('18-0000-002', 'Maria Lim',      '$2y$12$2mVB4/4etVp6XPm7ZqfuyOv0ijPhJiFJKdRMWkrBvXSOHbKZB6suq', 'staff',   'Library Services',     'maria.lim@library.edu');
 
 -- ============================================================
 -- TERMINALS (nComputing stations)

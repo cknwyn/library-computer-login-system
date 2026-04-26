@@ -57,6 +57,24 @@ namespace LibraryKiosk.Services
             }
         }
 
+        public async Task<bool> TrackWebsiteAsync(string token, string url, string title)
+        {
+            var requestData = new { url = url, title = title };
+            try
+            {
+                var request = new HttpRequestMessage(HttpMethod.Post, $"{_apiBaseUrl}/track_website.php");
+                request.Headers.Add("X-Session-Token", token);
+                request.Content = JsonContent.Create(requestData);
+                
+                var response = await _httpClient.SendAsync(request);
+                return response.IsSuccessStatusCode;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
         public async Task LogoutAsync(string token)
         {
             try

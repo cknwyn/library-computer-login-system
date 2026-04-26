@@ -15,7 +15,7 @@ $admin = current_admin();
 $active_sessions = (int) $pdo->query("SELECT COUNT(*) FROM sessions WHERE status='active'")->fetchColumn();
 $today_sessions  = (int) $pdo->query("SELECT COUNT(*) FROM sessions WHERE DATE(login_time)=CURDATE()")->fetchColumn();
 $total_users     = (int) $pdo->query("SELECT COUNT(*) FROM users WHERE status='active'")->fetchColumn();
-$pending_requests= (int) $pdo->query("SELECT COUNT(*) FROM app_requests WHERE status='pending'")->fetchColumn();
+$website_hits    = (int) $pdo->query("SELECT COUNT(*) FROM website_logs WHERE DATE(visited_at)=CURDATE()")->fetchColumn();
 
 $avg_duration = (int) ($pdo->query("SELECT AVG(duration_seconds) FROM sessions WHERE status='completed' AND DATE(login_time)=CURDATE()")->fetchColumn() ?? 0);
 
@@ -66,9 +66,9 @@ include __DIR__ . '/partials/header.php';
     <span class="stat-sub">Active accounts</span>
   </div>
   <div class="stat-card">
-    <span class="stat-label">Pending Requests</span>
-    <span class="stat-value" style="<?= $pending_requests > 0 ? 'color:var(--danger)' : '' ?>"><?= $pending_requests ?></span>
-    <span class="stat-sub">Software deployment</span>
+    <span class="stat-label">Website Hits</span>
+    <span class="stat-value"><?= $website_hits ?></span>
+    <span class="stat-sub">Tracked today</span>
   </div>
 </div>
 
