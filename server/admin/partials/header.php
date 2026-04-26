@@ -20,15 +20,9 @@
 
   <!-- Sidebar -->
   <aside class="sidebar">
-    <div class="sidebar-logo">
-      <div class="logo-image" style="width: 40px; height: 40px; flex-shrink: 0;">
-        <img src="<?= ASSETS_URL ?>/img/logo.png" alt="AUF Logo" style="width: 100%; height: 100%; object-fit: contain;">
-      </div>
-
-      <div>
-
-        <h1>AUF Library</h1>
-        <span>Admin System</span>
+    <div class="sidebar-logo" style="justify-content: center; padding: 40px 24px;">
+      <div class="logo-image" style="width: 210px; height: auto; flex-shrink: 0;">
+        <img src="<?= ASSETS_URL ?>/img/auf_ul_logo.png" alt="AUF Logo" style="width: 100%; height: auto; object-fit: contain;">
       </div>
     </div>
 

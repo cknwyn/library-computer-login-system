@@ -38,12 +38,9 @@ $expired = isset($_GET['expired']);
 <div class="login-page" style="background: var(--bg-base); display: flex; align-items: center; justify-content: center; min-height: 100vh;">
   <div class="login-card fade-in" style="background: white; padding: 48px; border-radius: var(--radius-lg); box-shadow: var(--shadow-lg); width: 100%; max-width: 400px; border: 1px solid var(--border-light);">
     <div class="login-logo" style="text-align: center; margin-bottom: 32px;">
-      <div class="sidebar-logo logo-image" style="width: 48px; height: 48px; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
-        <img src="<?= ASSETS_URL ?>/img/logo.png" alt="AUF Logo" style="width:100%;height:100%;object-fit:contain">
+      <div class="sidebar-logo logo-image" style="width: 320px; height: auto; margin: 0 auto 16px; display: flex; align-items: center; justify-content: center;">
+        <img src="<?= ASSETS_URL ?>/img/auf_ul_logo.png" alt="AUF Logo" style="width:100%;height:auto;object-fit:contain">
       </div>
-
-      <h1 style="font-size: 24px; font-weight: 800; color: var(--primary); letter-spacing: -0.02em;"><?= h(APP_NAME) ?></h1>
-      <p style="font-size: 13px; color: var(--text-muted); font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em; margin-top: 4px;">Administrator Portal</p>
     </div>
 
     <?php if ($expired): ?>

@@ -111,6 +111,7 @@ include __DIR__ . '/partials/header.php';
   </div>
 
   <!-- Right Column: Recent Activity -->
+  <div class="card">
     <div class="card-header">
       <span class="card-title">Recent Activity</span>
       <a href="sessions.php" class="btn btn-outline btn-sm">
