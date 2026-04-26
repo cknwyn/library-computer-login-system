@@ -16,117 +16,96 @@
 
     <Grid>
         <!-- Background Image -->
-        <Image Source="/assets/background.png" Stretch="UniformToFill">
-
-            <Image.Effect>
-                <BlurEffect Radius="5"/>
-            </Image.Effect>
-        </Image>
-        
-        <!-- White Gradient Overlay (to match the light theme in screenshot) -->
-        <Border Background="White" Opacity="0.7"/>
-
-        <!-- AUF Logo Overlay (Right side) -->
-        <Image Source="/assets/logo.png" 
-               HorizontalAlignment="Right" 
-               VerticalAlignment="Center" 
-               Width="600" 
+        <Image Source="/assets/client_background.jpg" 
+               Stretch="UniformToFill" 
                Opacity="0.4"
-               Margin="0,0,-150,0"/>
+               RenderOptions.BitmapScalingMode="HighQuality"/>
+        
+        <!-- Subtle Dark Gradient Overlay for readability -->
+        <Border Background="Black" Opacity="0.6"/>
 
-        <Grid Margin="120,0">
-            <StackPanel VerticalAlignment="Center" HorizontalAlignment="Left">
-                <!-- Title -->
-                <TextBlock Text="AUF Library Login" 
-                           FontSize="42" 
-                           FontWeight="Bold" 
-                           Foreground="{StaticResource PrimaryBlueBrush}" 
-                           Margin="0,0,0,40"
-                           HorizontalAlignment="Center"/>
+        <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
+            <!-- Centered Header Logo -->
+            <Image Source="/assets/logo.png" 
+                   Width="280" 
+                   Margin="0,0,0,40"
+                   HorizontalAlignment="Center"
+                   RenderOptions.BitmapScalingMode="HighQuality"/>
 
-                <!-- Login Card -->
-                <Border Background="White" 
-                        Width="480" 
-                        CornerRadius="16" 
-                        Padding="60,60" 
-                        Effect="{StaticResource CardShadow}">
-                    <StackPanel>
-                        <!-- Student/Staff ID -->
-                        <TextBlock Text="STUDENT ID" 
-                                   FontSize="12" 
-                                   FontWeight="Bold" 
+            <!-- Login Card -->
+            <Border Background="White" 
+                    Width="480" 
+                    CornerRadius="16" 
+                    Padding="60,60" 
+                    Effect="{StaticResource CardShadow}">
+                <StackPanel>
+                    <!-- Student/Staff ID -->
+                    <TextBlock Text="SYSTEM ID" 
+                               FontSize="12" 
+                               FontWeight="Bold" 
+                               Foreground="{StaticResource TextLightBrush}" 
+                               Margin="0,0,0,8"/>
+                    <TextBox x:Name="UserIdInput" 
+                             Style="{StaticResource KioskInput}" 
+                             Tag="XX-XXXX-XXX"
+                             Margin="0,0,0,32"/>
+
+                    <!-- Password -->
+                    <TextBlock Text="PASSWORD" 
+                               FontSize="12" 
+                               FontWeight="Bold" 
+                               Foreground="{StaticResource TextLightBrush}" 
+                               Margin="0,0,0,8"/>
+                    <PasswordBox x:Name="PasswordInput" 
+                                 Style="{StaticResource KioskPasswordInput}" 
+                                 Margin="0,0,0,48"
+                                 KeyDown="PasswordInput_KeyDown"/>
+
+                    <!-- Footer Actions -->
+                    <Grid>
+                        <TextBlock Text="Need assistance?" 
+                                   VerticalAlignment="Center" 
+                                   FontSize="13"
                                    Foreground="{StaticResource TextLightBrush}" 
-                                   Margin="0,0,0,8"/>
-                        <TextBox x:Name="UserIdInput" 
-                                 Style="{StaticResource KioskInput}" 
-                                 Tag="XX-XXXX-XXX"
-                                 Margin="0,0,0,32"/>
+                                   Cursor="Hand"/>
+                        
+                        <Button x:Name="LoginBtn" 
+                                Content="Login" 
+                                Style="{StaticResource PrimaryButton}" 
+                                HorizontalAlignment="Right"
+                                Width="140"
+                                Click="LoginBtn_Click"/>
+                    </Grid>
 
-                        <!-- Password -->
-                        <TextBlock Text="PASSWORD" 
-                                   FontSize="12" 
-                                   FontWeight="Bold" 
-                                   Foreground="{StaticResource TextLightBrush}" 
-                                   Margin="0,0,0,8"/>
-                        <PasswordBox x:Name="PasswordInput" 
-                                     Style="{StaticResource KioskPasswordInput}" 
-                                     Margin="0,0,0,48"/>
-
-                        <!-- Footer Actions -->
-                        <Grid>
-                            <TextBlock Text="Forgot credentials?" 
-                                       VerticalAlignment="Center" 
-                                       Foreground="{StaticResource TextLightBrush}" 
-                                       Cursor="Hand"/>
-                            
-                            <Button x:Name="LoginBtn" 
-                                    Content="Login →" 
-                                    Style="{StaticResource PrimaryButton}" 
-                                    HorizontalAlignment="Right"
-                                    Width="160"
-                                    Click="LoginBtn_Click"/>
-                        </Grid>
-
-                        <!-- Error Message -->
-                        <TextBlock x:Name="ErrorMsg" 
-                                   Foreground="{StaticResource ErrorRedBrush}" 
-                                   Margin="0,24,0,0" 
-                                   HorizontalAlignment="Center" 
-                                   Visibility="Collapsed"/>
-                    </StackPanel>
-                </Border>
-            </StackPanel>
-        </Grid>
+                    <!-- Error Message -->
+                    <TextBlock x:Name="ErrorMsg" 
+                               Foreground="{StaticResource ErrorRedBrush}" 
+                               Margin="0,24,0,0" 
+                               FontSize="13"
+                               HorizontalAlignment="Center" 
+                               Visibility="Collapsed"
+                               TextWrapping="Wrap"
+                               TextAlignment="Center"/>
+                </StackPanel>
+            </Border>
+        </StackPanel>
 
         <!-- Bottom Status Bar -->
-        <Grid VerticalAlignment="Bottom" Margin="0,0,0,60">
+        <Grid VerticalAlignment="Bottom" Margin="0,0,0,40">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
-                <!-- Terminal Info -->
-                <Border BorderBrush="{StaticResource PrimaryBlueBrush}" 
-                        BorderThickness="2" 
-                        CornerRadius="25" 
-                        Width="50" Height="50" 
-                        Margin="0,0,20,0">
-                    <TextBlock Text="15m" 
-                               VerticalAlignment="Center" 
-                               HorizontalAlignment="Center" 
-                               FontWeight="Bold" 
-                               Foreground="{StaticResource PrimaryBlueBrush}"/>
-                </Border>
-                
-                <StackPanel VerticalAlignment="Center" Margin="0,0,40,0">
-                    <TextBlock Text="SESSION IDLE" FontSize="10" Foreground="{StaticResource TextLightBrush}"/>
-                    <TextBlock Text="Terminal 04 Active" FontWeight="Bold" Foreground="{StaticResource TextDarkBrush}"/>
+                <StackPanel VerticalAlignment="Center" Margin="0,0,30,0">
+                    <TextBlock Text="TERMINAL STATUS" FontSize="10" Foreground="White" Opacity="0.7"/>
+                    <TextBlock x:Name="TerminalNameTxt" Text="Terminal Online" FontWeight="Bold" Foreground="White"/>
                 </StackPanel>
 
                 <!-- Status Pill -->
-                <Border Background="#EBF4FF" CornerRadius="4" Padding="12,8">
+                <Border Background="#22FFFFFF" CornerRadius="20" Padding="15,8">
                     <StackPanel Orientation="Horizontal">
-                        <Rectangle Width="8" Height="8" Fill="{StaticResource PrimaryBlueBrush}" Margin="0,0,8,0"/>
-                        <TextBlock Text="STATUS: ONLINE" 
+                        <Ellipse Width="8" Height="8" Fill="#4ADE80" Margin="0,0,10,0"/>
+                        <TextBlock Text="CONNECTED TO SERVER" 
                                    FontSize="10" 
                                    FontWeight="Bold" 
-                                   Foreground="{StaticResource PrimaryBlueBrush}"/>
+                                   Foreground="White"/>
                     </StackPanel>
                 </Border>
             </StackPanel>

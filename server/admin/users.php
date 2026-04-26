@@ -17,54 +17,139 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     if ($action === 'create') {
-        $uid   = trim($_POST['user_id']    ?? '');
+        $sid   = trim($_POST['user_id']    ?? '');
         $name  = trim($_POST['name']       ?? '');
         $pass  = trim($_POST['password']   ?? '');
         $role  = $_POST['role']            ?? 'student';
-        $dept  = trim($_POST['department'] ?? '');
-        $email = trim($_POST['email']      ?? '');
-
-        if (!$uid || !$name || !$pass) {
+        
+        if (!$sid || !$name || !$pass) {
             $flash = 'ID, name, and password are required.'; $flash_type='error';
         } else {
             try {
                 $hash = password_hash($pass, PASSWORD_BCRYPT, ['cost' => 12]);
                 $stmt = $pdo->prepare(
-                    'INSERT INTO users (user_id, name, password_hash, role, department, email)
-                     VALUES (:uid, :name, :hash, :role, :dept, :email)'
+                    "INSERT INTO users (user_id, name, password_hash, role, username, email, contact_number, 
+                                      designation, affiliation, gender, year, department, user_type, 
+                                      degree, speciality, ra_expiry_date, rank, batch, cadre, dob)
+                     VALUES (:sid, :name, :hash, :role, :uname, :email, :phone, :desig, :affil, :gen, :yr, :dept, :utype, 
+                             :deg, :spec, :raex, :rnk, :btch, :cadre, :dob)"
                 );
-                $stmt->execute([':uid'=>$uid,':name'=>$name,':hash'=>$hash,
-                                ':role'=>$role,':dept'=>$dept?:null,':email'=>$email?:null]);
-                log_activity('ADMIN_CREATE_USER', "Created user {$uid}", null, $admin['id']);
-                $flash = "User {$uid} created successfully.";
+                $stmt->execute([
+                    ':sid'   => $sid,
+                    ':name'  => $name,
+                    ':hash'  => $hash,
+                    ':role'  => $role,
+                    ':uname' => trim($_POST['username'] ?? '') ?: null,
+                    ':email' => trim($_POST['email'] ?? '') ?: null,
+                    ':phone' => trim($_POST['contact_number'] ?? '') ?: null,
+                    ':desig' => trim($_POST['designation'] ?? '') ?: null,
+                    ':affil' => trim($_POST['affiliation'] ?? '') ?: null,
+                    ':gen'   => trim($_POST['gender'] ?? '') ?: null,
+                    ':yr'    => trim($_POST['year'] ?? '') ?: null,
+                    ':dept'  => trim($_POST['department'] ?? '') ?: null,
+                    ':utype' => trim($_POST['user_type'] ?? '') ?: null,
+                    ':deg'   => trim($_POST['degree'] ?? '') ?: null,
+                    ':spec'  => trim($_POST['speciality'] ?? '') ?: null,
+                    ':raex'  => trim($_POST['ra_expiry_date'] ?? '') ?: null,
+                    ':rnk'   => trim($_POST['rank'] ?? '') ?: null,
+                    ':btch'  => trim($_POST['batch'] ?? '') ?: null,
+                    ':cadre' => trim($_POST['cadre'] ?? '') ?: null,
+                    ':dob'   => trim($_POST['dob'] ?? '') ?: null
+                ]);
+                log_activity('ADMIN_CREATE_USER', "Created user {$sid}", null, $admin['id']);
+                $flash = "User {$sid} created successfully.";
             } catch (PDOException $e) {
-                $flash = strpos($e->getMessage(),'Duplicate') !== false
-                    ? "User ID '{$uid}' already exists." : 'Error creating user.';
+                $flash = strpos($e->getMessage(),'Duplicate') !== false ? "User ID '{$sid}' already exists." : 'Error creating user: ' . $e->getMessage();
                 $flash_type = 'error';
             }
         }
     }
 
+    if ($action === 'bulk_import' && isset($_FILES['csv_file'])) {
+        $file = $_FILES['csv_file']['tmp_name'];
+        if ($file && ($handle = fopen($file, 'r')) !== false) {
+            $headers = fgetcsv($handle);
+            $count = 0;
+            $errors = 0;
+            
+            // Expected Header: Username,Email,Contact Number,Designation,Affiliation,Gender,Year,Department,User Type,Degree,Speciality,Staff Id,Ra Expiry Date,Rank,Batch,Cadre,Dob,Creation Date
+            $pdo->beginTransaction();
+            try {
+                while (($row = fgetcsv($handle)) !== false) {
+                    if (count($row) < 12) continue; // Basic validation
+                    $data = array_combine($headers, $row);
+                    
+                    $sid   = trim($data['Staff Id'] ?? '');
+                    if (!$sid) { $errors++; continue; }
+                    
+                    $role  = (stripos($data['User Type'] ?? '', 'STUDENT') !== false) ? 'student' : 'staff';
+                    $hash  = password_hash($sid, PASSWORD_BCRYPT, ['cost' => 10]); // Default PW is ID
+                    
+                    // Name is not in CSV, so we use Username or ID as fallback
+                    $name  = trim($data['Username'] ?? '');
+                    if ($name === '-' || !$name) $name = $sid;
+
+                    $stmt = $pdo->prepare(
+                        "INSERT INTO users (user_id, name, password_hash, role, username, email, contact_number, 
+                                          designation, affiliation, gender, year, department, user_type, 
+                                          degree, speciality, ra_expiry_date, rank, batch, cadre, dob)
+                         VALUES (:sid, :name, :hash, :role, :uname, :email, :phone, :desig, :affil, :gen, :yr, :dept, :utype, 
+                                 :deg, :spec, :raex, :rnk, :btch, :cadre, :dob)"
+                    );
+                    
+                    $stmt->execute([
+                        ':sid'   => $sid,
+                        ':name'  => $name,
+                        ':hash'  => $hash,
+                        ':role'  => $role,
+                        ':uname' => ($data['Username'] !== '-' ? $data['Username'] : null),
+                        ':email' => ($data['Email'] !== '-'    ? $data['Email']    : null),
+                        ':phone' => trim($data['Contact Number'] ?? '') ?: null,
+                        ':desig' => trim($data['Designation'] ?? '') ?: null,
+                        ':affil' => trim($data['Affiliation'] ?? '') ?: null,
+                        ':gen'   => trim($data['Gender'] ?? '') ?: null,
+                        ':yr'    => trim($data['Year'] ?? '') ?: null,
+                        ':dept'  => trim($data['Department'] ?? '') ?: null,
+                        ':utype' => trim($data['User Type'] ?? '') ?: null,
+                        ':deg'   => trim($data['Degree'] ?? '') ?: null,
+                        ':spec'  => trim($data['Speciality'] ?? '') ?: null,
+                        ':raex'  => !empty($data['Ra Expiry Date']) ? date('Y-m-d', strtotime($data['Ra Expiry Date'])) : null,
+                        ':rnk'   => trim($data['Rank'] ?? '') ?: null,
+                        ':btch'  => trim($data['Batch'] ?? '') ?: null,
+                        ':cadre' => trim($data['Cadre'] ?? '') ?: null,
+                        ':dob'   => !empty($data['Dob']) ? date('Y-m-d', strtotime($data['Dob'])) : null
+                    ]);
+                    $count++;
+                }
+                $pdo->commit();
+                $flash = "Successfully onboarded {$count} users. (Errors: {$errors})";
+            } catch (Exception $e) {
+                $pdo->rollBack();
+                $flash = "Import failed: " . $e->getMessage();
+                $flash_type = 'error';
+            }
+            fclose($handle);
+        }
+    }
+
     if ($action === 'update_status') {
-        $uid    = (int) ($_POST['id'] ?? 0);
+        $id    = (int) ($_POST['id'] ?? 0);
         $status = $_POST['status'] ?? '';
-        if ($uid && in_array($status, ['active','inactive','suspended'], true)) {
-            $pdo->prepare('UPDATE users SET status=:s WHERE id=:id')->execute([':s'=>$status,':id'=>$uid]);
-            log_activity('ADMIN_UPDATE_USER', "Set user #{$uid} status to {$status}", null, $admin['id']);
+        if ($id && in_array($status, ['active','inactive','suspended'], true)) {
+            $pdo->prepare('UPDATE users SET status=:s WHERE id=:id')->execute([':s'=>$status,':id'=>$id]);
+            log_activity('ADMIN_UPDATE_USER', "Set user #{$id} status to {$status}", null, $admin['id']);
             $flash = 'User status updated.';
         }
     }
 
     if ($action === 'reset_password') {
-        $uid  = (int) ($_POST['id'] ?? 0);
+        $id   = (int) ($_POST['id'] ?? 0);
         $pass = trim($_POST['new_password'] ?? '');
-        if ($uid && strlen($pass) >= 6) {
+        if ($id && strlen($pass) >= 6) {
             $hash = password_hash($pass, PASSWORD_BCRYPT, ['cost' => 12]);
-            $pdo->prepare('UPDATE users SET password_hash=:h WHERE id=:id')->execute([':h'=>$hash,':id'=>$uid]);
-            log_activity('ADMIN_RESET_PASSWORD', "Reset password for user #{$uid}", null, $admin['id']);
+            $pdo->prepare('UPDATE users SET password_hash=:h WHERE id=:id')->execute([':h'=>$hash,':id'=>$id]);
+            log_activity('ADMIN_RESET_PASSWORD', "Reset password for user #{$id}", null, $admin['id']);
             $flash = 'Password reset successfully.';
-        } else {
-            $flash = 'Password must be at least 6 characters.'; $flash_type='error';
         }
     }
 }
@@ -72,7 +157,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 // ── Fetch users ───────────────────────────────────────────────
 $search = trim($_GET['q'] ?? '');
 $role_f = $_GET['role']   ?? '';
-$status_f = $_GET['status'] ?? '';
 
 $where = ['1=1'];
 $params = [];
@@ -80,15 +164,15 @@ if ($search) {
     $where[] = '(u.user_id LIKE :q OR u.name LIKE :q OR u.email LIKE :q)';
     $params[':q'] = "%{$search}%";
 }
-if ($role_f)   { $where[] = 'u.role=:role';     $params[':role'] = $role_f; }
-if ($status_f) { $where[] = 'u.status=:status'; $params[':status'] = $status_f; }
+if ($role_f) { $where[] = 'u.role=:role'; $params[':role'] = $role_f; }
 
 $sql = "SELECT u.*,
                (SELECT COUNT(*) FROM sessions s WHERE s.user_id=u.id) AS total_sessions,
                (SELECT COUNT(*) FROM sessions s WHERE s.user_id=u.id AND s.status='active') AS active_sessions
         FROM users u
         WHERE " . implode(' AND ', $where) . "
-        ORDER BY u.created_at DESC";
+        ORDER BY u.created_at DESC LIMIT 500";
+
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);
 $users = $stmt->fetchAll();
@@ -98,52 +182,35 @@ include __DIR__ . '/partials/header.php';
 ?>
 
 <?php if ($flash): ?>
-  <div class="flash flash-<?= $flash_type === 'error' ? 'error' : 'success' ?> fade-in">
-    <i data-lucide="<?= $flash_type === 'error' ? 'alert-circle' : 'check-circle' ?>" style="width:18px"></i> <?= h($flash) ?>
+  <div class="flash flash-<?= $flash_type ?> fade-in">
+    <i data-lucide="<?= $flash_type==='error'?'alert-circle':'check-circle' ?>" style="width:18px"></i> <?= h($flash) ?>
   </div>
 <?php endif; ?>
 
-<!-- Actions Bar -->
 <div class="filter-bar">
   <form method="GET" style="display:contents">
     <div class="search-wrap">
       <span class="search-icon"><i data-lucide="search" style="width:18px"></i></span>
-      <input class="form-control search-input" name="q" placeholder="Look up identity or department..." value="<?= h($search) ?>">
+      <input class="form-control search-input" name="q" placeholder="Search ID, name, email..." value="<?= h($search) ?>">
     </div>
     <select name="role" class="form-control" style="max-width:140px">
       <option value="">All Roles</option>
       <option value="student" <?= $role_f==='student'?'selected':'' ?>>Student</option>
       <option value="staff"   <?= $role_f==='staff'?'selected':'' ?>>Staff</option>
     </select>
-    <select name="status" class="form-control" style="max-width:140px">
-      <option value="">All Status</option>
-      <option value="active"    <?= $status_f==='active'?'selected':'' ?>>Active</option>
-      <option value="inactive"  <?= $status_f==='inactive'?'selected':'' ?>>Inactive</option>
-      <option value="suspended" <?= $status_f==='suspended'?'selected':'' ?>>Suspended</option>
-    </select>
     <button type="submit" class="btn btn-outline">Filter</button>
   </form>
-  <button class="btn btn-primary" onclick="openModal('modal-create')">
-    <i data-lucide="user-plus" style="width:18px"></i> Register User
-  </button>
+  <div style="display:flex; gap:8px">
+    <button class="btn btn-secondary" onclick="openModal('modal-bulk')"><i data-lucide="upload"></i> Bulk Onboarding</button>
+    <button class="btn btn-primary" onclick="openModal('modal-create')"><i data-lucide="user-plus"></i> Register User</button>
+  </div>
 </div>
 
-<!-- Users Table -->
 <div class="card">
-  <div class="card-header">
-    <span class="card-title">Collective Users <span class="badge badge-gray" style="margin-left:8px"><?= count($users) ?></span></span>
-  </div>
-  <?php if (empty($users)): ?>
-    <div class="empty-state">
-      <div class="empty-icon"><i data-lucide="users-2"></i></div>
-      <p>No identities found in this directory.</p>
-    </div>
-  <?php else: ?>
+  <div class="card-header"><span class="card-title">Collective Users <span class="badge badge-gray"><?= count($users) ?></span></span></div>
   <div class="table-wrap">
-    <table id="users-table">
-      <thead>
-        <tr><th>Identity</th><th>Role</th><th>Dept / Email</th><th>Engagement</th><th>Status</th><th>Actions</th></tr>
-      </thead>
+    <table>
+      <thead><tr><th>Identity</th><th>Classification</th><th>Affiliation / Dept</th><th>Sessions</th><th>Status</th><th>Actions</th></tr></thead>
       <tbody>
         <?php foreach ($users as $u): ?>
         <tr>
@@ -151,39 +218,28 @@ include __DIR__ . '/partials/header.php';
             <div style="font-weight:700"><?= h($u['name']) ?></div>
             <div class="td-muted mono" style="font-size:11px"><?= h($u['user_id']) ?></div>
           </td>
-          <td><span class="badge <?= $u['role']==='staff'?'badge-blue':'badge-yellow' ?>"><?= ucfirst($u['role']) ?></span></td>
           <td>
-            <div style="font-size:13px; font-weight: 500"><?= h($u['department'] ?? '—') ?></div>
-            <div class="td-muted" style="font-size:11px"><?= h($u['email'] ?? 'No email') ?></div>
+            <span class="badge <?= $u['role']==='staff'?'badge-blue':'badge-yellow' ?>"><?= strtoupper($u['role']) ?></span>
+            <div class="td-muted" style="font-size:10px; margin-top:2px"><?= h($u['user_type']) ?></div>
           </td>
           <td>
-            <div style="display:flex; align-items: center; gap: 8px">
-              <span style="font-weight:700"><?= $u['total_sessions'] ?></span>
-              <?php if ($u['active_sessions'] > 0): ?>
-                <span class="badge badge-green" style="font-size:9px">Online</span>
-              <?php endif; ?>
-            </div>
+            <div style="font-size:12px; font-weight:600"><?= h($u['affiliation'] ?? $u['department'] ?? '—') ?></div>
+            <div class="td-muted" style="font-size:11px"><?= h($u['email']) ?></div>
           </td>
-          <td><?php
-            $b = ['active'=>'badge-green','inactive'=>'badge-gray','suspended'=>'badge-red'];
-            echo '<span class="badge '.($b[$u['status']]??'badge-gray').'"><span class="badge-dot"></span>'.ucfirst($u['status']).'</span>';
-          ?></td>
+          <td><span style="font-weight:700"><?= $u['total_sessions'] ?></span></td>
+          <td><span class="badge badge-<?= $u['status']==='active'?'green':($u['status']==='suspended'?'red':'gray') ?>"><span class="badge-dot"></span><?= ucfirst($u['status']) ?></span></td>
           <td>
-            <div style="display:flex;gap:8px;align-items:center">
+            <div style="display:flex;gap:4px">
+              <button class="btn btn-outline btn-sm" onclick="resetPw(<?= $u['id'] ?>,'<?= addslashes(h($u['name'])) ?>')"><i data-lucide="key" style="width:14px"></i></button>
               <form method="POST" style="display:inline">
                 <input type="hidden" name="action" value="update_status">
                 <input type="hidden" name="id" value="<?= $u['id'] ?>">
-                <select name="status" class="form-control" style="padding:4px 8px;font-size:11px;max-width:105px;background:white;border:1px solid var(--border)" onchange="this.form.submit()">
-                  <option value="active"    <?= $u['status']==='active'?'selected':'' ?>>Active</option>
-                  <option value="inactive"  <?= $u['status']==='inactive'?'selected':'' ?>>Inactive</option>
+                <select name="status" class="form-control" style="font-size:10px; padding:2px" onchange="this.form.submit()">
+                  <option value="active" <?= $u['status']==='active'?'selected':'' ?>>Active</option>
+                  <option value="inactive" <?= $u['status']==='inactive'?'selected':'' ?>>Inactive</option>
                   <option value="suspended" <?= $u['status']==='suspended'?'selected':'' ?>>Suspend</option>
                 </select>
               </form>
-              <button class="btn btn-outline btn-sm" style="padding: 5px" 
-                onclick="document.getElementById('rp-uid').value=<?= $u['id'] ?>;document.getElementById('rp-name').textContent='<?= addslashes(h($u['name'])) ?>';openModal('modal-reset-pw')"
-                title="Reset Password">
-                <i data-lucide="key" style="width:14px"></i>
-              </button>
             </div>
           </td>
         </tr>
@@ -191,49 +247,68 @@ include __DIR__ . '/partials/header.php';
       </tbody>
     </table>
   </div>
-  <?php endif; ?>
 </div>
 
-<!-- Create User Modal -->
-<div class="modal-backdrop" id="modal-create">
+<!-- Bulk Modal -->
+<div class="modal-backdrop" id="modal-bulk">
   <div class="modal">
     <div class="modal-header">
+      <span class="modal-title">Bulk Onboarding (CSV)</span>
+      <button class="btn-close" onclick="closeModal('modal-bulk')"><i data-lucide="x"></i></button>
+    </div>
+    <form method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="action" value="bulk_import">
+      <div class="modal-body">
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px">Upload a CSV file with the following headers: <strong>Username,Email,Contact Number,Designation,Affiliation,Gender,Year,Department,User Type,Degree,Speciality,Staff Id,Ra Expiry Date,Rank,Batch,Cadre,Dob,Creation Date</strong></p>
+        <div class="form-group">
+          <label class="form-label">Select CSV File</label>
+          <input type="file" name="csv_file" class="form-control" accept=".csv" required>
+        </div>
+        <div class="alert alert-info" style="font-size:12px; margin-top:12px; padding:12px; background:var(--secondary); border-radius:8px">
+          Passwords will be defaulted to the user's <strong>Staff Id</strong> (internal ID).
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-bulk')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Start Onboarding</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Individual Modal -->
+<div class="modal-backdrop" id="modal-create">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header">
       <span class="modal-title">Register Identity</span>
-      <button class="btn-close" onclick="closeModal('modal-create')"><i data-lucide="x" style="width:16px"></i></button>
+      <button class="btn-close" onclick="closeModal('modal-create')"><i data-lucide="x"></i></button>
     </div>
     <form method="POST">
       <input type="hidden" name="action" value="create">
-      <div class="modal-body">
+      <div class="modal-body" style="max-height:70vh; overflow-y:auto">
         <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">System ID</label>
-            <input name="user_id" class="form-control" placeholder="24-0000-001" required>
-          </div>
-          <div class="form-group">
-            <label class="form-label">Classification</label>
-            <select name="role" class="form-control">
-              <option value="student">Student</option>
-              <option value="staff">Staff</option>
-            </select>
-          </div>
-        </div>
-        <div class="form-group">
-          <label class="form-label">Full Name</label>
-          <input name="name" class="form-control" placeholder="Identity name..." required>
+          <div class="form-group"><label class="form-label">System/Staff ID *</label><input name="user_id" class="form-control" placeholder="24-0000-001" required></div>
+          <div class="form-group"><label class="form-label">Full Name *</label><input name="name" class="form-control" placeholder="Identity Name" required></div>
         </div>
         <div class="form-row">
-          <div class="form-group">
-            <label class="form-label">Department</label>
-            <input name="department" class="form-control" placeholder="e.g. CAS">
-          </div>
-          <div class="form-group">
-            <label class="form-label">Email</label>
-            <input name="email" type="email" class="form-control" placeholder="name@edu.ph">
-          </div>
+          <div class="form-group"><label class="form-label">Role</label><select name="role" class="form-control"><option value="student">Student</option><option value="staff">Staff</option></select></div>
+          <div class="form-group"><label class="form-label">Initial Password *</label><input name="password" type="password" class="form-control" required></div>
         </div>
-        <div class="form-group">
-          <label class="form-label">Initial Password</label>
-          <input name="password" type="password" class="form-control" placeholder="Min. 8 characters" required>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Email</label><input name="email" type="email" class="form-control"></div>
+          <div class="form-group"><label class="form-label">Username</label><input name="username" class="form-control"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Affiliation</label><input name="affiliation" class="form-control"></div>
+          <div class="form-group"><label class="form-label">Department</label><input name="department" class="form-control"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Designation</label><input name="designation" class="form-control"></div>
+          <div class="form-group"><label class="form-label">User Type String</label><input name="user_type" class="form-control" placeholder="STUDENT"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Gender</label><input name="gender" class="form-control"></div>
+          <div class="form-group"><label class="form-label">Birth Date</label><input name="dob" type="date" class="form-control"></div>
         </div>
       </div>
       <div class="modal-footer">
@@ -244,29 +319,18 @@ include __DIR__ . '/partials/header.php';
   </div>
 </div>
 
-<!-- Reset Password Modal -->
 <div class="modal-backdrop" id="modal-reset-pw">
   <div class="modal">
-    <div class="modal-header">
-      <span class="modal-title">Reset - <span id="rp-name"></span></span>
-      <button class="btn-close" onclick="closeModal('modal-reset-pw')"><i data-lucide="x" style="width:16px"></i></button>
-    </div>
-    <form method="POST">
-      <input type="hidden" name="action" value="reset_password">
-      <input type="hidden" name="id" id="rp-uid">
-      <div class="modal-body">
-        <div class="form-group">
-          <label class="form-label">New Credential</label>
-          <input name="new_password" type="password" class="form-control" placeholder="Min. 6 characters" required>
-        </div>
-      </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline" onclick="closeModal('modal-reset-pw')">Cancel</button>
-        <button type="submit" class="btn btn-primary">Update Password</button>
-      </div>
+    <div class="modal-header"><span class="modal-title">Reset - <span id="rp-name"></span></span><button class="btn-close" onclick="closeModal('modal-reset-pw')"><i data-lucide="x"></i></button></div>
+    <form method="POST"><input type="hidden" name="action" value="reset_password"><input type="hidden" name="id" id="rp-uid">
+      <div class="modal-body"><div class="form-group"><label class="form-label">New Credential</label><input name="new_password" type="password" class="form-control" required></div></div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-reset-pw')">Cancel</button><button type="submit" class="btn btn-primary">Update</button></div>
     </form>
   </div>
 </div>
 
+<script>
+function resetPw(id, name) { document.getElementById('rp-uid').value = id; document.getElementById('rp-name').textContent = name; openModal('modal-reset-pw'); }
+</script>
 
 <?php include __DIR__ . '/partials/footer.php'; ?>

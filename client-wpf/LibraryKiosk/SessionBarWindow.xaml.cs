@@ -37,6 +37,14 @@ namespace LibraryKiosk
             _heartbeatTimer.Start();
 
             SetupTrayIcon();
+
+            // Auto-hide after 5 seconds
+            var autoHideTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
+            autoHideTimer.Tick += (s, e) => {
+                autoHideTimer.Stop();
+                if (this.IsVisible) Minimize_Click(this, new RoutedEventArgs());
+            };
+            autoHideTimer.Start();
         }
 
         private async Task DoHeartbeat()
@@ -68,15 +76,14 @@ namespace LibraryKiosk
             _notifyIcon.ContextMenuStrip = contextMenu;
         }
 
+        private void Minimize_Click(object sender, RoutedEventArgs e)
+        {
+            this.Hide();
+            _notifyIcon?.ShowBalloonTip(2000, "Session Active", "The library session bar has been minimized to the tray.", ToolTipIcon.Info);
+        }
+
         private async void Settings_Click(object sender, RoutedEventArgs e)
         {
-            // Simple minimize logic for right-click or button
-            if (sender is Button)
-            {
-                this.Hide();
-                return;
-            }
-
             var result = System.Windows.MessageBox.Show("Are you sure you want to end your session?", 
                 "End Session", MessageBoxButton.YesNo, MessageBoxImage.Question);
             

@@ -14,6 +14,7 @@ namespace LibraryKiosk
             InitializeComponent();
             _apiService = apiService;
             _terminalCode = terminalCode;
+            TerminalNameTxt.Text = $"Terminal '{terminalCode}' Active";
         }
 
         private async void LoginBtn_Click(object sender, RoutedEventArgs e)
@@ -46,7 +47,15 @@ namespace LibraryKiosk
             }
 
             LoginBtn.IsEnabled = true;
-            LoginBtn.Content = "Login →";
+            LoginBtn.Content = "Login";
+        }
+
+        private void PasswordInput_KeyDown(object sender, System.Windows.Input.KeyEventArgs e)
+        {
+            if (e.Key == System.Windows.Input.Key.Enter)
+            {
+                LoginBtn_Click(sender, e);
+            }
         }
 
         private void ShowError(string msg)

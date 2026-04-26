@@ -69,8 +69,8 @@ function log_activity(
 /**
  * Sanitize a string for HTML output.
  */
-function h(string $str): string {
-    return htmlspecialchars($str, ENT_QUOTES | ENT_HTML5, 'UTF-8');
+function h(?string $str): string {
+    return htmlspecialchars($str ?? '', ENT_QUOTES | ENT_HTML5, 'UTF-8');
 }
 
 /**
