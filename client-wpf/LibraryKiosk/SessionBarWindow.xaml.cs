@@ -13,6 +13,7 @@ namespace LibraryKiosk
         private readonly ApiResponse<UserInfo> _session;
         private readonly ApiService _apiService;
         private readonly DispatcherTimer _heartbeatTimer;
+        private readonly WebsiteTrackerService? _websiteTracker;
         private NotifyIcon? _notifyIcon;
 
         public SessionBarWindow(ApiResponse<UserInfo> session, ApiService apiService)
@@ -37,6 +38,13 @@ namespace LibraryKiosk
             _heartbeatTimer.Start();
 
             SetupTrayIcon();
+
+            // Website Tracking
+            if (_session.SessionToken != null)
+            {
+                _websiteTracker = new WebsiteTrackerService(_apiService, _session.SessionToken);
+                _websiteTracker.Start();
+            }
 
             // Auto-hide after 5 seconds
             var autoHideTimer = new DispatcherTimer { Interval = TimeSpan.FromSeconds(5) };
@@ -95,6 +103,7 @@ namespace LibraryKiosk
                 }
                 
                 _heartbeatTimer.Stop();
+                _websiteTracker?.Stop();
                 _notifyIcon?.Dispose();
                 
                 // Return to login

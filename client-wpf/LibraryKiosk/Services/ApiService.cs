@@ -57,7 +57,7 @@ namespace LibraryKiosk.Services
             }
         }
 
-        public async Task<bool> TrackWebsiteAsync(string token, string url, string title)
+        public async Task<string> TrackWebsiteAsync(string token, string url, string title)
         {
             var requestData = new { url = url, title = title };
             try
@@ -67,11 +67,11 @@ namespace LibraryKiosk.Services
                 request.Content = JsonContent.Create(requestData);
                 
                 var response = await _httpClient.SendAsync(request);
-                return response.IsSuccessStatusCode;
+                return await response.Content.ReadAsStringAsync();
             }
-            catch
+            catch (Exception ex)
             {
-                return false;
+                return $"{{\"success\":false,\"error\":\"{ex.Message}\"}}";
             }
         }
 

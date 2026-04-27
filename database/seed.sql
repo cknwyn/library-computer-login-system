@@ -29,6 +29,7 @@ INSERT INTO users (user_id, name, password_hash, role, department, email) VALUES
 ('15-0000-001', 'Dr. Jose Cruz',  '$2y$12$2mVB4/4etVp6XPm7ZqfuyOv0ijPhJiFJKdRMWkrBvXSOHbKZB6suq', 'staff',   'Faculty',              'jose.cruz@library.edu'),
 ('18-0000-002', 'Maria Lim',      '$2y$12$2mVB4/4etVp6XPm7ZqfuyOv0ijPhJiFJKdRMWkrBvXSOHbKZB6suq', 'staff',   'Library Services',     'maria.lim@library.edu');
 
+
 -- ============================================================
 -- TERMINALS (nComputing stations)
 -- ============================================================
@@ -42,23 +43,3 @@ INSERT INTO terminals (terminal_code, location, status) VALUES
 ('PC-07', 'Study Hall',     'offline'),
 ('PC-08', 'Study Hall',     'offline'),
 ('LOCAL-TEST', 'Developer Machine', 'offline');
-
--- ============================================================
--- INSTALLED APPS (Master whitelist)
--- ============================================================
-INSERT INTO installed_apps (name, description, version, category) VALUES
-('Microsoft Word',       'Word processing application',                      '2021', 'Productivity'),
-('Microsoft Excel',      'Spreadsheet application',                          '2021', 'Productivity'),
-('Microsoft PowerPoint', 'Presentation application',                         '2021', 'Productivity'),
-('Google Chrome',        'Web browser',                                       '120',  'Internet'),
-('Mozilla Firefox',      'Open-source web browser',                          '121',  'Internet'),
-('Adobe Acrobat Reader', 'PDF viewer and annotator',                         'DC',   'Productivity'),
-('LibreOffice',          'Free and open-source office suite',                '7.6',  'Productivity'),
-('VLC Media Player',     'Multimedia player',                                '3.0',  'Media'),
-('Notepad++',            'Source code and text editor',                      '8.6',  'Development'),
-('7-Zip',                'File archiver with high compression ratio',        '23.0', 'Utilities'),
-('Mendeley',             'Reference manager and academic social network',    '2.x',  'Research'),
-('Zotero',               'Free, easy-to-use reference management software',  '6.0',  'Research'),
-('MATLAB',               'Numerical computing environment',                  'R2023','Research'),
-('Python 3',             'Programming language and runtime',                 '3.12', 'Development'),
-('Visual Studio Code',   'Source code editor',                               '1.85', 'Development');

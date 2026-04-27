@@ -9,14 +9,8 @@ require_once __DIR__ . '/../includes/auth.php';
 header('Content-Type: application/json');
 
 // ── Check session ─────────────────────────────────────────────
-$token = $_SERVER['HTTP_X_SESSION_TOKEN'] ?? $_POST['token'] ?? null;
-if (!$token) {
-    echo json_encode(['success' => false, 'error' => 'Missing session token.']);
-    exit;
-}
-
-$session = get_session_by_token($token);
-if (!$session || $session['status'] !== 'active') {
+$session = verify_client_token();
+if (!$session) {
     echo json_encode(['success' => false, 'error' => 'Invalid or expired session.']);
     exit;
 }
@@ -46,7 +40,13 @@ $success = $stmt->execute([
 ]);
 
 if ($success) {
-    echo json_encode(['success' => true]);
+    echo json_encode([
+        'success' => true, 
+        'db' => DB_NAME, 
+        'affected' => $stmt->rowCount(),
+        'sid' => $session['id'],
+        'uid' => $session['user_id']
+    ]);
 } else {
-    echo json_encode(['success' => false, 'error' => 'Failed to store tracking data.']);
+    echo json_encode(['success' => false, 'error' => 'Failed to store tracking data.', 'pdo_error' => $stmt->errorInfo()]);
 }
