@@ -56,7 +56,7 @@ $expired = isset($_GET['expired']);
 
     <form method="POST" action="">
       <div class="form-group">
-        <label class="form-label" for="username">Access Identity</label>
+        <label class="form-label" for="username">Username</label>
         <input
           id="username" name="username" type="text"
           class="form-control" placeholder="admin"
@@ -64,14 +64,14 @@ $expired = isset($_GET['expired']);
           autocomplete="username" required autofocus>
       </div>
       <div class="form-group">
-        <label class="form-label" for="password">Security Credential</label>
+        <label class="form-label" for="password">Password</label>
         <input
           id="password" name="password" type="password"
           class="form-control" placeholder="••••••••"
           autocomplete="current-password" required>
       </div>
       <button type="submit" class="btn btn-primary" style="width:100%; padding: 14px; margin-top: 8px;">
-        Authorize Access
+        Login
       </button>
     </form>
 

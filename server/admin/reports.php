@@ -12,24 +12,49 @@ $admin = current_admin();
 
 $date_from = $_GET['date_from'] ?? date('Y-m-01');    // Start of current month
 $date_to   = $_GET['date_to']   ?? date('Y-m-d');
-$group_by  = in_array($_GET['group_by'] ?? '', ['day','user','terminal']) ? $_GET['group_by'] : 'day';
+$group_by  = in_array($_GET['group_by'] ?? '', ['day','user','terminal','users_list','websites_list','college']) ? $_GET['group_by'] : 'day';
 $export    = isset($_GET['export']);
+$college_f = $_GET['college'] ?? '';
+$course_f  = $_GET['course']  ?? '';
+
+// ── Load filter options ──────────────────────────────────────
+$colleges = $pdo->query("SELECT DISTINCT affiliation FROM users WHERE affiliation IS NOT NULL AND affiliation != '' ORDER BY affiliation")->fetchAll(PDO::FETCH_COLUMN);
+
+$courses_sql = "SELECT DISTINCT department FROM users WHERE department IS NOT NULL AND department != ''";
+if ($college_f) {
+    $courses_sql .= " AND affiliation = " . $pdo->quote($college_f);
+}
+$courses_sql .= " ORDER BY department";
+$courses = $pdo->query($courses_sql)->fetchAll(PDO::FETCH_COLUMN);
+
+$where_clauses = ["DATE(s.login_time) BETWEEN :df AND :dt", "s.status IN ('completed','force_ended','abandoned')"];
+$params = [':df' => $date_from, ':dt' => $date_to];
+
+if ($college_f) {
+    $where_clauses[] = "u.affiliation = :coll";
+    $params[':coll'] = $college_f;
+}
+if ($course_f) {
+    $where_clauses[] = "u.department = :course";
+    $params[':course'] = $course_f;
+}
+$where_str = implode(" AND ", $where_clauses);
 
 // ── Aggregate stats for the date range ───────────────────────
 $range_stats = $pdo->prepare(
     "SELECT
        COUNT(*)                              AS total_sessions,
-       COUNT(DISTINCT user_id)              AS unique_users,
-       COUNT(DISTINCT terminal_id)          AS terminals_used,
-       AVG(duration_seconds)                AS avg_duration,
-       SUM(duration_seconds)                AS total_duration,
-       MAX(duration_seconds)                AS max_duration,
-       MIN(CASE WHEN duration_seconds>0 THEN duration_seconds END) AS min_duration
-     FROM sessions
-     WHERE DATE(login_time) BETWEEN :df AND :dt
-       AND status IN ('completed','force_ended','abandoned')"
+       COUNT(DISTINCT s.user_id)              AS unique_users,
+       COUNT(DISTINCT s.terminal_id)          AS terminals_used,
+       AVG(s.duration_seconds)                AS avg_duration,
+       SUM(s.duration_seconds)                AS total_duration,
+       MAX(s.duration_seconds)                AS max_duration,
+       MIN(CASE WHEN s.duration_seconds>0 THEN s.duration_seconds END) AS min_duration
+     FROM sessions s
+     JOIN users u ON u.id = s.user_id
+     WHERE $where_str"
 );
-$range_stats->execute([':df'=>$date_from,':dt'=>$date_to]);
+$range_stats->execute($params);
 $stats = $range_stats->fetch();
 
 // ── Grouped breakdown ─────────────────────────────────────────
@@ -40,8 +65,8 @@ if ($group_by === 'day') {
                    AVG(s.duration_seconds)   AS avg_dur,
                    SUM(s.duration_seconds)   AS total_dur
             FROM sessions s
-            WHERE DATE(s.login_time) BETWEEN :df AND :dt
-              AND s.status IN ('completed','force_ended','abandoned')
+            JOIN users u ON u.id = s.user_id
+            WHERE $where_str
             GROUP BY DATE(s.login_time)
             ORDER BY label ASC";
 } elseif ($group_by === 'user') {
@@ -52,9 +77,40 @@ if ($group_by === 'day') {
                    SUM(s.duration_seconds) AS total_dur
             FROM sessions s
             JOIN users u ON u.id=s.user_id
-            WHERE DATE(s.login_time) BETWEEN :df AND :dt
-              AND s.status IN ('completed','force_ended','abandoned')
+            WHERE $where_str
             GROUP BY s.user_id
+            ORDER BY sessions DESC";
+} elseif ($group_by === 'users_list') {
+    $u_where = ["DATE(creation_date) BETWEEN :df AND :dt"];
+    if ($college_f) $u_where[] = "affiliation = :coll";
+    if ($course_f)  $u_where[] = "department = :course";
+    $u_where_str = implode(" AND ", $u_where);
+    $sql = "SELECT user_id AS label, name AS extra, role, email, creation_date
+            FROM users
+            WHERE $u_where_str
+            ORDER BY creation_date DESC";
+} elseif ($group_by === 'websites_list') {
+    $w_where = ["DATE(w.visited_at) BETWEEN :df AND :dt"];
+    if ($college_f) $w_where[] = "u.affiliation = :coll";
+    if ($course_f)  $w_where[] = "u.department = :course";
+    $w_where_str = implode(" AND ", $w_where);
+    $sql = "SELECT u.user_id AS label, u.name AS extra, w.title, w.url, w.visited_at, t.terminal_code
+            FROM website_logs w
+            JOIN users u ON u.id = w.user_id
+            JOIN sessions s ON s.id = w.session_id
+            JOIN terminals t ON t.id = s.terminal_id
+            WHERE $w_where_str
+            ORDER BY w.visited_at DESC";
+} elseif ($group_by === 'college') {
+    $sql = "SELECT COALESCE(u.affiliation, 'No Affiliation') AS label,
+                   COUNT(*) AS sessions,
+                   COUNT(DISTINCT s.user_id) AS users,
+                   AVG(s.duration_seconds) AS avg_dur,
+                   SUM(s.duration_seconds) AS total_dur
+            FROM sessions s
+            JOIN users u ON u.id=s.user_id
+            WHERE $where_str
+            GROUP BY u.affiliation
             ORDER BY sessions DESC";
 } else {
     $sql = "SELECT t.terminal_code AS label,
@@ -64,13 +120,13 @@ if ($group_by === 'day') {
                    SUM(s.duration_seconds) AS total_dur
             FROM sessions s
             JOIN terminals t ON t.id=s.terminal_id
-            WHERE DATE(s.login_time) BETWEEN :df AND :dt
-              AND s.status IN ('completed','force_ended','abandoned')
+            JOIN users u ON u.id = s.user_id
+            WHERE $where_str
             GROUP BY s.terminal_id
             ORDER BY sessions DESC";
 }
 $breakdown_stmt = $pdo->prepare($sql);
-$breakdown_stmt->execute([':df'=>$date_from,':dt'=>$date_to]);
+$breakdown_stmt->execute($params);
 $breakdown = $breakdown_stmt->fetchAll();
 
 // ── CSV Export ────────────────────────────────────────────────
@@ -78,20 +134,55 @@ if ($export) {
     header('Content-Type: text/csv');
     header('Content-Disposition: attachment; filename="library-report-' . date('Ymd') . '.csv"');
     $out = fopen('php://output', 'w');
-    fputcsv($out, ['User ID','User Name','Terminal','Login Time','Logout Time','Duration (s)','Duration','Status']);
-    $rows = $pdo->prepare(
-        "SELECT u.user_id, u.name, t.terminal_code,
-                s.login_time, s.logout_time, s.duration_seconds, s.status
-         FROM sessions s
-         JOIN users     u ON u.id=s.user_id
-         JOIN terminals t ON t.id=s.terminal_id
-         WHERE DATE(s.login_time) BETWEEN :df AND :dt
-         ORDER BY s.login_time DESC"
-    );
-    $rows->execute([':df'=>$date_from,':dt'=>$date_to]);
-    while ($r = $rows->fetch()) {
-        fputcsv($out, [$r['user_id'],$r['name'],$r['terminal_code'],$r['login_time'],$r['logout_time'],
-                       $r['duration_seconds'],format_duration((int)$r['duration_seconds']),$r['status']]);
+    
+    if ($group_by === 'users_list') {
+        fputcsv($out, [
+            'Username', 'Email', 'Contact Number', 'Designation', 'Affiliation', 
+            'Gender', 'Year', 'Department', 'User Type', 'Degree', 
+            'Speciality', 'Staff Id', 'Ra Expiry Date', 'Rank', 'Batch', 
+            'Cadre', 'Dob', 'creation_date'
+        ]);
+        $rows = $pdo->prepare("SELECT * FROM users WHERE $u_where_str ORDER BY creation_date DESC");
+        $rows->execute($params);
+        while ($u = $rows->fetch()) {
+            fputcsv($out, [
+                $u['username'] ?? '-', $u['email'] ?? '-', $u['contact_number'] ?? '-',
+                $u['designation'] ?? '-', $u['affiliation'] ?? '-', $u['gender'] ?? '-',
+                $u['year'] ?? '-', $u['department'] ?? '-', $u['user_type'] ?? '-',
+                $u['degree'] ?? '-', $u['speciality'] ?? '-', $u['user_id'],
+                $u['ra_expiry_date'] ?? '-', $u['rank'] ?? '-', $u['batch'] ?? '-',
+                $u['cadre'] ?? '-', $u['dob'] ?? '-', $u['creation_date']
+            ]);
+        }
+    } elseif ($group_by === 'websites_list') {
+        fputcsv($out, ['Staff Id', 'User Name', 'Terminal', 'Page Title', 'URL', 'Visited At']);
+        $rows = $pdo->prepare("SELECT u.user_id, u.name, t.terminal_code, w.title, w.url, w.visited_at
+                               FROM website_logs w
+                               JOIN users u ON u.id = w.user_id
+                               JOIN sessions s ON s.id = w.session_id
+                               JOIN terminals t ON t.id = s.terminal_id
+                               WHERE $w_where_str
+                               ORDER BY w.visited_at DESC");
+        $rows->execute($params);
+        while ($l = $rows->fetch()) {
+            fputcsv($out, [$l['user_id'], $l['name'], $l['terminal_code'], $l['title'], $l['url'], $l['visited_at']]);
+        }
+    } else {
+        fputcsv($out, ['User ID','User Name','College/Affiliation','Terminal','Login Time','Logout Time','Duration (s)','Duration','Status']);
+        $rows = $pdo->prepare(
+            "SELECT u.user_id, u.name, u.affiliation, t.terminal_code,
+                    s.login_time, s.logout_time, s.duration_seconds, s.status
+             FROM sessions s
+             JOIN users     u ON u.id=s.user_id
+             JOIN terminals t ON t.id=s.terminal_id
+             WHERE $where_str
+             ORDER BY s.login_time DESC"
+        );
+        $rows->execute($params);
+        while ($r = $rows->fetch()) {
+            fputcsv($out, [$r['user_id'],$r['name'],$r['affiliation']??'—',$r['terminal_code'],$r['login_time'],$r['logout_time'],
+                           $r['duration_seconds'],format_duration((int)$r['duration_seconds']),$r['status']]);
+        }
     }
     fclose($out);
     exit;
@@ -116,12 +207,34 @@ include __DIR__ . '/partials/header.php';
       <input type="date" name="date_to" class="form-control" style="max-width:160px" value="<?= h($date_to) ?>">
       <label class="form-label" style="margin:0;white-space:nowrap">Group by:</label>
       <select name="group_by" class="form-control" style="max-width:140px">
-        <option value="day"      <?= $group_by==='day'     ?'selected':'' ?>>Day</option>
-        <option value="user"     <?= $group_by==='user'    ?'selected':'' ?>>User</option>
-        <option value="terminal" <?= $group_by==='terminal'?'selected':'' ?>>Terminal</option>
+        <option value="day"        <?= $group_by==='day'       ?'selected':'' ?>>Day</option>
+        <option value="user"       <?= $group_by==='user'      ?'selected':'' ?>>User Stats</option>
+        <option value="terminal"   <?= $group_by==='terminal'     ?'selected':'' ?>>Terminal</option>
+        <option value="college"    <?= $group_by==='college'      ?'selected':'' ?>>College / Affiliation</option>
+        <option value="users_list" <?= $group_by==='users_list'   ?'selected':'' ?>>User Registry</option>
+        <option value="websites_list" <?= $group_by==='websites_list' ?'selected':'' ?>>Website Tracking</option>
       </select>
       <button type="submit" class="btn btn-primary">Generate</button>
-      <a href="?date_from=<?= $date_from ?>&date_to=<?= $date_to ?>&group_by=<?= $group_by ?>&export=1"
+
+      <div style="flex-basis:100%; height:0; margin:0"></div> <!-- Break -->
+
+      <label class="form-label" style="margin:0;white-space:nowrap">Filter College:</label>
+      <select name="college" class="form-control" style="max-width:200px" onchange="this.form.submit()">
+        <option value="">— All Colleges —</option>
+        <?php foreach ($colleges as $c): ?>
+          <option value="<?= h($c) ?>" <?= $college_f===$c?'selected':'' ?>><?= h($c) ?></option>
+        <?php endforeach; ?>
+      </select>
+
+      <label class="form-label" style="margin:0;white-space:nowrap">Course/Dept:</label>
+      <select name="course" class="form-control" style="max-width:200px">
+        <option value="">— All Courses —</option>
+        <?php foreach ($courses as $c): ?>
+          <option value="<?= h($c) ?>" <?= $course_f===$c?'selected':'' ?>><?= h($c) ?></option>
+        <?php endforeach; ?>
+      </select>
+
+      <a href="?date_from=<?= $date_from ?>&date_to=<?= $date_to ?>&group_by=<?= $group_by ?>&college=<?= h($college_f) ?>&course=<?= h($course_f) ?>&export=1"
          class="btn btn-outline"><i data-lucide="download" style="width:16px;vertical-align:middle;margin-right:4px"></i> Export CSV</a>
 
     </form>
@@ -205,23 +318,46 @@ include __DIR__ . '/partials/header.php';
     <table>
       <thead>
         <tr>
-          <th><?= ucfirst($group_by) ?></th>
-          <?= $group_by!=='day' ? '<th>Name/Location</th>' : '' ?>
-          <th>Sessions</th>
-          <th>Avg. Duration</th>
-          <th>Total Time</th>
+          <th><?= ($group_by==='users_list' ? 'Staff ID' : ($group_by==='college' ? 'College' : ucfirst($group_by))) ?></th>
+          <?= !in_array($group_by, ['day','college']) ? '<th>'.($group_by==='users_list'?'Full Name':'Name/Location').'</th>' : '' ?>
+          <?php if ($group_by === 'users_list'): ?>
+            <th>Email</th>
+            <th>Role</th>
+            <th>Date Registered</th>
+          <?php elseif ($group_by === 'websites_list'): ?>
+            <th>Terminal</th>
+            <th>Website</th>
+            <th>Visited At</th>
+          <?php else: ?>
+            <th>Sessions</th>
+            <th>Avg. Duration</th>
+            <th>Total Time</th>
+          <?php endif; ?>
         </tr>
       </thead>
       <tbody>
         <?php foreach ($breakdown as $r): ?>
         <tr>
-          <td class="mono" style="font-weight:600"><?= h($r['label']) ?></td>
-          <?php if ($group_by!=='day'): ?>
+          <td class="mono" style="font-weight:600"><?= h($label_display = ($group_by==='college' ? ($r['label'] ?: 'Unspecified') : $r['label'])) ?></td>
+          <?php if (!in_array($group_by, ['day','college'])): ?>
             <td class="td-muted"><?= h($r['extra']??'—') ?></td>
           <?php endif; ?>
-          <td><?= (int)$r['sessions'] ?></td>
-          <td><?= format_duration((int)round((float)($r['avg_dur']??0))) ?></td>
-          <td><?= format_duration((int)($r['total_dur']??0)) ?></td>
+          <?php if ($group_by === 'users_list'): ?>
+            <td><?= h($r['email'] ?? '—') ?></td>
+            <td><span class="badge <?= $r['role']==='staff'?'badge-blue':'badge-yellow' ?>"><?= strtoupper($r['role']) ?></span></td>
+            <td class="td-muted"><?= date('M d, Y', strtotime($r['creation_date'])) ?></td>
+          <?php elseif ($group_by === 'websites_list'): ?>
+            <td><span class="badge badge-blue"><?= h($r['terminal_code']) ?></span></td>
+            <td>
+              <div style="font-weight:600; font-size:12px"><?= h($r['title'] ?: 'Untitled Page') ?></div>
+              <div class="td-muted" style="font-size:11px; max-width:300px; overflow:hidden; text-overflow:ellipsis; white-space:nowrap"><?= h($r['url']) ?></div>
+            </td>
+            <td class="td-muted"><?= date('M d, H:i:s', strtotime($r['visited_at'])) ?></td>
+          <?php else: ?>
+            <td><?= (int)$r['sessions'] ?></td>
+            <td><?= format_duration((int)round((float)($r['avg_dur']??0))) ?></td>
+            <td><?= format_duration((int)($r['total_dur']??0)) ?></td>
+          <?php endif; ?>
         </tr>
         <?php endforeach; ?>
       </tbody>

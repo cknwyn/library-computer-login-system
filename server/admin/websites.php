@@ -33,6 +33,26 @@ $stmt->execute([
 ]);
 $logs = $stmt->fetchAll();
 
+// ── CSV Export ────────────────────────────────────────────────
+if (isset($_GET['export'])) {
+    header('Content-Type: text/csv');
+    header('Content-Disposition: attachment; filename="website-logs-' . date('Ymd') . '.csv"');
+    $out = fopen('php://output', 'w');
+    fputcsv($out, ['Staff Id', 'User Name', 'Terminal', 'Page Title', 'URL', 'Visited At']);
+    foreach ($logs as $l) {
+        fputcsv($out, [
+            $l['user_code'], 
+            $l['user_name'], 
+            $l['terminal_code'], 
+            $l['title'] ?: 'Untitled', 
+            $l['url'], 
+            $l['visited_at']
+        ]);
+    }
+    fclose($out);
+    exit;
+}
+
 $page = 'websites';
 include __DIR__ . '/partials/header.php';
 ?>
@@ -49,6 +69,7 @@ include __DIR__ . '/partials/header.php';
     </div>
     
     <button type="submit" class="btn btn-primary">Filter</button>
+    <a href="?date=<?= $date ?>&search=<?= h($search) ?>&export=1" class="btn btn-outline"><i data-lucide="download"></i> Export CSV</a>
     <?php if ($search || $date !== date('Y-m-d')): ?>
       <a href="websites.php" class="btn btn-outline" title="Reset">Clear</a>
     <?php endif; ?>

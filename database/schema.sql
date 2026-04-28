@@ -35,7 +35,7 @@ CREATE TABLE users (
     cadre            VARCHAR(100) DEFAULT NULL,
     dob              DATE         DEFAULT NULL,
     status           ENUM('active', 'inactive', 'suspended') NOT NULL DEFAULT 'active',
-    created_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    creation_date    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     INDEX idx_user_id (user_id),
     INDEX idx_status (status)
@@ -50,7 +50,7 @@ CREATE TABLE admins (
     password_hash VARCHAR(255) NOT NULL,
     name          VARCHAR(100) NOT NULL,
     email         VARCHAR(150) DEFAULT NULL,
-    created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+    creation_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
 -- ============================================================
@@ -62,7 +62,7 @@ CREATE TABLE terminals (
     location      VARCHAR(100) DEFAULT NULL  COMMENT 'e.g. Reading Room A',
     status        ENUM('online', 'offline', 'maintenance') NOT NULL DEFAULT 'offline',
     last_seen     TIMESTAMP NULL DEFAULT NULL,
-    created_at    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    creation_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_status (status)
 ) ENGINE=InnoDB;
 
@@ -79,7 +79,7 @@ CREATE TABLE sessions (
     duration_seconds INT UNSIGNED NULL DEFAULT NULL COMMENT 'Computed on logout',
     last_heartbeat   TIMESTAMP NULL DEFAULT NULL,
     status           ENUM('active', 'completed', 'force_ended', 'abandoned') NOT NULL DEFAULT 'active',
-    created_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    creation_date    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (user_id)     REFERENCES users(id)     ON UPDATE CASCADE,
     FOREIGN KEY (terminal_id) REFERENCES terminals(id) ON UPDATE CASCADE,
     INDEX idx_status (status),
@@ -115,7 +115,7 @@ CREATE TABLE activity_logs (
     action      VARCHAR(100) NOT NULL COMMENT 'e.g. USER_LOGIN, USER_LOGOUT, APP_REQUEST',
     details     TEXT         DEFAULT NULL,
     ip_address  VARCHAR(45)  DEFAULT NULL,
-    created_at  TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    creation_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_action (action),
-    INDEX idx_created_at (created_at)
+    INDEX idx_creation_date (creation_date)
 ) ENGINE=InnoDB;

@@ -43,10 +43,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':email' => trim($_POST['email'] ?? '') ?: null,
                     ':phone' => trim($_POST['contact_number'] ?? '') ?: null,
                     ':desig' => trim($_POST['designation'] ?? '') ?: null,
-                    ':affil' => trim($_POST['affiliation'] ?? '') ?: null,
+                    ':affil' => standardize_affiliation($_POST['affiliation'] ?? null),
                     ':gen'   => trim($_POST['gender'] ?? '') ?: null,
                     ':yr'    => trim($_POST['year'] ?? '') ?: null,
-                    ':dept'  => trim($_POST['department'] ?? '') ?: null,
+                    ':dept'  => standardize_department($_POST['department'] ?? null),
                     ':utype' => trim($_POST['user_type'] ?? '') ?: null,
                     ':deg'   => trim($_POST['degree'] ?? '') ?: null,
                     ':spec'  => trim($_POST['speciality'] ?? '') ?: null,
@@ -106,10 +106,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ':email' => ($data['Email'] !== '-'    ? $data['Email']    : null),
                         ':phone' => trim($data['Contact Number'] ?? '') ?: null,
                         ':desig' => trim($data['Designation'] ?? '') ?: null,
-                        ':affil' => trim($data['Affiliation'] ?? '') ?: null,
+                        ':affil' => standardize_affiliation($data['Affiliation'] ?? null),
                         ':gen'   => trim($data['Gender'] ?? '') ?: null,
                         ':yr'    => trim($data['Year'] ?? '') ?: null,
-                        ':dept'  => trim($data['Department'] ?? '') ?: null,
+                        ':dept'  => standardize_department($data['Department'] ?? null),
                         ':utype' => trim($data['User Type'] ?? '') ?: null,
                         ':deg'   => trim($data['Degree'] ?? '') ?: null,
                         ':spec'  => trim($data['Speciality'] ?? '') ?: null,
@@ -171,7 +171,7 @@ $sql = "SELECT u.*,
                (SELECT COUNT(*) FROM sessions s WHERE s.user_id=u.id AND s.status='active') AS active_sessions
         FROM users u
         WHERE " . implode(' AND ', $where) . "
-        ORDER BY u.created_at DESC LIMIT 500";
+        ORDER BY u.creation_date DESC LIMIT 500";
 
 $stmt = $pdo->prepare($sql);
 $stmt->execute($params);

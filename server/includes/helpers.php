@@ -115,3 +115,49 @@ function cleanup_abandoned_sessions(): void {
         // Non-fatal
     }
 }
+
+/**
+ * Standardizes college/affiliation names based on common abbreviations.
+ */
+function standardize_affiliation(?string $text): ?string {
+    if (!$text) return null;
+    $text = trim($text);
+    $map = [
+        'CAMP'   => 'College of Allied Medical Professions (CAMP)',
+        'CAS'    => 'College of Arts and Sciences (CAS)',
+        'CBA'    => 'College of Business and Accountancy (CBA)',
+        'CCS'    => 'College of Computer Studies (CCS)',
+        'CCJE'   => 'College of Criminal Justice Education (CCJE)',
+        'CED'    => 'College of Education (CED)',
+        'CEA'    => 'College of Engineering and Architecture (CEA)',
+        'CON'    => 'College of Nursing (CON)',
+        'AUF-IS' => 'AUF Integrated School (AUF-IS)',
+        'AUF IS' => 'AUF Integrated School (AUF-IS)',
+        'MED'    => 'School of Medicine',
+        'LAW'    => 'School of Law'
+    ];
+    
+    $upper = strtoupper($text);
+    // First, check if it's a direct abbreviation match
+    if (isset($map[$upper])) return $map[$upper];
+    
+    // Then, check if it already contains the full name to avoid double-processing
+    foreach ($map as $abbr => $full) {
+        if (stripos($text, $full) !== false) return $full;
+        if (stripos($text, $abbr) !== false && strlen($text) < 10) return $full; // Catch short strings like "ccs student"
+    }
+    
+    return $text; 
+}
+
+/**
+ * Standardizes department/course names.
+ */
+function standardize_department(?string $text): ?string {
+    if (!$text) return null;
+    $text = trim($text);
+    // Standardize common BS/MS prefixes
+    $text = preg_replace('/^bs\s+/i', 'BS ', $text);
+    $text = preg_replace('/^ms\s+/i', 'MS ', $text);
+    return $text;
+}
