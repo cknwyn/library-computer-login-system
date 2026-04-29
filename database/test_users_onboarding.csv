@@ -1,0 +1,6 @@
+Username,Email,Contact Number,Designation,Affiliation,Gender,Year,Department,User Type,Degree,Speciality,Staff Id,Ra Expiry Date,Rank,Batch,Cadre,Dob,Creation Date
+Juan Dela Cruz,juan.delacruz@email.com,09123456789,Student,CCS,Male,3rd Year,BS Computer Science,STUDENT,BSCS,Software Engineering,24-0001-001,2028-12-31,Regular,2024,Main,2003-05-15,2026-04-28
+Maria Clara,maria.clara@email.com,09987654321,Instructor,CAS,Female,N/A,Psychology,STAFF,Ph.D.,Clinical Psychology,15-0123-456,2030-01-01,Senior,2015,Satellite,1990-10-10,2026-04-28
+-,test.user@email.com,09000000000,Student,CED,Female,1st Year,Elementary Education,STUDENT,BEEd,-,23-9999-999,2027-12-31,Freshman,2023,Main,2005-01-01,2026-04-28
+Ricardo Dalisay,cardodalisay@email.com,09111111111,Student,CCJE,Male,4th Year,BS Criminology,STUDENT,BS Crim,Law Enforcement,21-5555-555,2026-12-31,Active,2021,Main,2002-12-25,2026-04-28
+Leonor Rivera,leonor.rivera@email.com,09222222222,Faculty,CED,Female,N/A,Professional Education,STAFF,MA Ed,Curriculum Development,10-8888-888,2035-01-01,Head,2010,Main,1985-04-11,2026-04-28

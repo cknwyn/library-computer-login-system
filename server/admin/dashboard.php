@@ -23,10 +23,12 @@ $avg_duration = (int) ($pdo->query("SELECT AVG(duration_seconds) FROM sessions W
 $active_rows = $pdo->query(
     "SELECT s.id, s.login_time, s.last_heartbeat,
             u.name AS user_name, u.user_id AS user_code, u.role,
-            t.terminal_code, t.location
+            t.terminal_code, r.room_name, c.name AS campus_name
      FROM   sessions s
      JOIN   users     u ON u.id = s.user_id
      JOIN   terminals t ON t.id = s.terminal_id
+     LEFT JOIN rooms r ON r.id = t.room_id
+     LEFT JOIN campuses c ON c.id = r.campus_id
      WHERE  s.status = 'active'
      ORDER  BY s.login_time DESC
      LIMIT  10"
@@ -92,7 +94,7 @@ include __DIR__ . '/partials/header.php';
             <div class="feed-icon"><i data-lucide="<?= $r['role']==='staff' ? 'user-check' : 'user' ?>"></i></div>
             <div class="feed-content">
               <div class="feed-title"><?= h($r['user_name']) ?> <span class="td-muted" style="font-weight:400; font-size:12px">• <?= h($r['terminal_code']) ?></span></div>
-              <div class="feed-meta"><?= ucfirst($r['role']) ?> • In session for <?= format_duration(elapsed_since($r['login_time'])) ?></div>
+              <div class="feed-meta"><?= ucfirst($r['role']) ?> • <?= h($r['room_name'] ?? 'Unassigned') ?> • In session for <?= format_duration(elapsed_since($r['login_time'])) ?></div>
             </div>
             <div class="feed-actions">
               <form method="POST" action="sessions.php" onsubmit="return confirm('Force-end this session?')">

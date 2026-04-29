@@ -54,15 +54,38 @@ CREATE TABLE admins (
 ) ENGINE=InnoDB;
 
 -- ============================================================
+-- CAMPUSES (Collegiate sites)
+-- ============================================================
+CREATE TABLE campuses (
+    id               INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    name             VARCHAR(100) NOT NULL UNIQUE,
+    creation_date    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
+) ENGINE=InnoDB;
+
+-- ============================================================
+-- ROOMS (Physical locations for terminals)
+-- ============================================================
+CREATE TABLE rooms (
+    id               INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    campus_id        INT UNSIGNED DEFAULT NULL,
+    room_name        VARCHAR(100) NOT NULL,
+    description      TEXT         DEFAULT NULL,
+    creation_date    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (campus_id) REFERENCES campuses(id) ON DELETE SET NULL ON UPDATE CASCADE
+) ENGINE=InnoDB;
+
+-- ============================================================
 -- TERMINALS (nComputing thin-client stations)
 -- ============================================================
 CREATE TABLE terminals (
     id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     terminal_code VARCHAR(30)  NOT NULL UNIQUE COMMENT 'e.g. PC-01, LIB-A-03',
-    location      VARCHAR(100) DEFAULT NULL  COMMENT 'e.g. Reading Room A',
+    pc_name       VARCHAR(100) DEFAULT NULL COMMENT 'Actual computer hostname',
+    room_id       INT UNSIGNED DEFAULT NULL,
     status        ENUM('online', 'offline', 'maintenance') NOT NULL DEFAULT 'offline',
     last_seen     TIMESTAMP NULL DEFAULT NULL,
     creation_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (room_id) REFERENCES rooms(id) ON DELETE SET NULL ON UPDATE CASCADE,
     INDEX idx_status (status)
 ) ENGINE=InnoDB;
 

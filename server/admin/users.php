@@ -16,6 +16,57 @@ $flash_type = 'success';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
+    if ($action === 'update') {
+        $id    = (int) ($_POST['id'] ?? 0);
+        $sid   = trim($_POST['user_id']    ?? '');
+        $name  = trim($_POST['name']       ?? '');
+        $role  = $_POST['role']            ?? 'student';
+        
+        if (!$id || !$sid || !$name) {
+            $flash = 'ID and name are required.'; $flash_type='error';
+        } else {
+            try {
+                $stmt = $pdo->prepare(
+                    "UPDATE users SET 
+                        user_id = :sid, name = :name, role = :role, username = :uname, 
+                        email = :email, contact_number = :phone, designation = :desig, 
+                        affiliation = :affil, gender = :gen, year = :yr, department = :dept, 
+                        user_type = :utype, degree = :deg, speciality = :spec, 
+                        ra_expiry_date = :raex, rank = :rnk, batch = :btch, 
+                        cadre = :cadre, dob = :dob
+                     WHERE id = :id"
+                );
+                $stmt->execute([
+                    ':sid'   => $sid,
+                    ':name'  => $name,
+                    ':role'  => $role,
+                    ':uname' => trim($_POST['username'] ?? '') ?: null,
+                    ':email' => trim($_POST['email'] ?? '') ?: null,
+                    ':phone' => trim($_POST['contact_number'] ?? '') ?: null,
+                    ':desig' => trim($_POST['designation'] ?? '') ?: null,
+                    ':affil' => standardize_affiliation($_POST['affiliation'] ?? null),
+                    ':gen'   => trim($_POST['gender'] ?? '') ?: null,
+                    ':yr'    => trim($_POST['year'] ?? '') ?: null,
+                    ':dept'  => standardize_department($_POST['department'] ?? null),
+                    ':utype' => strtoupper($role),
+                    ':deg'   => trim($_POST['degree'] ?? '') ?: null,
+                    ':spec'  => trim($_POST['speciality'] ?? '') ?: null,
+                    ':raex'  => trim($_POST['ra_expiry_date'] ?? '') ?: null,
+                    ':rnk'   => trim($_POST['rank'] ?? '') ?: null,
+                    ':btch'  => trim($_POST['batch'] ?? '') ?: null,
+                    ':cadre' => trim($_POST['cadre'] ?? '') ?: null,
+                    ':dob'   => trim($_POST['dob'] ?? '') ?: null,
+                    ':id'    => $id
+                ]);
+                log_activity('ADMIN_UPDATE_USER', "Updated user {$sid}", null, $admin['id']);
+                $flash = "User {$sid} updated successfully.";
+            } catch (PDOException $e) {
+                $flash = 'Error updating user: ' . $e->getMessage();
+                $flash_type = 'error';
+            }
+        }
+    }
+
     if ($action === 'create') {
         $sid   = trim($_POST['user_id']    ?? '');
         $name  = trim($_POST['name']       ?? '');
@@ -47,7 +98,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':gen'   => trim($_POST['gender'] ?? '') ?: null,
                     ':yr'    => trim($_POST['year'] ?? '') ?: null,
                     ':dept'  => standardize_department($_POST['department'] ?? null),
-                    ':utype' => trim($_POST['user_type'] ?? '') ?: null,
+                    ':utype' => strtoupper($role),
                     ':deg'   => trim($_POST['degree'] ?? '') ?: null,
                     ':spec'  => trim($_POST['speciality'] ?? '') ?: null,
                     ':raex'  => trim($_POST['ra_expiry_date'] ?? '') ?: null,
@@ -220,7 +271,9 @@ include __DIR__ . '/partials/header.php';
           </td>
           <td>
             <span class="badge <?= $u['role']==='staff'?'badge-blue':'badge-yellow' ?>"><?= strtoupper($u['role']) ?></span>
-            <div class="td-muted" style="font-size:10px; margin-top:2px"><?= h($u['user_type']) ?></div>
+            <?php if ($u['user_type'] && strtoupper($u['user_type']) !== strtoupper($u['role'])): ?>
+              <div class="td-muted" style="font-size:10px; margin-top:2px"><?= h($u['user_type']) ?></div>
+            <?php endif; ?>
           </td>
           <td>
             <div style="font-size:12px; font-weight:600"><?= h($u['affiliation'] ?? $u['department'] ?? '—') ?></div>
@@ -230,7 +283,8 @@ include __DIR__ . '/partials/header.php';
           <td><span class="badge badge-<?= $u['status']==='active'?'green':($u['status']==='suspended'?'red':'gray') ?>"><span class="badge-dot"></span><?= ucfirst($u['status']) ?></span></td>
           <td>
             <div style="display:flex;gap:4px">
-              <button class="btn btn-outline btn-sm" onclick="resetPw(<?= $u['id'] ?>,'<?= addslashes(h($u['name'])) ?>')"><i data-lucide="key" style="width:14px"></i></button>
+              <button class="btn btn-info btn-sm" onclick='editUser(<?= json_encode($u) ?>)' title="Edit Profile"><i data-lucide="edit-3" style="width:14px"></i></button>
+              <button class="btn btn-warning btn-sm" onclick="resetPw(<?= $u['id'] ?>,'<?= addslashes(h($u['name'])) ?>')" title="Reset Password"><i data-lucide="key" style="width:14px"></i></button>
               <form method="POST" style="display:inline">
                 <input type="hidden" name="action" value="update_status">
                 <input type="hidden" name="id" value="<?= $u['id'] ?>">
@@ -304,16 +358,60 @@ include __DIR__ . '/partials/header.php';
         </div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">Designation</label><input name="designation" class="form-control"></div>
-          <div class="form-group"><label class="form-label">User Type String</label><input name="user_type" class="form-control" placeholder="STUDENT"></div>
+          <div class="form-group"><label class="form-label">Gender</label><input name="gender" class="form-control"></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label class="form-label">Gender</label><input name="gender" class="form-control"></div>
           <div class="form-group"><label class="form-label">Birth Date</label><input name="dob" type="date" class="form-control"></div>
+          <div class="form-group"></div>
         </div>
       </div>
       <div class="modal-footer">
         <button type="button" class="btn btn-outline" onclick="closeModal('modal-create')">Cancel</button>
         <button type="submit" class="btn btn-primary">Enroll User</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-backdrop" id="modal-edit">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header">
+      <span class="modal-title">Edit Identity</span>
+      <button class="btn-close" onclick="closeModal('modal-edit')"><i data-lucide="x"></i></button>
+    </div>
+    <form method="POST">
+      <input type="hidden" name="action" value="update">
+      <input type="hidden" name="id" id="edit-id">
+      <div class="modal-body" style="max-height:70vh; overflow-y:auto">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">System/Staff ID *</label><input name="user_id" id="edit-user_id" class="form-control" required></div>
+          <div class="form-group"><label class="form-label">Full Name *</label><input name="name" id="edit-name" class="form-control" required></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Role</label><select name="role" id="edit-role" class="form-control"><option value="student">Student</option><option value="staff">Staff</option></select></div>
+          <div class="form-group"><label class="form-label">Username</label><input name="username" id="edit-username" class="form-control"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Email</label><input name="email" id="edit-email" type="email" class="form-control"></div>
+          <div class="form-group"><label class="form-label">Contact Number</label><input name="contact_number" id="edit-contact_number" class="form-control"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Affiliation</label><input name="affiliation" id="edit-affiliation" class="form-control"></div>
+          <div class="form-group"><label class="form-label">Department</label><input name="department" id="edit-department" class="form-control"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Designation</label><input name="designation" id="edit-designation" class="form-control"></div>
+          <div class="form-group"><label class="form-label">Gender</label><input name="gender" id="edit-gender" class="form-control"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Birth Date</label><input name="dob" id="edit-dob" type="date" class="form-control"></div>
+          <div class="form-group"><label class="form-label">Year/Level</label><input name="year" id="edit-year" class="form-control"></div>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-edit')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Save Changes</button>
       </div>
     </form>
   </div>
@@ -331,6 +429,22 @@ include __DIR__ . '/partials/header.php';
 
 <script>
 function resetPw(id, name) { document.getElementById('rp-uid').value = id; document.getElementById('rp-name').textContent = name; openModal('modal-reset-pw'); }
+function editUser(u) {
+    document.getElementById('edit-id').value = u.id;
+    document.getElementById('edit-user_id').value = u.user_id;
+    document.getElementById('edit-name').value = u.name;
+    document.getElementById('edit-role').value = u.role;
+    document.getElementById('edit-username').value = u.username || '';
+    document.getElementById('edit-email').value = u.email || '';
+    document.getElementById('edit-contact_number').value = u.contact_number || '';
+    document.getElementById('edit-affiliation').value = u.affiliation || '';
+    document.getElementById('edit-department').value = u.department || '';
+    document.getElementById('edit-designation').value = u.designation || '';
+    document.getElementById('edit-gender').value = u.gender || '';
+    document.getElementById('edit-dob').value = u.dob || '';
+    document.getElementById('edit-year').value = u.year || '';
+    openModal('modal-edit');
+}
 </script>
 
 <?php include __DIR__ . '/partials/footer.php'; ?>

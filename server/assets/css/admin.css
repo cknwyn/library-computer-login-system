@@ -416,6 +416,18 @@ td { padding: 20px 24px; vertical-align: middle; }
 .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-primary); }
 .btn-outline:hover { background: var(--bg-base); }
 
+.btn-info { background: #DBEAFE; color: #1E40AF; }
+.btn-info:hover { background: #3B82F6; color: white; }
+
+.btn-warning { background: #FEF3C7; color: #92400E; }
+.btn-warning:hover { background: #F59E0B; color: white; }
+
+.btn-success { background: #D1FAE5; color: #065F46; }
+.btn-success:hover { background: #10B981; color: white; }
+
+.btn-danger { background: #FEE2E2; color: #991B1B; }
+.btn-danger:hover { background: #EF4444; color: white; }
+
 .btn-sm { padding: 6px 14px; font-size: 12px; border-radius: 6px; }
 
 /* ── Terminal Grid View ─────────────────────────────────────── */

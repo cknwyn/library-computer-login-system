@@ -114,12 +114,13 @@ if ($group_by === 'day') {
             ORDER BY sessions DESC";
 } else {
     $sql = "SELECT t.terminal_code AS label,
-                   t.location AS extra,
+                   COALESCE(r.room_name, 'Unknown') AS extra,
                    COUNT(*) AS sessions,
                    AVG(s.duration_seconds) AS avg_dur,
                    SUM(s.duration_seconds) AS total_dur
             FROM sessions s
             JOIN terminals t ON t.id=s.terminal_id
+            LEFT JOIN rooms r ON r.id=t.room_id
             JOIN users u ON u.id = s.user_id
             WHERE $where_str
             GROUP BY s.terminal_id
@@ -168,19 +169,21 @@ if ($export) {
             fputcsv($out, [$l['user_id'], $l['name'], $l['terminal_code'], $l['title'], $l['url'], $l['visited_at']]);
         }
     } else {
-        fputcsv($out, ['User ID','User Name','College/Affiliation','Terminal','Login Time','Logout Time','Duration (s)','Duration','Status']);
+        fputcsv($out, ['User ID','User Name','College/Affiliation','Terminal','Room','Campus','Login Time','Logout Time','Duration (s)','Duration','Status']);
         $rows = $pdo->prepare(
-            "SELECT u.user_id, u.name, u.affiliation, t.terminal_code,
+            "SELECT u.user_id, u.name, u.affiliation, t.terminal_code, r.room_name, c.name AS campus_name,
                     s.login_time, s.logout_time, s.duration_seconds, s.status
              FROM sessions s
              JOIN users     u ON u.id=s.user_id
              JOIN terminals t ON t.id=s.terminal_id
+             LEFT JOIN rooms r ON r.id=t.room_id
+             LEFT JOIN campuses c ON c.id=r.campus_id
              WHERE $where_str
              ORDER BY s.login_time DESC"
         );
         $rows->execute($params);
         while ($r = $rows->fetch()) {
-            fputcsv($out, [$r['user_id'],$r['name'],$r['affiliation']??'—',$r['terminal_code'],$r['login_time'],$r['logout_time'],
+            fputcsv($out, [$r['user_id'],$r['name'],$r['affiliation']??'—',$r['terminal_code'],$r['room_name']??'—',$r['campus_name']??'—',$r['login_time'],$r['logout_time'],
                            $r['duration_seconds'],format_duration((int)$r['duration_seconds']),$r['status']]);
         }
     }

@@ -20,6 +20,7 @@ $body = json_decode(file_get_contents('php://input'), true);
 $user_id_input   = trim($body['user_id']       ?? '');
 $password_input  = trim($body['password']       ?? '');
 $terminal_code   = trim($body['terminal_code']  ?? '');
+$pc_name         = trim($body['pc_name']         ?? '');
 
 if (!$user_id_input || !$password_input || !$terminal_code) {
     json_response(['success' => false, 'error' => 'ID, password, and terminal code are required.'], 400);
@@ -53,14 +54,14 @@ $terminal = $stmt->fetch();
 
 if (!$terminal) {
     // Auto-register unknown terminals (convenient for local testing)
-    $stmt = db()->prepare('INSERT INTO terminals (terminal_code, location, status) VALUES (:code, :loc, :s)');
-    $stmt->execute([':code' => $terminal_code, ':loc' => 'Auto-registered', ':s' => 'online']);
+    $stmt = db()->prepare('INSERT INTO terminals (terminal_code, pc_name, status) VALUES (:code, :pcn, :s)');
+    $stmt->execute([':code' => $terminal_code, ':pcn' => $pc_name ?: null, ':s' => 'online']);
     $terminal_id = (int) db()->lastInsertId();
 } else {
     $terminal_id = (int) $terminal['id'];
-    // Update terminal status to online
-    db()->prepare("UPDATE terminals SET status = 'online', last_seen = NOW() WHERE id = :id")
-        ->execute([':id' => $terminal_id]);
+    // Update terminal status to online and sync PC Name if it changed
+    db()->prepare("UPDATE terminals SET status = 'online', pc_name = COALESCE(:pcn, pc_name), last_seen = NOW() WHERE id = :id")
+        ->execute([':id' => $terminal_id, ':pcn' => $pc_name ?: null]);
 }
 
 // ── Create session ────────────────────────────────────────────

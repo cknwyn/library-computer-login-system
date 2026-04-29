@@ -13,6 +13,9 @@ namespace LibraryKiosk.Models
 
         [JsonPropertyName("terminal_code")]
         public string TerminalCode { get; set; } = string.Empty;
+
+        [JsonPropertyName("pc_name")]
+        public string PcName { get; set; } = string.Empty;
     }
 
     public class ApiResponse<T>

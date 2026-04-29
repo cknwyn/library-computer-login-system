@@ -33,12 +33,13 @@ namespace LibraryKiosk
             var apiBaseUrl = Configuration["LibraryKiosk:ApiBaseUrl"] ?? "http://localhost/library-system/api";
             var terminalCode = Configuration["LibraryKiosk:TerminalCode"] ?? "PC-04";
             var kioskMode = Configuration.GetValue<bool>("LibraryKiosk:KioskMode");
+            var pcName = Environment.MachineName;
 
             // Initialize services
             _keyboardHook = new KeyboardHook();
             _watchdogService = new WatchdogService();
 
-            var apiService = new ApiService(apiBaseUrl, terminalCode);
+            var apiService = new ApiService(apiBaseUrl, terminalCode, pcName);
 
             if (kioskMode)
             {

@@ -44,10 +44,12 @@ if ($search)   { $where[] = '(u.user_id LIKE :q OR u.name LIKE :q OR t.terminal_
 
 $sql = "SELECT s.*,
                u.name AS user_name, u.user_id AS user_code, u.role,
-               t.terminal_code, t.location
+               t.terminal_code, r.room_name, c.name AS campus_name
         FROM sessions s
         JOIN users     u ON u.id = s.user_id
         JOIN terminals t ON t.id = s.terminal_id
+        LEFT JOIN rooms r ON r.id = t.room_id
+        LEFT JOIN campuses c ON c.id = r.campus_id
         WHERE " . implode(' AND ', $where) . "
         ORDER BY s.login_time DESC
         LIMIT 200";
@@ -128,7 +130,7 @@ include __DIR__ . '/partials/header.php';
           <td><span class="badge <?= $s['role']==='staff'?'badge-blue':'badge-yellow' ?>"><?= ucfirst($s['role']) ?></span></td>
           <td>
              <div style="font-weight:700"><?= h($s['terminal_code']) ?></div>
-             <div class="td-muted" style="font-size:11px"><?= h($s['location']??'Unspecified') ?></div>
+             <div class="td-muted" style="font-size:11px"><?= h($s['room_name'] ? "{$s['room_name']} ({$s['campus_name']})" : 'Unspecified') ?></div>
           </td>
           <td>
              <div style="font-size:13px; font-weight: 500"><?= date('M d, H:i', strtotime($s['login_time'])) ?></div>

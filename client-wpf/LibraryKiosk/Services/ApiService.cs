@@ -12,12 +12,14 @@ namespace LibraryKiosk.Services
         private readonly HttpClient _httpClient;
         private readonly string _apiBaseUrl;
         public string TerminalCode { get; }
+        public string PcName { get; }
 
-        public ApiService(string apiBaseUrl, string terminalCode)
+        public ApiService(string apiBaseUrl, string terminalCode, string pcName)
         {
             _httpClient = new HttpClient();
             _apiBaseUrl = apiBaseUrl.TrimEnd('/');
             TerminalCode = terminalCode;
+            PcName = pcName;
         }
 
         public async Task<ApiResponse<UserInfo>> LoginAsync(string userId, string password)
@@ -26,7 +28,8 @@ namespace LibraryKiosk.Services
             {
                 UserId = userId,
                 Password = password,
-                TerminalCode = TerminalCode
+                TerminalCode = TerminalCode,
+                PcName = PcName
             };
 
             try
