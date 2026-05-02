@@ -154,7 +154,18 @@ include __DIR__ . '/partials/header.php';
                             <?= h($l['details']) ?>
                         </td>
                         <td class="mono td-muted" style="font-size:11px">
-                            <?= h($l['ip_address'] ?: '—') ?>
+                            <?php 
+                                if ($l['ip_address']) {
+                                    $parts = explode('.', $l['ip_address']);
+                                    if (count($parts) === 4) {
+                                        echo h($parts[0] . '.' . $parts[1] . '.*.*');
+                                    } else {
+                                        echo 'Masked';
+                                    }
+                                } else {
+                                    echo '—';
+                                }
+                            ?>
                         </td>
                     </tr>
                     <?php endforeach; ?>

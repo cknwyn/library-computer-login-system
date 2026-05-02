@@ -169,48 +169,52 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if (count($parts) > 2) $mname = $parts[1];
                     }
 
-                    // --- Auto-resolve Academic Units ---
+                    // --- Auto-resolve Academic Units (Enhanced Fuzzy Matching) ---
                     $cid = null; $did = null; $degid = null; $specid = null;
 
-                    // College
+                    // 1. Resolve College
                     $coll_name = trim($data['Affiliation'] ?? $data['College'] ?? '');
                     if ($coll_name && $coll_name !== '-') {
+                        // Strip "College of " prefix if present for cleaner matching
+                        $clean_coll = preg_replace('/^College of /i', '', $coll_name);
                         if (!isset($cache_coll[$coll_name])) {
-                            $st = $pdo->prepare("SELECT id FROM colleges WHERE name LIKE ? OR code = ? LIMIT 1");
-                            $st->execute(["%$coll_name%", $coll_name]);
+                            $st = $pdo->prepare("SELECT id FROM colleges WHERE name LIKE ? OR code = ? OR ? LIKE CONCAT('%', name, '%') LIMIT 1");
+                            $st->execute(["%$clean_coll%", $coll_name, $coll_name]);
                             $cache_coll[$coll_name] = $st->fetchColumn() ?: null;
                         }
                         $cid = $cache_coll[$coll_name];
                     }
 
-                    // Department
+                    // 2. Resolve Department
                     $dept_name = trim($data['Department'] ?? '');
                     if ($dept_name && $dept_name !== '-') {
+                        $clean_dept = preg_replace('/^Department of /i', '', $dept_name);
                         if (!isset($cache_dept[$dept_name])) {
-                            $st = $pdo->prepare("SELECT id FROM departments WHERE name LIKE ? LIMIT 1");
-                            $st->execute(["%$dept_name%"]);
+                            $st = $pdo->prepare("SELECT id FROM departments WHERE name LIKE ? OR name LIKE ? OR ? LIKE CONCAT('%', name, '%') LIMIT 1");
+                            $st->execute(["%$dept_name%", "%$clean_dept%", $dept_name]);
                             $cache_dept[$dept_name] = $st->fetchColumn() ?: null;
                         }
                         $did = $cache_dept[$dept_name];
                     }
 
-                    // Degree
+                    // 3. Resolve Degree
                     $deg_name = trim($data['Degree'] ?? '');
                     if ($deg_name && $deg_name !== '-') {
+                        $clean_deg = preg_replace('/^(BS in |AB in |Bachelor of Science in |Bachelor of Arts in )/i', '', $deg_name);
                         if (!isset($cache_deg[$deg_name])) {
-                            $st = $pdo->prepare("SELECT id FROM degrees WHERE name LIKE ? OR name = ? LIMIT 1");
-                            $st->execute(["%$deg_name%", $deg_name]);
+                            $st = $pdo->prepare("SELECT id FROM degrees WHERE name LIKE ? OR name LIKE ? OR ? LIKE CONCAT('%', name, '%') LIMIT 1");
+                            $st->execute(["%$deg_name%", "%$clean_deg%", $deg_name]);
                             $cache_deg[$deg_name] = $st->fetchColumn() ?: null;
                         }
                         $degid = $cache_deg[$deg_name];
                     }
 
-                    // Specialization
+                    // 4. Resolve Specialization
                     $spec_name = trim($data['Speciality'] ?? $data['Specialization'] ?? '');
                     if ($spec_name && $spec_name !== '-') {
                         if (!isset($cache_spec[$spec_name])) {
-                            $st = $pdo->prepare("SELECT id FROM specializations WHERE name LIKE ? LIMIT 1");
-                            $st->execute(["%$spec_name%"]);
+                            $st = $pdo->prepare("SELECT id FROM specializations WHERE name LIKE ? OR ? LIKE CONCAT('%', name, '%') LIMIT 1");
+                            $st->execute(["%$spec_name%", $spec_name]);
                             $cache_spec[$spec_name] = $st->fetchColumn() ?: null;
                         }
                         $specid = $cache_spec[$spec_name];
@@ -220,7 +224,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         "INSERT INTO users (user_id, first_name, middle_name, last_name, name, password_hash, role, username, email, contact_number, 
                                           designation, gender, year, college_id, department_id, degree_id, specialization_id, ra_expiry_date, rank, batch, cadre, dob)
                          VALUES (:sid, :fname, :mname, :lname, :name, :hash, :role, :uname, :email, :phone, :desig, :gen, :yr, :cid, :did, :degid,
-                                 :specid, :raex, :rnk, :btch, :cadre, :dob)"
+                                 :specid, :raex, :rnk, :btch, :cadre, :dob)
+                         ON DUPLICATE KEY UPDATE
+                            first_name = VALUES(first_name), middle_name = VALUES(middle_name), last_name = VALUES(last_name),
+                            name = VALUES(name), role = VALUES(role), email = VALUES(email), contact_number = VALUES(contact_number),
+                            designation = VALUES(designation), gender = VALUES(gender), year = VALUES(year),
+                            college_id = VALUES(college_id), department_id = VALUES(department_id), 
+                            degree_id = VALUES(degree_id), specialization_id = VALUES(specialization_id),
+                            ra_expiry_date = VALUES(ra_expiry_date), rank = VALUES(rank), batch = VALUES(batch),
+                            cadre = VALUES(cadre), dob = VALUES(dob)"
                     );
                     
                     try {
@@ -240,11 +252,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ]);
                         $count++;
                     } catch (PDOException $e) {
-                        if (strpos($e->getMessage(), 'Duplicate') !== false) {
-                            $errors++; 
-                        } else {
-                            throw $e;
-                        }
+                        $errors++;
                     }
                 }
                 $pdo->commit();
@@ -359,7 +367,7 @@ include __DIR__ . '/partials/header.php';
 
 <div class="card">
   <div class="card-header"><span class="card-title">Collective Users <span class="badge badge-gray"><?= count($users) ?></span></span></div>
-  <div class="table-wrap">
+  <div class="table-wrap" style="max-height: 600px; overflow-y: auto;">
     <table>
       <thead><tr><th>Identity</th><th>Classification</th><th>Academic Profile</th><th>Sessions</th><th>Status</th><th>Actions</th></tr></thead>
       <tbody>

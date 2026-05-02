@@ -1,127 +1,137 @@
 -- ============================================================
 -- ANGELES UNIVERSITY FOUNDATION (AUF) - NORMALIZED SEED DATA
--- Enterprise 3NF / AUF Identity Context
+-- Comprehensive Academic Hierarchy & Sample Identities
 -- ============================================================
 
--- 1. AUF Campus Locations
+SET FOREIGN_KEY_CHECKS = 0;
+
+-- CLEAR EXISTING DATA
+DELETE FROM website_logs;
+DELETE FROM sessions;
+DELETE FROM users;
+DELETE FROM admins;
+DELETE FROM specializations;
+DELETE FROM degrees;
+DELETE FROM departments;
+DELETE FROM colleges;
+DELETE FROM rooms;
+DELETE FROM campuses;
+
+-- RESET AUTO-INCREMENT
+ALTER TABLE campuses AUTO_INCREMENT = 1;
+ALTER TABLE rooms AUTO_INCREMENT = 1;
+ALTER TABLE colleges AUTO_INCREMENT = 1;
+ALTER TABLE departments AUTO_INCREMENT = 1;
+ALTER TABLE degrees AUTO_INCREMENT = 1;
+ALTER TABLE specializations AUTO_INCREMENT = 1;
+ALTER TABLE users AUTO_INCREMENT = 1;
+
+-- 1. AUF CAMPUS LOCATIONS
 INSERT INTO campuses (name) VALUES 
-('Main Campus'), 
-('Medical Center Campus');
+('AUF - Main Campus'), 
+('AUF-IS - Santa Barbara Campus');
 
+-- 2. AUF ROOMS (Lookup Campus ID by Name)
 INSERT INTO rooms (name, campus_id) VALUES 
-('University Library (Main)', 1),
-('Cyberzone - Information Commons', 1),
-('High School Library', 1),
-('Nursing Virtual Lab', 1),
-('Medical Library (AUFMC)', 2),
-('HS Cyberzone', 1);
+('Learning Commons', (SELECT id FROM campuses WHERE name = 'AUF - Main Campus' LIMIT 1)),
+('Highschool Library', (SELECT id FROM campuses WHERE name = 'AUF-IS - Santa Barbara Campus' LIMIT 1)),
+('Grade school library', (SELECT id FROM campuses WHERE name = 'AUF-IS - Santa Barbara Campus' LIMIT 1));
 
--- 2. AUF Academic Hierarchy
+-- 3. AUF COLLEGES
 INSERT INTO colleges (name, code) VALUES 
+('College of Allied Medical Professions', 'CAMP'),
 ('College of Computer Studies', 'CCS'),
+('College of Arts and Sciences', 'CAS'),
 ('College of Nursing', 'CON'),
 ('College of Engineering and Architecture', 'CEA'),
 ('College of Business and Accountancy', 'CBA'),
-('College of Arts and Sciences', 'CAS'),
-('College of Allied Medical Professions', 'CAMP'),
 ('College of Criminal Justice Education', 'CCJE'),
 ('College of Education', 'CED'),
 ('School of Medicine', 'SOM'),
 ('School of Law', 'SOL'),
-('Graduate School', 'GS');
+('Grade School', 'GS'),
+('Elementary', 'ELEM'),
+('Junior Highschool', 'JHS'),
+('Senior Highschool', 'SHS'),
+('Graduate School', 'GRAD');
 
--- CCS Departments
+-- 4. DEPARTMENTS (Lookup College ID by Code)
 INSERT INTO departments (name, college_id) VALUES 
-('Information Technology', 1), 
-('Computer Science', 1);
+('Department of Physical Therapy', (SELECT id FROM colleges WHERE code = 'CAMP' LIMIT 1)),
+('Department of Occupational Therapy', (SELECT id FROM colleges WHERE code = 'CAMP' LIMIT 1)),
+('Department of Radiologic Technology', (SELECT id FROM colleges WHERE code = 'CAMP' LIMIT 1)),
+('Department of Medical Technology', (SELECT id FROM colleges WHERE code = 'CAMP' LIMIT 1)),
+('Department of Pharmacy', (SELECT id FROM colleges WHERE code = 'CAMP' LIMIT 1)),
+('Department of Information Technology', (SELECT id FROM colleges WHERE code = 'CCS' LIMIT 1)),
+('Department of Computer Science', (SELECT id FROM colleges WHERE code = 'CCS' LIMIT 1)),
+('Department of Multimedia Arts', (SELECT id FROM colleges WHERE code = 'CCS' LIMIT 1)),
+('Department of Communication', (SELECT id FROM colleges WHERE code = 'CAS' LIMIT 1)),
+('Department of Biological Sciences', (SELECT id FROM colleges WHERE code = 'CAS' LIMIT 1)),
+('Department of Psychology', (SELECT id FROM colleges WHERE code = 'CAS' LIMIT 1)),
+('Department of Civil Engineering', (SELECT id FROM colleges WHERE code = 'CEA' LIMIT 1)),
+('Department of Architecture', (SELECT id FROM colleges WHERE code = 'CEA' LIMIT 1)),
+('Department of Computer Engineering', (SELECT id FROM colleges WHERE code = 'CEA' LIMIT 1)),
+('Department of Electronics Engineering', (SELECT id FROM colleges WHERE code = 'CEA' LIMIT 1)),
+('Department of Accounting', (SELECT id FROM colleges WHERE code = 'CBA' LIMIT 1)),
+('Department of Business Administration', (SELECT id FROM colleges WHERE code = 'CBA' LIMIT 1)),
+('Department of Hospitality and Tourism Management', (SELECT id FROM colleges WHERE code = 'CBA' LIMIT 1)),
+('Department of Nursing', (SELECT id FROM colleges WHERE code = 'CON' LIMIT 1)),
+('Department of Criminology', (SELECT id FROM colleges WHERE code = 'CCJE' LIMIT 1)),
+('Department of Education', (SELECT id FROM colleges WHERE code = 'CED' LIMIT 1)),
+('School of Medicine', (SELECT id FROM colleges WHERE code = 'SOM' LIMIT 1)),
+('School of Law', (SELECT id FROM colleges WHERE code = 'SOL' LIMIT 1)),
+('General Academics', (SELECT id FROM colleges WHERE code = 'SHS' LIMIT 1));
 
--- CON Departments
-INSERT INTO departments (name, college_id) VALUES 
-('Nursing Education', 2);
-
--- CEA Departments
-INSERT INTO departments (name, college_id) VALUES 
-('Civil Engineering', 3), 
-('Electrical Engineering', 3), 
-('Architecture', 3);
-
--- CBA Departments
-INSERT INTO departments (name, college_id) VALUES 
-('Accountancy', 4), 
-('Management and Marketing', 4);
-
--- Degrees (Sample AUF Programs)
+-- 5. DEGREES (Lookup Department ID by Name)
 INSERT INTO degrees (name, department_id) VALUES 
-('BS in Information Technology', 1),
-('BS in Computer Science', 2),
-('Bachelor of Science in Nursing', 3),
-('BS in Civil Engineering', 4),
-('BS in Architecture', 6),
-('BS in Accountancy', 7);
+('BS Medical Technology', (SELECT id FROM departments WHERE name = 'Department of Medical Technology' LIMIT 1)),
+('BS Occupational Therapy', (SELECT id FROM departments WHERE name = 'Department of Occupational Therapy' LIMIT 1)),
+('BS Pharmacy', (SELECT id FROM departments WHERE name = 'Department of Pharmacy' LIMIT 1)),
+('BS Clinical Pharmacy', (SELECT id FROM departments WHERE name = 'Department of Pharmacy' LIMIT 1)),
+('BS Radiologic Technology', (SELECT id FROM departments WHERE name = 'Department of Radiologic Technology' LIMIT 1)),
+('BS Physical Therapy', (SELECT id FROM departments WHERE name = 'Department of Physical Therapy' LIMIT 1)),
+('BS Computer Science', (SELECT id FROM departments WHERE name = 'Department of Computer Science' LIMIT 1)),
+('BS Information Technology', (SELECT id FROM departments WHERE name = 'Department of Information Technology' LIMIT 1)),
+('B Multimedia Arts', (SELECT id FROM departments WHERE name = 'Department of Multimedia Arts' LIMIT 1)),
+('AB Communication', (SELECT id FROM departments WHERE name = 'Department of Communication' LIMIT 1)),
+('BS Biology', (SELECT id FROM departments WHERE name = 'Department of Biological Sciences' LIMIT 1)),
+('BS Psychology', (SELECT id FROM departments WHERE name = 'Department of Psychology' LIMIT 1)),
+('AB Psychology', (SELECT id FROM departments WHERE name = 'Department of Psychology' LIMIT 1)),
+('BS Human Biology', (SELECT id FROM departments WHERE name = 'Department of Biological Sciences' LIMIT 1)),
+('BS Architecture', (SELECT id FROM departments WHERE name = 'Department of Architecture' LIMIT 1)),
+('BS Civil Engineering', (SELECT id FROM departments WHERE name = 'Department of Civil Engineering' LIMIT 1)),
+('BS Computer Engineering', (SELECT id FROM departments WHERE name = 'Department of Computer Engineering' LIMIT 1)),
+('BS Electronics Engineering', (SELECT id FROM departments WHERE name = 'Department of Electronics Engineering' LIMIT 1)),
+('BS Nursing', (SELECT id FROM departments WHERE name = 'Department of Nursing' LIMIT 1)),
+('BS Criminology', (SELECT id FROM departments WHERE name = 'Department of Criminology' LIMIT 1)),
+('B Elementary Education', (SELECT id FROM departments WHERE name = 'Department of Education' LIMIT 1)),
+('B Secondary Education', (SELECT id FROM departments WHERE name = 'Department of Education' LIMIT 1)),
+('Doctor of Medicine', (SELECT id FROM departments WHERE name = 'School of Medicine' LIMIT 1)),
+('Juris Doctor', (SELECT id FROM departments WHERE name = 'School of Law' LIMIT 1));
 
--- Specializations (Sample AUF Tracks)
+-- 6. SPECIALIZATIONS
 INSERT INTO specializations (name, degree_id) VALUES 
-('Infrastructure', 1), -- IT Specialization
-('Software Development', 1), 
-('Cybersecurity', 1),
-('Clinical Nursing', 3), -- Nursing Specialization
-('Community Health', 3),
-('Structural Engineering', 4); -- Civil Eng Specialization
+('Network Security', (SELECT id FROM degrees WHERE name = 'BS Information Technology' LIMIT 1)),
+('Data Science', (SELECT id FROM degrees WHERE name = 'BS Information Technology' LIMIT 1)),
+('Structural Engineering', (SELECT id FROM degrees WHERE name = 'BS Civil Engineering' LIMIT 1)),
+('Clinical Psychology', (SELECT id FROM degrees WHERE name = 'BS Psychology' LIMIT 1));
 
--- 3. Users (AUF Identities)
--- Passwords are set to 'admin' using the known compatible hash:
--- Jane Reyes (CCS Student)
-INSERT INTO users (user_id, first_name, last_name, name, password_hash, role, college_id, department_id, degree_id, specialization_id, gender, year, batch, cadre)
-VALUES ('24-1234-567', 'Jane', 'Reyes', 'Jane Reyes', '$2y$12$N9qo8uLOickgx2ZMRZoMyeIjZAgNo8U8y.X6E/eM0D6R.K9R7N3Sy', 'student', 1, 1, 1, 1, 'Female', '1st', 3, 'Undergraduate');
+-- 7. TERMINALS (Lookup Room by Name and Campus by Name)
+INSERT INTO terminals (terminal_code, terminal_name, campus_id, room_id, status) VALUES 
+('AUF-MAIN-LC-01', 'Learning Commons PC 01', 
+    (SELECT id FROM campuses WHERE name = 'AUF - Main Campus' LIMIT 1), 
+    (SELECT id FROM rooms WHERE name = 'Learning Commons' LIMIT 1), 
+    'online'),
+('AUF-IS-HS-LIB', 'IS Highschool Library Station', 
+    (SELECT id FROM campuses WHERE name = 'AUF-IS - Santa Barbara Campus' LIMIT 1), 
+    (SELECT id FROM rooms WHERE name = 'Highschool Library' LIMIT 1), 
+    'online');
 
--- John Santos (Nursing Student)
-INSERT INTO users (user_id, first_name, last_name, name, password_hash, role, college_id, department_id, degree_id, specialization_id, gender, year, batch, cadre)
-VALUES ('22-0987-123', 'John', 'Santos', 'John Santos', '$2y$12$N9qo8uLOickgx2ZMRZoMyeIjZAgNo8U8y.X6E/eM0D6R.K9R7N3Sy', 'student', 2, 3, 3, 4, 'Male', '3rd', 1, 'Undergraduate');
-
--- Maria Dela Cruz (Faculty/Staff)
-INSERT INTO users (user_id, first_name, last_name, name, password_hash, role, college_id, department_id, designation, gender)
-VALUES ('F-99001', 'Maria', 'Dela Cruz', 'Maria Dela Cruz', '$2y$12$N9qo8uLOickgx2ZMRZoMyeIjZAgNo8U8y.X6E/eM0D6R.K9R7N3Sy', 'staff', 1, 1, 'Associate Professor', 'Female');
-
--- Admin Account (Dashboard & Patron)
+-- 8. ADMIN ACCOUNT
 INSERT INTO users (user_id, first_name, last_name, name, password_hash, role)
-VALUES ('admin', 'System', 'Administrator', 'System Administrator', '$2y$12$N9qo8uLOickgx2ZMRZoMyeIjZAgNo8U8y.X6E/eM0D6R.K9R7N3Sy', 'admin');
+VALUES ('admin', 'Library', 'Admin', 'Library Admin', '$2y$12$N9qo8uLOickgx2ZMRZoMyeIjZAgNo8U8y.X6E/eM0D6R.K9R7N3Sy', 'admin');
 
 INSERT INTO admins (username, password_hash, name, email)
-VALUES ('admin', '$2y$12$N9qo8uLOickgx2ZMRZoMyeIjZAgNo8U8y.X6E/eM0D6R.K9R7N3Sy', 'AUF System Admin', 'admin@auf.edu.ph');
+VALUES ('admin', '$2y$12$N9qo8uLOickgx2ZMRZoMyeIjZAgNo8U8y.X6E/eM0D6R.K9R7N3Sy', 'Library System Admin', 'admin@auf.edu.ph');
 
--- 4. Terminals (AUF Catalog)
-INSERT INTO terminals (terminal_code, terminal_name, campus_id, room_id, status) VALUES 
-('AUF-MAIN-LIB-01', 'Reference Desk PC 1', 1, 1, 'online'),
-('AUF-MAIN-LIB-02', 'Reference Desk PC 2', 1, 1, 'online'),
-('AUF-CYBER-01', 'Cyberzone Workstation 01', 1, 2, 'online'),
-('AUF-CYBER-02', 'Cyberzone Workstation 02', 1, 2, 'online'),
-('AUF-MC-LIB-01', 'Med-Lib Search Terminal', 2, 5, 'online'),
-('AUF-HS-LIB-01', 'HS Library Terminal 1', 1, 3, 'maintenance');
-
--- 5. Standard Research Websites
-INSERT INTO websites (url, title) VALUES 
-('https://www.auf.edu.ph', 'Angeles University Foundation'),
-('https://library.auf.edu.ph', 'AUF University Library'),
-('https://canvas.auf.edu.ph', 'AUF Canvas LMS'),
-('https://google.com', 'Google Search'),
-('https://wikipedia.org', 'Wikipedia'),
-('https://github.com', 'GitHub'),
-('https://sciencedirect.com', 'ScienceDirect Research');
-
--- 6. Simulated Session History (Realistic AUF Context)
--- Jane Reyes (CCS Student) on Cyberzone Station
-INSERT INTO sessions (user_id, terminal_id, session_token, login_time, logout_time, duration_seconds, status)
-VALUES (1, 3, 'token-jane-ccs', NOW() - INTERVAL 4 HOUR, NOW() - INTERVAL 3 HOUR, 3600, 'completed');
-
-INSERT INTO website_logs (session_id, user_id, website_id, visited_at) VALUES 
-(1, 1, 3, NOW() - INTERVAL 235 MINUTE),
-(1, 1, 6, NOW() - INTERVAL 220 MINUTE),
-(1, 1, 4, NOW() - INTERVAL 200 MINUTE);
-
--- John Santos (CON Student) on Main Library Terminal
-INSERT INTO sessions (user_id, terminal_id, session_token, login_time, logout_time, duration_seconds, status)
-VALUES (2, 1, 'token-john-con', NOW() - INTERVAL 45 MINUTE, NULL, NULL, 'active');
-
-INSERT INTO website_logs (session_id, user_id, website_id, visited_at) VALUES 
-(2, 2, 7, NOW() - INTERVAL 30 MINUTE),
-(2, 2, 2, NOW() - INTERVAL 10 MINUTE);
+SET FOREIGN_KEY_CHECKS = 1;

@@ -156,6 +156,13 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 }
 
+// ── Tab Persistence Logic ────────────────────────────────────
+$active_tab = 'academic';
+$physical_actions = ['create_campus', 'update_campus', 'delete_campus', 'create_room', 'update_room', 'delete_room'];
+if (isset($_POST['action']) && in_array($_POST['action'], $physical_actions)) {
+    $active_tab = 'physical';
+}
+
 // ── Fetch Data ────────────────────────────────────────────────
 $colleges = $pdo->query("SELECT * FROM colleges ORDER BY name ASC")->fetchAll();
 $depts    = $pdo->query("SELECT d.*, c.name as college_name FROM departments d JOIN colleges c ON d.college_id = c.id ORDER BY c.name, d.name")->fetchAll();
@@ -176,17 +183,17 @@ include __DIR__ . '/partials/header.php';
 
 <!-- Tabs Navigation -->
 <div class="tabs-container" style="margin-bottom: 32px; border-bottom: 1px solid var(--border-light); display: flex; gap: 32px">
-    <button class="tab-link active" onclick="switchTab(event, 'academic')" style="padding: 12px 16px; border: none; background: none; font-weight: 700; color: var(--primary); border-bottom: 3px solid var(--primary); cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s ease">
+    <button class="tab-link <?= $active_tab === 'academic' ? 'active' : '' ?>" onclick="switchTab(event, 'academic')" style="padding: 12px 16px; border: none; background: none; font-weight: 700; color: <?= $active_tab === 'academic' ? 'var(--primary)' : 'var(--text-muted)' ?>; border-bottom: <?= $active_tab === 'academic' ? '3px solid var(--primary)' : 'none' ?>; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s ease">
         <i data-lucide="graduation-cap" style="width:18px"></i> Academic
     </button>
-    <button class="tab-link" onclick="switchTab(event, 'physical')" style="padding: 12px 16px; border: none; background: none; font-weight: 700; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s ease">
+    <button class="tab-link <?= $active_tab === 'physical' ? 'active' : '' ?>" onclick="switchTab(event, 'physical')" style="padding: 12px 16px; border: none; background: none; font-weight: 700; color: <?= $active_tab === 'physical' ? 'var(--primary)' : 'var(--text-muted)' ?>; border-bottom: <?= $active_tab === 'physical' ? '3px solid var(--primary)' : 'none' ?>; cursor: pointer; display: flex; align-items: center; gap: 8px; transition: all 0.2s ease">
         <i data-lucide="map-pin" style="width:18px"></i> Physical Locations
     </button>
 </div>
 
 <!-- Academic Tab -->
-<div id="academic" class="tab-content fade-in">
-    <div class="row" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;">
+<div id="academic" class="tab-content fade-in" style="display: <?= $active_tab === 'academic' ? 'block' : 'none' ?>">
+    <div class="row" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 24px;">
         <!-- Colleges Section -->
         <section>
             <div class="card">
@@ -194,7 +201,7 @@ include __DIR__ . '/partials/header.php';
                     <span class="card-title">Colleges</span>
                     <button class="btn btn-create btn-sm" onclick="openModal('modal-add-college')"><i data-lucide="plus"></i> Add</button>
                 </div>
-                <div class="table-wrap">
+                <div class="table-wrap" style="max-height: 500px; overflow-y: auto;">
                     <table>
                         <thead><tr><th>Name</th><th>Actions</th></tr></thead>
                         <tbody>
@@ -229,7 +236,7 @@ include __DIR__ . '/partials/header.php';
                     <span class="card-title">Departments</span>
                     <button class="btn btn-create btn-sm" onclick="openModal('modal-add-dept')"><i data-lucide="plus"></i> Add</button>
                 </div>
-                <div class="table-wrap">
+                <div class="table-wrap" style="max-height: 500px; overflow-y: auto;">
                     <table>
                         <thead><tr><th>Name</th><th>Actions</th></tr></thead>
                         <tbody>
@@ -264,7 +271,7 @@ include __DIR__ . '/partials/header.php';
                     <span class="card-title">Degrees / Programs</span>
                     <button class="btn btn-create btn-sm" onclick="openModal('modal-add-degree')"><i data-lucide="plus"></i> Add</button>
                 </div>
-                <div class="table-wrap">
+                <div class="table-wrap" style="max-height: 500px; overflow-y: auto;">
                     <table>
                         <thead><tr><th>Program Name</th><th>Actions</th></tr></thead>
                         <tbody>
@@ -295,7 +302,7 @@ include __DIR__ . '/partials/header.php';
 </div>
 
 <!-- Physical Tab -->
-<div id="physical" class="tab-content fade-in" style="display: none">
+<div id="physical" class="tab-content fade-in" style="display: <?= $active_tab === 'physical' ? 'block' : 'none' ?>">
     <div class="row" style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px;">
         <!-- Campuses Section -->
         <section>
@@ -304,7 +311,7 @@ include __DIR__ . '/partials/header.php';
                     <span class="card-title">Campuses</span>
                     <button class="btn btn-create btn-sm" onclick="openModal('modal-add-campus')"><i data-lucide="plus"></i> Add</button>
                 </div>
-                <div class="table-wrap">
+                <div class="table-wrap" style="max-height: 500px; overflow-y: auto;">
                     <table>
                         <thead><tr><th>Campus Name</th><th>Actions</th></tr></thead>
                         <tbody>
@@ -336,7 +343,7 @@ include __DIR__ . '/partials/header.php';
                     <span class="card-title">Rooms</span>
                     <button class="btn btn-create btn-sm" onclick="openModal('modal-add-room')"><i data-lucide="plus"></i> Add</button>
                 </div>
-                <div class="table-wrap">
+                <div class="table-wrap" style="max-height: 500px; overflow-y: auto;">
                     <table>
                         <thead><tr><th>Room Name</th><th>Campus</th><th>Actions</th></tr></thead>
                         <tbody>

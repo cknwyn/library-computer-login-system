@@ -17,6 +17,7 @@ $export    = isset($_GET['export']);
 $college_f = $_GET['college'] ?? '';
 $course_f  = $_GET['course']  ?? '';
 $degree_f  = $_GET['degree']  ?? '';
+$rank_f    = $_GET['rank']    ?? '';
 
 // If college changes, clear course unless it belongs to that college
 if ($college_f && $course_f) {
@@ -32,6 +33,7 @@ if ($course_f && $degree_f) {
 
 // ── Load filter options ──────────────────────────────────────
 $colleges = $pdo->query("SELECT id, name FROM colleges ORDER BY name")->fetchAll();
+$ranks    = $pdo->query("SELECT DISTINCT rank FROM users WHERE rank IS NOT NULL AND rank != '' ORDER BY rank")->fetchAll(PDO::FETCH_COLUMN);
 
 $courses_sql = "SELECT id, name FROM departments WHERE 1=1";
 if ($college_f) {
@@ -59,6 +61,10 @@ if ($course_f) {
 if ($degree_f) {
     $where_clauses[] = "u.degree_id = :degree";
     $params[':degree'] = $degree_f;
+}
+if ($rank_f) {
+    $where_clauses[] = "u.rank = :rank";
+    $params[':rank'] = $rank_f;
 }
 $where_str = implode(" AND ", $where_clauses);
 
@@ -107,6 +113,7 @@ if ($group_by === 'day') {
     if ($college_f) $u_where[] = "u.college_id = :coll";
     if ($course_f)  $u_where[] = "u.department_id = :course";
     if ($degree_f)  $u_where[] = "u.degree_id = :degree";
+    if ($rank_f)    $u_where[] = "u.rank = :rank";
     $u_where_str = implode(" AND ", $u_where);
     $sql = "SELECT u.user_id AS label, u.name AS extra, u.role, u.email, u.creation_date, c.name AS college_name
             FROM users u
@@ -118,6 +125,7 @@ if ($group_by === 'day') {
     if ($college_f) $w_where[] = "u.college_id = :coll";
     if ($course_f)  $w_where[] = "u.department_id = :course";
     if ($degree_f)  $w_where[] = "u.degree_id = :degree";
+    if ($rank_f)    $w_where[] = "u.rank = :rank";
     $w_where_str = implode(" AND ", $w_where);
     $sql = "SELECT u.user_id AS label, u.name AS extra, w.title, w.url, wl.visited_at, t.terminal_code
             FROM website_logs wl
@@ -298,6 +306,14 @@ include __DIR__ . '/partials/header.php';
         <option value="">— All Colleges —</option>
         <?php foreach ($colleges as $c): ?>
           <option value="<?= $c['id'] ?>" <?= $college_f==(string)$c['id']?'selected':'' ?>><?= h($c['name']) ?></option>
+        <?php endforeach; ?>
+      </select>
+
+      <label class="form-label" style="margin:0;white-space:nowrap">Filter Grade/Year:</label>
+      <select name="rank" class="form-control" style="max-width:180px" onchange="this.form.submit()">
+        <option value="">— All Levels —</option>
+        <?php foreach ($ranks as $r): ?>
+          <option value="<?= h($r) ?>" <?= $rank_f===$r?'selected':'' ?>><?= h($r) ?></option>
         <?php endforeach; ?>
       </select>
 
