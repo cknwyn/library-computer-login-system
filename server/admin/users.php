@@ -303,8 +303,10 @@ $role_f = $_GET['role']   ?? '';
 $where = ['1=1'];
 $params = [];
 if ($search) {
-    $where[] = '(u.user_id LIKE :q OR u.name LIKE :q OR u.email LIKE :q)';
-    $params[':q'] = "%{$search}%";
+    $where[] = '(u.user_id LIKE :q1 OR u.name LIKE :q2 OR u.email LIKE :q3 OR c.name LIKE :q4 OR d.name LIKE :q5 OR deg.name LIKE :q6 OR u.first_name LIKE :q7 OR u.last_name LIKE :q8)';
+    $term = "%{$search}%";
+    $params[':q1'] = $term; $params[':q2'] = $term; $params[':q3'] = $term; $params[':q4'] = $term;
+    $params[':q5'] = $term; $params[':q6'] = $term; $params[':q7'] = $term; $params[':q8'] = $term;
 }
 if ($role_f) { $where[] = 'u.role=:role'; $params[':role'] = $role_f; }
 
@@ -337,7 +339,10 @@ include __DIR__ . '/partials/header.php';
   <form method="GET" style="display:contents">
     <div class="search-wrap">
       <span class="search-icon"><i data-lucide="search" style="width:18px"></i></span>
-      <input class="form-control search-input" name="q" placeholder="Search ID, name, email..." value="<?= h($search) ?>">
+      <input class="form-control search-input" name="q" id="search-q" placeholder="Search ID, name, email, college..." value="<?= h($search) ?>">
+      <?php if ($search): ?>
+        <a href="?" class="search-clear" title="Clear Search"><i data-lucide="x" style="width:14px"></i></a>
+      <?php endif; ?>
     </div>
     <select name="role" class="form-control" style="max-width:140px">
       <option value="">All Roles</option>

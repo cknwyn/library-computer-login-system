@@ -12,16 +12,22 @@ $admin = current_admin();
 
 $date_from = $_GET['date_from'] ?? date('Y-m-01');    // Start of current month
 $date_to   = $_GET['date_to']   ?? date('Y-m-d');
-$group_by  = in_array($_GET['group_by'] ?? '', ['day','user','terminal','users_list','websites_list','college']) ? $_GET['group_by'] : 'day';
+$group_by  = in_array($_GET['group_by'] ?? '', ['day','user','terminal','users_list','websites_list','college','dept','degree']) ? $_GET['group_by'] : 'day';
 $export    = isset($_GET['export']);
 $college_f = $_GET['college'] ?? '';
 $course_f  = $_GET['course']  ?? '';
+$degree_f  = $_GET['degree']  ?? '';
 
 // If college changes, clear course unless it belongs to that college
 if ($college_f && $course_f) {
     $check = $pdo->prepare("SELECT COUNT(*) FROM departments WHERE id = ? AND college_id = ?");
     $check->execute([$course_f, $college_f]);
-    if (!$check->fetchColumn()) $course_f = '';
+    if (!$check->fetchColumn()) { $course_f = ''; $degree_f = ''; }
+}
+if ($course_f && $degree_f) {
+    $check = $pdo->prepare("SELECT COUNT(*) FROM degrees WHERE id = ? AND department_id = ?");
+    $check->execute([$degree_f, $course_f]);
+    if (!$check->fetchColumn()) $degree_f = '';
 }
 
 // ── Load filter options ──────────────────────────────────────
@@ -34,6 +40,11 @@ if ($college_f) {
 $courses_sql .= " ORDER BY name";
 $courses = $pdo->query($courses_sql)->fetchAll();
 
+$degrees = [];
+if ($course_f) {
+    $degrees = $pdo->query("SELECT id, name FROM degrees WHERE department_id = " . (int)$course_f . " ORDER BY name")->fetchAll();
+}
+
 $where_clauses = ["DATE(s.login_time) BETWEEN :df AND :dt", "s.status IN ('completed','force_ended','abandoned')"];
 $params = [':df' => $date_from, ':dt' => $date_to];
 
@@ -44,6 +55,10 @@ if ($college_f) {
 if ($course_f) {
     $where_clauses[] = "u.department_id = :course";
     $params[':course'] = $course_f;
+}
+if ($degree_f) {
+    $where_clauses[] = "u.degree_id = :degree";
+    $params[':degree'] = $degree_f;
 }
 $where_str = implode(" AND ", $where_clauses);
 
@@ -91,6 +106,7 @@ if ($group_by === 'day') {
     $u_where = ["DATE(u.creation_date) BETWEEN :df AND :dt"];
     if ($college_f) $u_where[] = "u.college_id = :coll";
     if ($course_f)  $u_where[] = "u.department_id = :course";
+    if ($degree_f)  $u_where[] = "u.degree_id = :degree";
     $u_where_str = implode(" AND ", $u_where);
     $sql = "SELECT u.user_id AS label, u.name AS extra, u.role, u.email, u.creation_date, c.name AS college_name
             FROM users u
@@ -101,6 +117,7 @@ if ($group_by === 'day') {
     $w_where = ["DATE(wl.visited_at) BETWEEN :df AND :dt"];
     if ($college_f) $w_where[] = "u.college_id = :coll";
     if ($course_f)  $w_where[] = "u.department_id = :course";
+    if ($degree_f)  $w_where[] = "u.degree_id = :degree";
     $w_where_str = implode(" AND ", $w_where);
     $sql = "SELECT u.user_id AS label, u.name AS extra, w.title, w.url, wl.visited_at, t.terminal_code
             FROM website_logs wl
@@ -110,6 +127,34 @@ if ($group_by === 'day') {
             JOIN terminals t ON t.id = s.terminal_id
             WHERE $w_where_str
             ORDER BY wl.visited_at DESC";
+} elseif ($group_by === 'dept') {
+    $sql = "SELECT COALESCE(d.name, 'No Dept') AS label,
+                   c.name AS extra,
+                   COUNT(*) AS sessions,
+                   COUNT(DISTINCT s.user_id) AS users,
+                   AVG(s.duration_seconds) AS avg_dur,
+                   SUM(s.duration_seconds) AS total_dur
+            FROM sessions s
+            JOIN users u ON u.id=s.user_id
+            LEFT JOIN departments d ON u.department_id = d.id
+            LEFT JOIN colleges c ON d.college_id = c.id
+            WHERE $where_str
+            GROUP BY u.department_id
+            ORDER BY sessions DESC";
+} elseif ($group_by === 'degree') {
+    $sql = "SELECT COALESCE(deg.name, 'No Degree') AS label,
+                   d.name AS extra,
+                   COUNT(*) AS sessions,
+                   COUNT(DISTINCT s.user_id) AS users,
+                   AVG(s.duration_seconds) AS avg_dur,
+                   SUM(s.duration_seconds) AS total_dur
+            FROM sessions s
+            JOIN users u ON u.id=s.user_id
+            LEFT JOIN degrees deg ON u.degree_id = deg.id
+            LEFT JOIN departments d ON deg.department_id = d.id
+            WHERE $where_str
+            GROUP BY u.degree_id
+            ORDER BY sessions DESC";
 } elseif ($group_by === 'college') {
     $sql = "SELECT COALESCE(c.name, 'No Affiliation') AS label,
                    COUNT(*) AS sessions,
@@ -186,13 +231,16 @@ if ($export) {
             fputcsv($out, [$l['user_id'], $l['name'], $l['terminal_code'], $l['title'], $l['url'], $l['visited_at']]);
         }
     } else {
-        fputcsv($out, ['User ID','User Name','College','Terminal','Room','Campus','Login Time','Logout Time','Duration (s)','Duration','Status']);
+        fputcsv($out, ['User ID','User Name','College','Department','Degree','Terminal','Room','Campus','Login Time','Logout Time','Duration (s)','Duration','Status']);
         $rows = $pdo->prepare(
-            "SELECT u.user_id, u.name, coll.name AS college_name, t.terminal_code, r.name AS room_name, camp.name AS campus_name,
+            "SELECT u.user_id, u.name, coll.name AS college_name, d.name AS dept_name, deg.name AS degree_name,
+                    t.terminal_code, r.name AS room_name, camp.name AS campus_name,
                     s.login_time, s.logout_time, s.duration_seconds, s.status
              FROM sessions s
              JOIN users     u ON u.id=s.user_id
              LEFT JOIN colleges coll ON u.college_id = coll.id
+             LEFT JOIN departments d ON u.department_id = d.id
+             LEFT JOIN degrees deg   ON u.degree_id = deg.id
              JOIN terminals t ON t.id=s.terminal_id
              LEFT JOIN rooms r ON r.id=t.room_id
              LEFT JOIN campuses camp ON camp.id=r.campus_id
@@ -201,8 +249,12 @@ if ($export) {
         );
         $rows->execute($params);
         while ($r = $rows->fetch()) {
-            fputcsv($out, [$r['user_id'],$r['name'],$r['college_name']??'—',$r['terminal_code'],$r['room_name']??'—',$r['campus_name']??'—',$r['login_time'],$r['logout_time'],
-                           $r['duration_seconds'],format_duration((int)$r['duration_seconds']),$r['status']]);
+            fputcsv($out, [
+                $r['user_id'],$r['name'],$r['college_name']??'—',$r['dept_name']??'—',$r['degree_name']??'—',
+                $r['terminal_code'],$r['room_name']??'—',$r['campus_name']??'—',
+                $r['login_time'],$r['logout_time'],$r['duration_seconds'],
+                format_duration((int)$r['duration_seconds']),$r['status']
+            ]);
         }
     }
     fclose($out);
@@ -232,6 +284,8 @@ include __DIR__ . '/partials/header.php';
         <option value="user"       <?= $group_by==='user'      ?'selected':'' ?>>User Stats</option>
         <option value="terminal"   <?= $group_by==='terminal'     ?'selected':'' ?>>Terminal</option>
         <option value="college"    <?= $group_by==='college'      ?'selected':'' ?>>College</option>
+        <option value="dept"       <?= $group_by==='dept'         ?'selected':'' ?>>Department</option>
+        <option value="degree"     <?= $group_by==='degree'       ?'selected':'' ?>>Degree</option>
         <option value="users_list" <?= $group_by==='users_list'   ?'selected':'' ?>>User Registry</option>
         <option value="websites_list" <?= $group_by==='websites_list' ?'selected':'' ?>>Website Tracking</option>
       </select>
@@ -248,14 +302,22 @@ include __DIR__ . '/partials/header.php';
       </select>
 
       <label class="form-label" style="margin:0;white-space:nowrap">Course/Dept:</label>
-      <select name="course" class="form-control" style="max-width:200px">
+      <select name="course" class="form-control" style="max-width:200px" onchange="this.form.submit()">
         <option value="">— All Courses —</option>
         <?php foreach ($courses as $c): ?>
           <option value="<?= $c['id'] ?>" <?= $course_f==(string)$c['id']?'selected':'' ?>><?= h($c['name']) ?></option>
         <?php endforeach; ?>
       </select>
 
-      <a href="?date_from=<?= $date_from ?>&date_to=<?= $date_to ?>&group_by=<?= $group_by ?>&college=<?= h($college_f) ?>&course=<?= h($course_f) ?>&export=1"
+      <label class="form-label" style="margin:0;white-space:nowrap">Degree:</label>
+      <select name="degree" class="form-control" style="max-width:200px" onchange="this.form.submit()" <?= empty($degrees)?'disabled':'' ?>>
+        <option value="">— All Degrees —</option>
+        <?php foreach ($degrees as $d): ?>
+          <option value="<?= $d['id'] ?>" <?= $degree_f==(string)$d['id']?'selected':'' ?>><?= h($d['name']) ?></option>
+        <?php endforeach; ?>
+      </select>
+
+      <a href="?date_from=<?= $date_from ?>&date_to=<?= $date_to ?>&group_by=<?= $group_by ?>&college=<?= h($college_f) ?>&course=<?= h($course_f) ?>&degree=<?= h($degree_f) ?>&export=1"
          class="btn btn-secondary"><i data-lucide="download" style="width:16px;vertical-align:middle;margin-right:4px"></i> Export CSV</a>
 
     </form>
@@ -339,8 +401,8 @@ include __DIR__ . '/partials/header.php';
     <table>
       <thead>
         <tr>
-          <th><?= ($group_by==='users_list' ? 'Staff ID' : ($group_by==='college' ? 'College' : ucfirst($group_by))) ?></th>
-          <?= !in_array($group_by, ['day','college']) ? '<th>'.($group_by==='users_list'?'Full Name':'Name/Location').'</th>' : '' ?>
+          <th><?= ($group_by==='users_list' ? 'Staff ID' : ($group_by==='college' ? 'College' : ($group_by==='dept'?'Department':($group_by==='degree'?'Degree':ucfirst($group_by))))) ?></th>
+          <?= !in_array($group_by, ['day','college']) ? '<th>'.($group_by==='users_list'?'Full Name':($group_by==='dept'?'College':($group_by==='degree'?'Department':'Name/Location'))).'</th>' : '' ?>
           <?php if ($group_by === 'users_list'): ?>
             <th>Email</th>
             <th>Role</th>

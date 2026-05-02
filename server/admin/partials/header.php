@@ -63,6 +63,9 @@
       <a href="reports.php" class="nav-item <?= $page==='reports' ? 'active' : '' ?>">
         <span class="nav-icon"><i data-lucide="bar-chart-3"></i></span> Reports
       </a>
+      <a href="logs.php" class="nav-item <?= $page==='logs' ? 'active' : '' ?>">
+        <span class="nav-icon"><i data-lucide="history"></i></span> System Logs
+      </a>
     </nav>
 
     <div class="sidebar-footer">

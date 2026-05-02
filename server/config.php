@@ -14,7 +14,7 @@ define('DB_USER', getenv('DB_USER') ?: 'root');
 define('DB_PASS', getenv('DB_PASS') ?: '');           // Default XAMPP root has no password
 
 // ── Application ───────────────────────────────────────────────
-define('APP_NAME',    'Library Computer System');
+define('APP_NAME', 'Library Computer System');
 define('APP_VERSION', '1.0.0');
 // Auto-detect APP_URL if not set
 if (!getenv('APP_URL')) {
@@ -28,7 +28,7 @@ if (!getenv('APP_URL')) {
 } else {
     define('APP_URL', rtrim(getenv('APP_URL'), '/'));
 }
-define('ASSETS_URL',  APP_URL . '/assets');
+define('ASSETS_URL', APP_URL . '/assets');
 
 
 // ── Session ───────────────────────────────────────────────────
@@ -59,3 +59,12 @@ if (DEBUG_MODE) {
 
 // ── Timezone ──────────────────────────────────────────────────
 date_default_timezone_set('Asia/Manila'); // Adjust to your timezone
+
+// ── Email (SMTP) ──────────────────────────────────────────────
+// Configure these for your environment
+define('MAIL_HOST', getenv('MAIL_HOST') ?: 'sandbox.smtp.mailtrap.io');
+define('MAIL_PORT', getenv('MAIL_PORT') ?: 587);
+define('MAIL_USER', getenv('MAIL_USER') ?: '3c9c1a8b18ec8e');
+define('MAIL_PASS', getenv('MAIL_PASS') ?: '5cad0589987a97');
+define('MAIL_FROM', getenv('MAIL_FROM') ?: 'no-reply@library.auf.edu.ph');
+define('MAIL_NAME', getenv('MAIL_NAME') ?: 'AUF Library System');

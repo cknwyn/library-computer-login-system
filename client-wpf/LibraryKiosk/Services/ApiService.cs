@@ -98,5 +98,34 @@ namespace LibraryKiosk.Services
             }
             catch { /* Ignored on logout */ }
         }
+
+        public async Task<ApiResponse<object>> RequestPasswordResetAsync(string userId)
+        {
+            try
+            {
+                var response = await _httpClient.PostAsJsonAsync($"{_apiBaseUrl}/password_reset_request.php", new { user_id = userId });
+                var content = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<ApiResponse<object>>(content) ?? new ApiResponse<object> { Success = false, Error = "Deserialization failed" };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<object> { Success = false, Error = $"Network error: {ex.Message}" };
+            }
+        }
+
+        public async Task<ApiResponse<object>> ResetPasswordAsync(string userId, string code, string newPassword)
+        {
+            try
+            {
+                var request = new { user_id = userId, code = code, new_password = newPassword };
+                var response = await _httpClient.PostAsJsonAsync($"{_apiBaseUrl}/password_reset_verify.php", request);
+                var content = await response.Content.ReadAsStringAsync();
+                return JsonSerializer.Deserialize<ApiResponse<object>>(content) ?? new ApiResponse<object> { Success = false, Error = "Deserialization failed" };
+            }
+            catch (Exception ex)
+            {
+                return new ApiResponse<object> { Success = false, Error = $"Network error: {ex.Message}" };
+            }
+        }
     }
 }

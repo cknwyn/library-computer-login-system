@@ -96,6 +96,8 @@ CREATE TABLE users (
     FOREIGN KEY (degree_id)     REFERENCES degrees(id)     ON UPDATE CASCADE ON DELETE SET NULL,
     FOREIGN KEY (specialization_id) REFERENCES specializations(id) ON UPDATE CASCADE ON DELETE SET NULL,
     INDEX idx_user_id (user_id),
+    INDEX idx_name (name),
+    INDEX idx_email (email),
     INDEX idx_status (status)
 ) ENGINE=InnoDB;
 
@@ -186,4 +188,17 @@ CREATE TABLE activity_logs (
     creation_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     INDEX idx_action (action),
     INDEX idx_creation_date (creation_date)
+) ENGINE=InnoDB;
+
+-- ============================================================
+-- AUTHENTICATION & RECOVERY
+-- ============================================================
+CREATE TABLE password_resets (
+    id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    user_id     INT UNSIGNED NOT NULL,
+    token       VARCHAR(255) NOT NULL COMMENT 'Hashed 6-digit code',
+    expires_at  TIMESTAMP NOT NULL,
+    created_at  TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (user_id) REFERENCES users(id) ON DELETE CASCADE,
+    INDEX idx_expires (expires_at)
 ) ENGINE=InnoDB;

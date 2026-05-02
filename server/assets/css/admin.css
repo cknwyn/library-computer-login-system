@@ -562,9 +562,23 @@ td { padding: 20px 24px; vertical-align: middle; }
 .search-icon {
   position: absolute; left: 16px; top: 50%; transform: translateY(-50%);
   color: var(--text-muted); font-size: 18px;
+  pointer-events: none;
 }
 .search-input {
   padding-left: 48px;
+  padding-right: 40px; /* Space for clear button */
+}
+.search-clear {
+  position: absolute; right: 12px; top: 50%; transform: translateY(-50%);
+  color: var(--text-faint); 
+  width: 24px; height: 24px;
+  display: flex; align-items: center; justify-content: center;
+  border-radius: 50%;
+  transition: all var(--transition);
+}
+.search-clear:hover {
+  background: #F1F5F9;
+  color: var(--danger);
 }
 
 /* ── Empty state ───────────────────────────────────────────── */

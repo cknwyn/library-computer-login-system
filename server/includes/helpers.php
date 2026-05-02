@@ -209,3 +209,62 @@ function find_or_create_degree(int $department_id, string $name): ?int {
     $stmt->execute([$department_id, $name]);
     return (int)$pdo->lastInsertId();
 }
+
+/**
+ * Send an email using SMTP with authentication.
+ * Optimized for services like Mailtrap.
+ */
+function send_email(string $to, string $subject, string $message): bool {
+    try {
+        $host = MAIL_HOST;
+        $port = MAIL_PORT;
+        $user = MAIL_USER;
+        $pass = MAIL_PASS;
+        $from = MAIL_FROM;
+        $name = MAIL_NAME;
+
+        // Establish connection
+        $socket = fsockopen($host, $port, $errno, $errstr, 10);
+        if (!$socket) return false;
+
+        $getResponse = function($socket) {
+            $res = "";
+            while($str = fgets($socket, 515)) {
+                $res .= $str;
+                if(substr($str, 3, 1) == " ") break;
+            }
+            return $res;
+        };
+
+        $sendCmd = function($socket, $cmd) use ($getResponse) {
+            fputs($socket, $cmd . "\r\n");
+            return $getResponse($socket);
+        };
+
+        $getResponse($socket); // Initial greeting
+        $sendCmd($socket, "EHLO " . $_SERVER['HTTP_HOST']);
+        $sendCmd($socket, "AUTH LOGIN");
+        $sendCmd($socket, base64_encode($user));
+        $sendCmd($socket, base64_encode($pass));
+        $sendCmd($socket, "MAIL FROM: <$from>");
+        $sendCmd($socket, "RCPT TO: <$to>");
+        $sendCmd($socket, "DATA");
+        
+        $headers = "MIME-Version: 1.0\r\n";
+        $headers .= "Content-type: text/html; charset=UTF-8\r\n";
+        $headers .= "To: <$to>\r\n";
+        $headers .= "From: $name <$from>\r\n";
+        $headers .= "Subject: $subject\r\n";
+        $headers .= "Date: " . date("r") . "\r\n";
+        $headers .= "X-Mailer: PHP/" . phpversion() . "\r\n";
+
+        fputs($socket, $headers . "\r\n" . $message . "\r\n.\r\n");
+        $getResponse($socket);
+        
+        $sendCmd($socket, "QUIT");
+        fclose($socket);
+        return true;
+    } catch (Exception $e) {
+        return false;
+    }
+}

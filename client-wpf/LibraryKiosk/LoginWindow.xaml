@@ -8,22 +8,24 @@
         WindowState="Maximized" 
         WindowStyle="None" 
         Topmost="True"
-        Background="#F5F7FA">
+        Background="#F5F7FA"
+        UseLayoutRounding="True"
+        SnapsToDevicePixels="True"
+        TextOptions.TextFormattingMode="Display"
+        TextOptions.TextRenderingMode="ClearType">
     
     <Window.Resources>
         <DropShadowEffect x:Key="CardShadow" BlurRadius="40" Direction="270" Opacity="0.1" ShadowDepth="10"/>
     </Window.Resources>
 
     <Grid>
-        <!-- Background Image -->
-        <Image Source="/assets/client_background.jpg" 
-               Stretch="UniformToFill" 
-               Opacity="0.4"
-               RenderOptions.BitmapScalingMode="HighQuality"/>
+        <Grid.Background>
+            <LinearGradientBrush StartPoint="0,0" EndPoint="1,1">
+                <GradientStop Color="#FFFFFF" Offset="0"/>
+                <GradientStop Color="#F1F5F9" Offset="1"/>
+            </LinearGradientBrush>
+        </Grid.Background>
         
-        <!-- Subtle Dark Gradient Overlay for readability -->
-        <Border Background="Black" Opacity="0.6"/>
-
         <StackPanel VerticalAlignment="Center" HorizontalAlignment="Center">
             <!-- Centered Header Logo -->
             <Image Source="/assets/logo.png" 
@@ -63,11 +65,23 @@
 
                     <!-- Footer Actions -->
                     <Grid>
-                        <TextBlock Text="Need assistance?" 
-                                   VerticalAlignment="Center" 
-                                   FontSize="13"
-                                   Foreground="{StaticResource TextLightBrush}" 
-                                   Cursor="Hand"/>
+                        <Button x:Name="ForgotPwBtn" 
+                                Content="Forgot Password?" 
+                                Background="Transparent" 
+                                BorderThickness="0"
+                                Foreground="{StaticResource TextLightBrush}" 
+                                FontSize="13"
+                                VerticalAlignment="Center"
+                                HorizontalAlignment="Left"
+                                Cursor="Hand"
+                                Click="ForgotPwBtn_Click">
+                            <Button.Template>
+                                <ControlTemplate TargetType="Button">
+                                    <TextBlock Text="{TemplateBinding Content}" 
+                                               TextDecorations="Underline"/>
+                                </ControlTemplate>
+                            </Button.Template>
+                        </Button>
                         
                         <Button x:Name="LoginBtn" 
                                 Content="Login" 
@@ -90,22 +104,21 @@
             </Border>
         </StackPanel>
 
-        <!-- Bottom Status Bar -->
         <Grid VerticalAlignment="Bottom" Margin="0,0,0,40">
             <StackPanel Orientation="Horizontal" HorizontalAlignment="Center">
                 <StackPanel VerticalAlignment="Center" Margin="0,0,30,0">
-                    <TextBlock Text="TERMINAL STATUS" FontSize="10" Foreground="White" Opacity="0.7"/>
-                    <TextBlock x:Name="TerminalNameTxt" Text="Terminal Online" FontWeight="Bold" Foreground="White"/>
+                    <TextBlock Text="TERMINAL STATUS" FontSize="10" Foreground="{StaticResource TextLightBrush}" FontWeight="Bold"/>
+                    <TextBlock x:Name="TerminalNameTxt" Text="Terminal Online" FontWeight="Bold" Foreground="{StaticResource TextDarkBrush}"/>
                 </StackPanel>
 
                 <!-- Status Pill -->
-                <Border Background="#22FFFFFF" CornerRadius="20" Padding="15,8">
+                <Border Background="#E2E8F0" CornerRadius="20" Padding="15,8">
                     <StackPanel Orientation="Horizontal">
                         <Ellipse x:Name="StatusDot" Width="8" Height="8" Fill="#4ADE80" Margin="0,0,10,0"/>
                         <TextBlock x:Name="StatusTxt" Text="CONNECTED TO SERVER" 
                                    FontSize="10" 
                                    FontWeight="Bold" 
-                                   Foreground="White"/>
+                                   Foreground="{StaticResource TextDarkBrush}"/>
                     </StackPanel>
                 </Border>
             </StackPanel>

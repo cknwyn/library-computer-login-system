@@ -92,5 +92,11 @@ namespace LibraryKiosk
             ErrorMsg.Text = msg;
             ErrorMsg.Visibility = Visibility.Visible;
         }
+        private void ForgotPwBtn_Click(object sender, RoutedEventArgs e)
+        {
+            var forgotPwWindow = new ForgotPasswordWindow(_apiService);
+            forgotPwWindow.Owner = this;
+            forgotPwWindow.ShowDialog();
+        }
     }
 }

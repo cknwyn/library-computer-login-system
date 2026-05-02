@@ -3,6 +3,13 @@
              xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
              xmlns:local="clr-namespace:LibraryKiosk">
     <Application.Resources>
+        <!-- Text Rendering Optimizations -->
+        <Style TargetType="Control">
+            <Setter Property="TextOptions.TextFormattingMode" Value="Display"/>
+            <Setter Property="TextOptions.TextRenderingMode" Value="ClearType"/>
+            <Setter Property="SnapsToDevicePixels" Value="True"/>
+        </Style>
+
         <!-- Colors -->
         <Color x:Key="PrimaryBlue">#004A8D</Color>
         <SolidColorBrush x:Key="PrimaryBlueBrush" Color="{StaticResource PrimaryBlue}"/>
