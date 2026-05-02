@@ -258,12 +258,14 @@ if ($search) {
 }
 if ($role_f) { $where[] = 'u.role=:role'; $params[':role'] = $role_f; }
 
-$sql = "SELECT u.*, c.name AS college_name, d.name AS department_name, deg.name AS degree_name,
+$sql = "SELECT u.*, c.name AS college_name, d.name AS department_name, 
+               deg.name AS degree_name, spec.name AS specialization_name,
                (SELECT COUNT(*) FROM sessions s WHERE s.user_id=u.id) AS total_sessions
         FROM users u
         LEFT JOIN colleges c ON u.college_id = c.id
         LEFT JOIN departments d ON u.department_id = d.id
         LEFT JOIN degrees deg ON u.degree_id = deg.id
+        LEFT JOIN specializations spec ON u.specialization_id = spec.id
         WHERE " . implode(' AND ', $where) . "
         ORDER BY u.creation_date DESC LIMIT 500";
 
@@ -304,7 +306,7 @@ include __DIR__ . '/partials/header.php';
   <div class="card-header"><span class="card-title">Collective Users <span class="badge badge-gray"><?= count($users) ?></span></span></div>
   <div class="table-wrap">
     <table>
-      <thead><tr><th>Identity</th><th>Classification</th><th>College / Dept</th><th>Sessions</th><th>Status</th><th>Actions</th></tr></thead>
+      <thead><tr><th>Identity</th><th>Classification</th><th>Academic Profile</th><th>Sessions</th><th>Status</th><th>Actions</th></tr></thead>
       <tbody>
         <?php foreach ($users as $u): ?>
         <tr>
@@ -312,10 +314,18 @@ include __DIR__ . '/partials/header.php';
             <div style="font-weight:700"><?= h($u['last_name'] ? "{$u['first_name']} " . ($u['middle_name'] ? substr($u['middle_name'],0,1).'. ' : '') . $u['last_name'] : $u['name']) ?></div>
             <div class="td-muted mono" style="font-size:11px"><?= h($u['user_id']) ?></div>
           </td>
-          <td><span class="badge <?= $u['role']==='staff'?'badge-blue':'badge-yellow' ?>"><?= strtoupper($u['role']) ?></span></td>
           <td>
-            <div style="font-size:12px; font-weight:600"><?= h($u['college_name'] ?? '—') ?></div>
-            <div class="td-muted" style="font-size:11px"><?= h($u['department_name'] ?? '—') ?></div>
+            <span class="badge <?= $u['role']==='staff'?'badge-blue':'badge-yellow' ?>"><?= strtoupper($u['role']) ?></span>
+            <div class="td-muted" style="font-size:10px; margin-top:2px"><?= h($u['rank'] ?? '') ?></div>
+          </td>
+          <td>
+            <div style="font-size:12px; font-weight:700; color:#334155"><?= h($u['college_name'] ?? '—') ?></div>
+            <div class="td-muted" style="font-size:11px; line-height:1.3">
+                <?= h($u['department_name'] ?? '') ?><?= $u['degree_name'] ? " &rsaquo; " . h($u['degree_name']) : '' ?>
+                <?php if ($u['specialization_name']): ?>
+                    <div style="font-style:italic; color:#64748b; margin-top:1px">Track: <?= h($u['specialization_name']) ?></div>
+                <?php endif; ?>
+            </div>
           </td>
           <td><span style="font-weight:700"><?= $u['total_sessions'] ?></span></td>
           <td><span class="badge badge-<?= $u['status']==='active'?'green':($u['status']==='suspended'?'red':'gray') ?>"><span class="badge-dot"></span><?= ucfirst($u['status']) ?></span></td>
