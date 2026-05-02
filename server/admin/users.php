@@ -174,24 +174,33 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                                  :specid, :raex, :rnk, :btch, :cadre, :dob)"
                     );
                     
-                    $stmt->execute([
-                        ':sid'    => $sid, ':fname'  => $fname, ':mname'  => $mname, ':lname'  => $lname, ':name'   => $rawName,
-                        ':hash'   => $hash, ':role'   => $role, ':uname' => ($data['Username'] !== '-' ? $data['Username'] : null),
-                        ':email' => ($data['Email'] !== '-'    ? $data['Email']    : null),
-                        ':phone' => trim($data['Contact Number'] ?? '') ?: null,
-                        ':desig' => trim($data['Designation'] ?? '') ?: null,
-                        ':gen'   => trim($data['Gender'] ?? '') ?: null,
-                        ':yr'    => trim($data['Year'] ?? '') ?: null, ':utype' => strtoupper($role),
-                        ':specid' => null, // Academic classifications are manual for CSV to maintain integrity
-                        ':raex'  => !empty($data['Ra Expiry Date']) ? date('Y-m-d', strtotime($data['Ra Expiry Date'])) : null,
-                        ':rnk'   => trim($data['Rank'] ?? '') ?: null, ':btch'  => trim($data['Batch'] ?? '') ?: null,
-                        ':cadre' => trim($data['Cadre'] ?? '') ?: null,
-                        ':dob'   => !empty($data['Dob']) ? date('Y-m-d', strtotime($data['Dob'])) : null
-                    ]);
-                    $count++;
+                    try {
+                        $stmt->execute([
+                            ':sid'    => $sid, ':fname'  => $fname, ':mname'  => $mname, ':lname'  => $lname, ':name'   => $rawName,
+                            ':hash'   => $hash, ':role'   => $role, ':uname' => ($data['Username'] !== '-' ? $data['Username'] : null),
+                            ':email' => ($data['Email'] !== '-'    ? $data['Email']    : null),
+                            ':phone' => trim($data['Contact Number'] ?? '') ?: null,
+                            ':desig' => trim($data['Designation'] ?? '') ?: null,
+                            ':gen'   => trim($data['Gender'] ?? '') ?: null,
+                            ':yr'    => trim($data['Year'] ?? '') ?: null, ':utype' => strtoupper($role),
+                            ':specid' => null,
+                            ':raex'  => !empty($data['Ra Expiry Date']) ? date('Y-m-d', strtotime($data['Ra Expiry Date'])) : null,
+                            ':rnk'   => trim($data['Rank'] ?? '') ?: null, ':btch'  => trim($data['Batch'] ?? '') ?: null,
+                            ':cadre' => trim($data['Cadre'] ?? '') ?: null,
+                            ':dob'   => !empty($data['Dob']) ? date('Y-m-d', strtotime($data['Dob'])) : null
+                        ]);
+                        $count++;
+                    } catch (PDOException $e) {
+                        if (strpos($e->getMessage(), 'Duplicate') !== false) {
+                            $errors++; // Skip duplicate
+                        } else {
+                            throw $e; // Re-throw other errors
+                        }
+                    }
                 }
                 $pdo->commit();
-                $flash = "Successfully onboarded {$count} users. (Note: Academic classifications must be assigned manually for CSV imports)";
+                $flash = "Successfully onboarded {$count} users. ";
+                if ($errors > 0) $flash .= "Skipped {$errors} duplicate or invalid records.";
             } catch (Exception $e) {
                 $pdo->rollBack();
                 $flash = "Import failed: " . $e->getMessage(); $flash_type = 'error';
