@@ -169,9 +169,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     $stmt = $pdo->prepare(
                         "INSERT INTO users (user_id, first_name, middle_name, last_name, name, password_hash, role, username, email, contact_number, 
-                                          designation, gender, year, user_type, speciality, ra_expiry_date, rank, batch, cadre, dob)
+                                          designation, gender, year, user_type, specialization_id, ra_expiry_date, rank, batch, cadre, dob)
                          VALUES (:sid, :fname, :mname, :lname, :name, :hash, :role, :uname, :email, :phone, :desig, :gen, :yr, :utype, 
-                                 :spec, :raex, :rnk, :btch, :cadre, :dob)"
+                                 :specid, :raex, :rnk, :btch, :cadre, :dob)"
                     );
                     
                     $stmt->execute([
@@ -182,7 +182,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ':desig' => trim($data['Designation'] ?? '') ?: null,
                         ':gen'   => trim($data['Gender'] ?? '') ?: null,
                         ':yr'    => trim($data['Year'] ?? '') ?: null, ':utype' => strtoupper($role),
-                        ':spec'  => trim($data['Speciality'] ?? '') ?: null,
+                        ':specid' => null, // Academic classifications are manual for CSV to maintain integrity
                         ':raex'  => !empty($data['Ra Expiry Date']) ? date('Y-m-d', strtotime($data['Ra Expiry Date'])) : null,
                         ':rnk'   => trim($data['Rank'] ?? '') ?: null, ':btch'  => trim($data['Batch'] ?? '') ?: null,
                         ':cadre' => trim($data['Cadre'] ?? '') ?: null,
