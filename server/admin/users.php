@@ -278,7 +278,7 @@ include __DIR__ . '/partials/header.php';
   </form>
   <div style="display:flex; gap:8px">
     <button class="btn btn-secondary" onclick="openModal('modal-bulk')"><i data-lucide="upload" style="width:18px"></i> Bulk Onboarding</button>
-    <button class="btn btn-primary" onclick="openModal('modal-create')"><i data-lucide="user-plus" style="width:18px"></i> Register User</button>
+    <button class="btn btn-create" onclick="openModal('modal-create')"><i data-lucide="user-plus" style="width:18px"></i> Register User</button>
   </div>
 </div>
 
@@ -303,12 +303,12 @@ include __DIR__ . '/partials/header.php';
           <td><span class="badge badge-<?= $u['status']==='active'?'green':($u['status']==='suspended'?'red':'gray') ?>"><span class="badge-dot"></span><?= ucfirst($u['status']) ?></span></td>
           <td>
             <div style="display:flex;gap:4px">
-              <button class="btn btn-info btn-sm" onclick='editUser(<?= json_encode($u) ?>)' title="Edit Profile"><i data-lucide="edit-3" style="width:14px"></i></button>
+              <button class="btn btn-edit btn-sm" onclick='editUser(<?= json_encode($u) ?>)' title="Edit Profile"><i data-lucide="edit-3" style="width:14px"></i></button>
               <button class="btn btn-warning btn-sm" onclick="resetPw(<?= $u['id'] ?>,'<?= addslashes(h($u['name'])) ?>')" title="Reset Password"><i data-lucide="key" style="width:14px"></i></button>
               <form method="POST" style="display:inline" onsubmit="return confirm('Delete this user and all history?')">
                 <input type="hidden" name="action" value="delete">
                 <input type="hidden" name="id" value="<?= $u['id'] ?>">
-                <button type="submit" class="btn btn-outline btn-sm" style="color:var(--error)" title="Delete"><i data-lucide="trash-2" style="width:14px"></i></button>
+                <button type="submit" class="btn btn-delete btn-sm" title="Delete"><i data-lucide="trash-2" style="width:14px"></i></button>
               </form>
               <form method="POST" style="display:inline" onsubmit="return confirm('Change status?')">
                 <input type="hidden" name="action" value="update_status">

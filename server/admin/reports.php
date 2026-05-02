@@ -234,7 +234,7 @@ include __DIR__ . '/partials/header.php';
         <option value="users_list" <?= $group_by==='users_list'   ?'selected':'' ?>>User Registry</option>
         <option value="websites_list" <?= $group_by==='websites_list' ?'selected':'' ?>>Website Tracking</option>
       </select>
-      <button type="submit" class="btn btn-primary">Generate</button>
+      <button type="submit" class="btn btn-create">Generate</button>
 
       <div style="flex-basis:100%; height:0; margin:0"></div> <!-- Break -->
 
@@ -255,7 +255,7 @@ include __DIR__ . '/partials/header.php';
       </select>
 
       <a href="?date_from=<?= $date_from ?>&date_to=<?= $date_to ?>&group_by=<?= $group_by ?>&college=<?= h($college_f) ?>&course=<?= h($course_f) ?>&export=1"
-         class="btn btn-outline"><i data-lucide="download" style="width:16px;vertical-align:middle;margin-right:4px"></i> Export CSV</a>
+         class="btn btn-secondary"><i data-lucide="download" style="width:16px;vertical-align:middle;margin-right:4px"></i> Export CSV</a>
 
     </form>
   </div>

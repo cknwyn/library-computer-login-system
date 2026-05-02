@@ -79,7 +79,7 @@ include __DIR__ . '/partials/header.php';
     <h2 style="font-size: 20px; font-weight: 800; color: var(--text-primary)">Network Assets</h2>
     <p class="td-muted">Manage ecosystem access points and terminal health.</p>
   </div>
-  <button class="btn btn-primary" onclick="document.getElementById('terminal-modal-title').textContent='Provision Terminal'; document.getElementById('terminal-action').value='add'; openModal('modal-terminal')">
+  <button class="btn btn-create" onclick="document.getElementById('terminal-modal-title').textContent='Provision Terminal'; document.getElementById('terminal-action').value='add'; openModal('modal-terminal')">
     <i data-lucide="plus" style="width:18px"></i> Provision New Terminal
   </button>
 </div>
@@ -102,7 +102,7 @@ include __DIR__ . '/partials/header.php';
     <div class="terminal-info">
       <div style="display:flex; justify-content:space-between; align-items:flex-start">
         <h3 style="margin:0"><?= h($t['terminal_name'] ?: $t['terminal_code']) ?></h3>
-        <button class="btn btn-outline btn-sm" style="padding:4px" onclick="editTerminal(<?= h(json_encode($t)) ?>)">
+        <button class="btn btn-edit btn-sm" style="padding:4px" onclick="editTerminal(<?= h(json_encode($t)) ?>)">
             <i data-lucide="edit-2" style="width:14px"></i>
         </button>
       </div>
