@@ -36,7 +36,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         email = :email, contact_number = :phone, designation = :desig, 
                         college_id = :cid, gender = :gen, year = :yr, 
                         department_id = :did, user_type = :utype, 
-                        degree_id = :degid, speciality = :spec, 
+                        degree_id = :degid, specialization_id = :specid, 
                         ra_expiry_date = :raex, rank = :rnk, batch = :btch, 
                         cadre = :cadre, dob = :dob
                      WHERE id = :id"
@@ -55,7 +55,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':did'   => $dept_id,
                     ':utype' => strtoupper($role),
                     ':degid' => $deg_id,
-                    ':spec'  => trim($_POST['speciality'] ?? '') ?: null,
+                    ':specid'=> !empty($_POST['specialization_id']) ? (int)$_POST['specialization_id'] : null,
                     ':raex'  => trim($_POST['ra_expiry_date'] ?? '') ?: null,
                     ':rnk'   => trim($_POST['rank'] ?? '') ?: null,
                     ':btch'  => trim($_POST['batch'] ?? '') ?: null,
@@ -97,9 +97,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $pdo->prepare(
                     "INSERT INTO users (user_id, first_name, middle_name, last_name, name, password_hash, role, username, email, contact_number, 
                                       designation, college_id, gender, year, department_id, 
-                                      user_type, degree_id, speciality, ra_expiry_date, rank, batch, cadre, dob)
+                                      user_type, degree_id, specialization_id, ra_expiry_date, rank, batch, cadre, dob)
                      VALUES (:sid, :fname, :mname, :lname, :name, :hash, :role, :uname, :email, :phone, :desig, :cid, :gen, :yr, :did, :utype, 
-                             :degid, :spec, :raex, :rnk, :btch, :cadre, :dob)"
+                             :degid, :specid, :raex, :rnk, :btch, :cadre, :dob)"
                 );
                 $stmt->execute([
                     ':sid'    => $sid, ':fname'  => $fname, ':mname'  => $mname, ':lname'  => $lname, ':name'   => $name, ':hash'   => $hash, ':role'   => $role,
@@ -109,7 +109,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':desig' => trim($_POST['designation'] ?? '') ?: null,
                     ':cid'   => $college_id, ':gen'   => trim($_POST['gender'] ?? '') ?: null,
                     ':yr'    => trim($_POST['year'] ?? '') ?: null, ':did'   => $dept_id, ':utype' => strtoupper($role),
-                    ':degid' => $deg_id, ':spec'  => trim($_POST['speciality'] ?? '') ?: null,
+                    ':degid' => $deg_id, ':specid'  => !empty($_POST['specialization_id']) ? (int)$_POST['specialization_id'] : null,
                     ':raex'  => trim($_POST['ra_expiry_date'] ?? '') ?: null, ':rnk'   => trim($_POST['rank'] ?? '') ?: null,
                     ':btch'  => trim($_POST['batch'] ?? '') ?: null, ':cadre' => trim($_POST['cadre'] ?? '') ?: null,
                     ':dob'   => trim($_POST['dob'] ?? '') ?: null
@@ -376,8 +376,8 @@ include __DIR__ . '/partials/header.php';
             <div class="form-group"><label class="form-label">Department</label><select name="department_id" id="reg-dept" class="form-control" onchange="loadDegrees(this.value)" disabled><option value="">Select Dept</option></select></div>
         </div>
         <div class="form-row">
-            <div class="form-group"><label class="form-label">Degree</label><select name="degree_id" id="reg-degree" class="form-control" disabled><option value="">Select Degree</option></select></div>
-            <div class="form-group"><label class="form-label">Initial Password</label><input name="password" type="password" class="form-control" placeholder="Default is Staff ID"></div>
+            <div class="form-group"><label class="form-label">Degree</label><select name="degree_id" id="reg-degree" class="form-control" onchange="loadSpecializations(this.value)" disabled><option value="">Select Degree</option></select></div>
+            <div class="form-group"><label class="form-label">Specialization</label><select name="specialization_id" id="reg-spec" class="form-control" disabled><option value="">Select Specialization</option></select></div>
         </div>
         <div class="form-row">
             <div class="form-group"><label class="form-label">Email</label><input name="email" type="email" class="form-control"></div>
@@ -392,7 +392,7 @@ include __DIR__ . '/partials/header.php';
             <div class="form-group"><label class="form-label">Cadre</label><select name="cadre" class="form-control"><option value="Undergraduate">Undergraduate</option><option value="Postgraduate">Postgraduate</option><option value="Others">Others</option></select></div>
         </div>
         <div class="form-row">
-            <div class="form-group" style="flex:1"><label class="form-label">Specialty / Specialization</label><input name="speciality" class="form-control" placeholder="e.g. Infrastructure (of Information Technology)"></div>
+            <div class="form-group"><label class="form-label">Initial Password</label><input name="password" type="password" class="form-control" placeholder="Default is Staff ID"></div>
         </div>
       </div>
       <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-create')">Cancel</button><button type="submit" class="btn btn-primary">Enroll User</button></div>
@@ -421,15 +421,15 @@ include __DIR__ . '/partials/header.php';
           <div class="form-group"><label class="form-label">Department</label><select name="department_id" id="edit-dept" class="form-control" onchange="loadDegreesEdit(this.value)" disabled><option value="">Select Dept</option></select></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label class="form-label">Degree</label><select name="degree_id" id="edit-degree" class="form-control" disabled><option value="">Select Degree</option></select></div>
-          <div class="form-group"><label class="form-label">Gender</label><select name="gender" id="edit-gender" class="form-control"><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
+          <div class="form-group"><label class="form-label">Degree</label><select name="degree_id" id="edit-degree" class="form-control" onchange="loadSpecializationsEdit(this.value)" disabled><option value="">Select Degree</option></select></div>
+          <div class="form-group"><label class="form-label">Specialization</label><select name="specialization_id" id="edit-spec" class="form-control" disabled><option value="">Select Specialization</option></select></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">Batch</label><input name="batch" id="edit-batch" type="number" class="form-control"></div>
           <div class="form-group"><label class="form-label">Cadre</label><select name="cadre" id="edit-cadre" class="form-control"><option value="Undergraduate">Undergraduate</option><option value="Postgraduate">Postgraduate</option><option value="Others">Others</option></select></div>
         </div>
         <div class="form-row">
-          <div class="form-group" style="flex:1"><label class="form-label">Specialty</label><input name="speciality" id="edit-speciality" class="form-control"></div>
+          <div class="form-group"><label class="form-label">Gender</label><select name="gender" id="edit-gender" class="form-control"><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
         </div>
       </div>
       <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-edit')">Cancel</button><button type="submit" class="btn btn-primary">Save Changes</button></div>
@@ -463,8 +463,10 @@ async function loadColleges() {
 async function loadDepartments(collegeId, targetId = 'reg-dept', degId = 'reg-degree') {
     const dSelect = document.getElementById(targetId);
     const degSelect = document.getElementById(degId);
+    const specSelect = document.getElementById(targetId.includes('edit') ? 'edit-spec' : 'reg-spec');
     dSelect.innerHTML = '<option value="">Select Dept</option>';
     degSelect.innerHTML = '<option value="">Select Degree</option>';
+    if(specSelect) { specSelect.innerHTML = '<option value="">Select Specialization</option>'; specSelect.disabled = true; }
     degSelect.disabled = true;
     if (!collegeId) { dSelect.disabled = true; return; }
     const res = await fetch(`../api/classifications.php?type=departments&college_id=${collegeId}`);
@@ -482,7 +484,9 @@ function loadDepartmentsEdit(cid) { return loadDepartments(cid, 'edit-dept', 'ed
 
 async function loadDegrees(deptId, targetId = 'reg-degree') {
     const degSelect = document.getElementById(targetId);
+    const specSelect = document.getElementById(targetId.includes('edit') ? 'edit-spec' : 'reg-spec');
     degSelect.innerHTML = '<option value="">Select Degree</option>';
+    if(specSelect) { specSelect.innerHTML = '<option value="">Select Specialization</option>'; specSelect.disabled = true; }
     if (!deptId) { degSelect.disabled = true; return; }
     const res = await fetch(`../api/classifications.php?type=degrees&department_id=${deptId}`);
     const json = await res.json();
@@ -497,6 +501,23 @@ async function loadDegrees(deptId, targetId = 'reg-degree') {
 
 function loadDegreesEdit(did) { return loadDegrees(did, 'edit-degree'); }
 
+async function loadSpecializations(degreeId, targetId = 'reg-spec') {
+    const sSelect = document.getElementById(targetId);
+    sSelect.innerHTML = '<option value="">Select Specialization</option>';
+    if (!degreeId) { sSelect.disabled = true; return; }
+    const res = await fetch(`../api/classifications.php?type=specializations&degree_id=${degreeId}`);
+    const json = await res.json();
+    json.data.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s.id;
+        opt.textContent = s.name;
+        sSelect.appendChild(opt);
+    });
+    sSelect.disabled = false;
+}
+
+function loadSpecializationsEdit(sid) { return loadSpecializations(sid, 'edit-spec'); }
+
 loadColleges();
 
 async function editUser(u) {
@@ -508,7 +529,7 @@ async function editUser(u) {
     document.getElementById('edit-gender').value = u.gender || '';
     document.getElementById('edit-batch').value  = u.batch  || '';
     document.getElementById('edit-cadre').value  = u.cadre  || 'Undergraduate';
-    document.getElementById('edit-speciality').value = u.speciality || '';
+    document.getElementById('edit-cadre').value  = u.cadre  || 'Undergraduate';
     
     // Cascading loads for Edit
     document.getElementById('edit-college').value = u.college_id || '';
@@ -518,6 +539,10 @@ async function editUser(u) {
         if (u.department_id) {
             await loadDegrees(u.department_id, 'edit-degree');
             document.getElementById('edit-degree').value = u.degree_id || '';
+            if (u.degree_id) {
+                await loadSpecializations(u.degree_id, 'edit-spec');
+                document.getElementById('edit-spec').value = u.specialization_id || '';
+            }
         }
     }
     

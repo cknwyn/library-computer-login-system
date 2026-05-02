@@ -34,6 +34,14 @@ CREATE TABLE degrees (
     FOREIGN KEY (department_id) REFERENCES departments(id) ON DELETE CASCADE
 ) ENGINE=InnoDB;
 
+CREATE TABLE specializations (
+    id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    degree_id     INT UNSIGNED NOT NULL,
+    name          VARCHAR(150) NOT NULL,
+    UNIQUE KEY (degree_id, name),
+    FOREIGN KEY (degree_id) REFERENCES degrees(id) ON DELETE CASCADE
+) ENGINE=InnoDB;
+
 -- ============================================================
 -- PHYSICAL INFRASTRUCTURE
 -- ============================================================
@@ -75,8 +83,8 @@ CREATE TABLE users (
     year             VARCHAR(10)  DEFAULT NULL,
     department_id    INT UNSIGNED DEFAULT NULL,
     degree_id        INT UNSIGNED DEFAULT NULL,
+    specialization_id INT UNSIGNED DEFAULT NULL,
     user_type        VARCHAR(50)  DEFAULT NULL COMMENT 'Legacy/Import category label',
-    speciality       VARCHAR(150) DEFAULT NULL,
     ra_expiry_date   DATE         DEFAULT NULL,
     rank             VARCHAR(50)  DEFAULT NULL,
     batch            VARCHAR(50)  DEFAULT NULL,
@@ -87,6 +95,7 @@ CREATE TABLE users (
     FOREIGN KEY (college_id)    REFERENCES colleges(id)    ON UPDATE CASCADE ON DELETE SET NULL,
     FOREIGN KEY (department_id) REFERENCES departments(id) ON UPDATE CASCADE ON DELETE SET NULL,
     FOREIGN KEY (degree_id)     REFERENCES degrees(id)     ON UPDATE CASCADE ON DELETE SET NULL,
+    FOREIGN KEY (specialization_id) REFERENCES specializations(id) ON UPDATE CASCADE ON DELETE SET NULL,
     INDEX idx_user_id (user_id),
     INDEX idx_status (status)
 ) ENGINE=InnoDB;

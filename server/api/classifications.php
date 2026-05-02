@@ -28,6 +28,13 @@ try {
         json_response(['success' => true, 'data' => $stmt->fetchAll()]);
     }
 
+    if ($type === 'specializations') {
+        $deg_id = (int)($_GET['degree_id'] ?? 0);
+        $stmt = $pdo->prepare("SELECT id, name FROM specializations WHERE degree_id = ? ORDER BY name ASC");
+        $stmt->execute([$deg_id]);
+        json_response(['success' => true, 'data' => $stmt->fetchAll()]);
+    }
+
     if ($type === 'campuses') {
         $stmt = $pdo->query("SELECT id, name FROM campuses ORDER BY name ASC");
         json_response(['success' => true, 'data' => $stmt->fetchAll()]);
