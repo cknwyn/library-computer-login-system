@@ -42,7 +42,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         name = :name, role = :role, username = :uname, 
                         email = :email, contact_number = :phone, designation = :desig, 
                         college_id = :cid, gender = :gen, year = :yr, 
-                        department_id = :did, user_type = :utype, 
+                        department_id = :did, 
                         degree_id = :degid, specialization_id = :specid, 
                         ra_expiry_date = :raex, rank = :rnk, batch = :btch, 
                         cadre = :cadre, dob = :dob
@@ -63,7 +63,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':gen'   => trim($_POST['gender'] ?? '') ?: null,
                     ':yr'    => trim($_POST['year'] ?? '') ?: null,
                     ':did'   => $dept_id,
-                    ':utype' => strtoupper($role),
                     ':degid' => $deg_id,
                     ':specid'=> !empty($_POST['specialization_id']) ? (int)$_POST['specialization_id'] : null,
                     ':raex'  => trim($_POST['ra_expiry_date'] ?? '') ?: null,
@@ -107,8 +106,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $stmt = $pdo->prepare(
                     "INSERT INTO users (user_id, first_name, middle_name, last_name, name, password_hash, role, username, email, contact_number, 
                                       designation, college_id, gender, year, department_id, 
-                                      user_type, degree_id, specialization_id, ra_expiry_date, rank, batch, cadre, dob)
-                     VALUES (:sid, :fname, :mname, :lname, :name, :hash, :role, :uname, :email, :phone, :desig, :cid, :gen, :yr, :did, :utype, 
+                                      degree_id, specialization_id, ra_expiry_date, rank, batch, cadre, dob)
+                     VALUES (:sid, :fname, :mname, :lname, :name, :hash, :role, :uname, :email, :phone, :desig, :cid, :gen, :yr, :did, 
                              :degid, :specid, :raex, :rnk, :btch, :cadre, :dob)"
                 );
                 $stmt->execute([
@@ -118,7 +117,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':phone' => trim($_POST['contact_number'] ?? '') ?: null,
                     ':desig' => trim($_POST['designation'] ?? '') ?: null,
                     ':cid'   => $college_id, ':gen'   => trim($_POST['gender'] ?? '') ?: null,
-                    ':yr'    => trim($_POST['year'] ?? '') ?: null, ':did'   => $dept_id, ':utype' => strtoupper($role),
+                    ':yr'    => trim($_POST['year'] ?? '') ?: null, ':did'   => $dept_id,
                     ':degid' => $deg_id, ':specid'  => !empty($_POST['specialization_id']) ? (int)$_POST['specialization_id'] : null,
                     ':raex'  => trim($_POST['ra_expiry_date'] ?? '') ?: null, ':rnk'   => trim($_POST['rank'] ?? '') ?: null,
                     ':btch'  => trim($_POST['batch'] ?? '') ?: null, ':cadre' => trim($_POST['cadre'] ?? '') ?: null,
@@ -169,8 +168,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     
                     $stmt = $pdo->prepare(
                         "INSERT INTO users (user_id, first_name, middle_name, last_name, name, password_hash, role, username, email, contact_number, 
-                                          designation, gender, year, user_type, specialization_id, ra_expiry_date, rank, batch, cadre, dob)
-                         VALUES (:sid, :fname, :mname, :lname, :name, :hash, :role, :uname, :email, :phone, :desig, :gen, :yr, :utype, 
+                                          designation, gender, year, specialization_id, ra_expiry_date, rank, batch, cadre, dob)
+                         VALUES (:sid, :fname, :mname, :lname, :name, :hash, :role, :uname, :email, :phone, :desig, :gen, :yr, 
                                  :specid, :raex, :rnk, :btch, :cadre, :dob)"
                     );
                     
@@ -182,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                             ':phone' => trim($data['Contact Number'] ?? '') ?: null,
                             ':desig' => trim($data['Designation'] ?? '') ?: null,
                             ':gen'   => trim($data['Gender'] ?? '') ?: null,
-                            ':yr'    => trim($data['Year'] ?? '') ?: null, ':utype' => strtoupper($role),
+                            ':yr'    => trim($data['Year'] ?? '') ?: null,
                             ':specid' => null,
                             ':raex'  => !empty($data['Ra Expiry Date']) ? date('Y-m-d', strtotime($data['Ra Expiry Date'])) : null,
                             ':rnk'   => trim($data['Rank'] ?? '') ?: null, ':btch'  => trim($data['Batch'] ?? '') ?: null,

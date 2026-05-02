@@ -149,23 +149,24 @@ if ($export) {
     if ($group_by === 'users_list') {
         fputcsv($out, [
             'Username', 'Email', 'Contact Number', 'Designation', 'College', 
-            'Gender', 'Year', 'Department', 'User Type', 'Degree', 
-            'Speciality', 'Staff Id', 'Ra Expiry Date', 'Rank', 'Batch', 
+            'Gender', 'Year', 'Department', 'Degree', 
+            'Specialization', 'Staff Id', 'Ra Expiry Date', 'Rank', 'Batch', 
             'Cadre', 'Dob', 'creation_date'
         ]);
-        $rows = $pdo->prepare("SELECT u.*, c.name AS college_name, d.name AS dept_name, deg.name AS degree_name 
+        $rows = $pdo->prepare("SELECT u.*, c.name AS college_name, d.name AS dept_name, deg.name AS degree_name, spec.name AS spec_name 
                                FROM users u
                                LEFT JOIN colleges c ON u.college_id = c.id
                                LEFT JOIN departments d ON u.department_id = d.id
                                LEFT JOIN degrees deg ON u.degree_id = deg.id
+                               LEFT JOIN specializations spec ON u.specialization_id = spec.id
                                WHERE $u_where_str ORDER BY u.creation_date DESC");
         $rows->execute($params);
         while ($u = $rows->fetch()) {
             fputcsv($out, [
                 $u['username'] ?? '-', $u['email'] ?? '-', $u['contact_number'] ?? '-',
                 $u['designation'] ?? '-', $u['college_name'] ?? '-', $u['gender'] ?? '-',
-                $u['year'] ?? '-', $u['dept_name'] ?? '-', $u['user_type'] ?? '-',
-                $u['degree_name'] ?? '-', $u['speciality'] ?? '-', $u['user_id'],
+                $u['year'] ?? '-', $u['dept_name'] ?? '-',
+                $u['degree_name'] ?? '-', $u['spec_name'] ?? '-', $u['user_id'],
                 $u['ra_expiry_date'] ?? '-', $u['rank'] ?? '-', $u['batch'] ?? '-',
                 $u['cadre'] ?? '-', $u['dob'] ?? '-', $u['creation_date']
             ]);

@@ -84,7 +84,6 @@ CREATE TABLE users (
     department_id    INT UNSIGNED DEFAULT NULL,
     degree_id        INT UNSIGNED DEFAULT NULL,
     specialization_id INT UNSIGNED DEFAULT NULL,
-    user_type        VARCHAR(50)  DEFAULT NULL COMMENT 'Legacy/Import category label',
     ra_expiry_date   DATE         DEFAULT NULL,
     rank             VARCHAR(50)  DEFAULT NULL,
     batch            VARCHAR(50)  DEFAULT NULL,
