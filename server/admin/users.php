@@ -138,17 +138,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $headers = fgetcsv($handle);
             $count = 0; $errors = 0;
             $pdo->beginTransaction();
+            // Cache lookups to minimize queries
+            $cache_coll = []; $cache_dept = []; $cache_deg = []; $cache_spec = [];
+
             try {
                 while (($row = fgetcsv($handle)) !== false) {
-                    if (count($row) < 12) continue;
+                    if (count($row) < 5) continue; // Safety check
                     $data = array_combine($headers, $row);
-                    $sid = trim($data['Staff Id'] ?? '');
+                    $sid = trim($data['Staff Id'] ?? $data['User ID'] ?? '');
                     if (!$sid) { $errors++; continue; }
                     
                     $role  = (stripos($data['User Type'] ?? '', 'STUDENT') !== false) ? 'student' : 'staff';
                     $hash  = password_hash($sid, PASSWORD_BCRYPT, ['cost' => 10]);
                     
-                    $rawName = trim($data['Username'] ?? '');
+                    $rawName = trim($data['Username'] ?? $data['Name'] ?? '');
                     if ($rawName === '-' || !$rawName) $rawName = $sid;
 
                     $fname = $rawName; $mname = null; $lname = null;
@@ -165,24 +168,71 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $lname = end($parts);
                         if (count($parts) > 2) $mname = $parts[1];
                     }
+
+                    // --- Auto-resolve Academic Units ---
+                    $cid = null; $did = null; $degid = null; $specid = null;
+
+                    // College
+                    $coll_name = trim($data['Affiliation'] ?? $data['College'] ?? '');
+                    if ($coll_name && $coll_name !== '-') {
+                        if (!isset($cache_coll[$coll_name])) {
+                            $st = $pdo->prepare("SELECT id FROM colleges WHERE name = ? OR code = ? LIMIT 1");
+                            $st->execute([$coll_name, $coll_name]);
+                            $cache_coll[$coll_name] = $st->fetchColumn() ?: null;
+                        }
+                        $cid = $cache_coll[$coll_name];
+                    }
+
+                    // Department
+                    $dept_name = trim($data['Department'] ?? '');
+                    if ($dept_name && $dept_name !== '-') {
+                        if (!isset($cache_dept[$dept_name])) {
+                            $st = $pdo->prepare("SELECT id FROM departments WHERE name = ? LIMIT 1");
+                            $st->execute([$dept_name]);
+                            $cache_dept[$dept_name] = $st->fetchColumn() ?: null;
+                        }
+                        $did = $cache_dept[$dept_name];
+                    }
+
+                    // Degree
+                    $deg_name = trim($data['Degree'] ?? '');
+                    if ($deg_name && $deg_name !== '-') {
+                        if (!isset($cache_deg[$deg_name])) {
+                            $st = $pdo->prepare("SELECT id FROM degrees WHERE name = ? LIMIT 1");
+                            $st->execute([$deg_name]);
+                            $cache_deg[$deg_name] = $st->fetchColumn() ?: null;
+                        }
+                        $degid = $cache_deg[$deg_name];
+                    }
+
+                    // Specialization
+                    $spec_name = trim($data['Speciality'] ?? $data['Specialization'] ?? '');
+                    if ($spec_name && $spec_name !== '-') {
+                        if (!isset($cache_spec[$spec_name])) {
+                            $st = $pdo->prepare("SELECT id FROM specializations WHERE name = ? LIMIT 1");
+                            $st->execute([$spec_name]);
+                            $cache_spec[$spec_name] = $st->fetchColumn() ?: null;
+                        }
+                        $specid = $cache_spec[$spec_name];
+                    }
                     
                     $stmt = $pdo->prepare(
                         "INSERT INTO users (user_id, first_name, middle_name, last_name, name, password_hash, role, username, email, contact_number, 
-                                          designation, gender, year, specialization_id, ra_expiry_date, rank, batch, cadre, dob)
-                         VALUES (:sid, :fname, :mname, :lname, :name, :hash, :role, :uname, :email, :phone, :desig, :gen, :yr, 
+                                          designation, gender, year, college_id, department_id, degree_id, specialization_id, ra_expiry_date, rank, batch, cadre, dob)
+                         VALUES (:sid, :fname, :mname, :lname, :name, :hash, :role, :uname, :email, :phone, :desig, :gen, :yr, :cid, :did, :degid,
                                  :specid, :raex, :rnk, :btch, :cadre, :dob)"
                     );
                     
                     try {
                         $stmt->execute([
                             ':sid'    => $sid, ':fname'  => $fname, ':mname'  => $mname, ':lname'  => $lname, ':name'   => $rawName,
-                            ':hash'   => $hash, ':role'   => $role, ':uname' => ($data['Username'] !== '-' ? $data['Username'] : null),
+                            ':hash'   => $hash, ':role'   => $role, ':uname' => ($data['Username'] ?? $data['Name'] ?? null),
                             ':email' => ($data['Email'] !== '-'    ? $data['Email']    : null),
                             ':phone' => trim($data['Contact Number'] ?? '') ?: null,
                             ':desig' => trim($data['Designation'] ?? '') ?: null,
                             ':gen'   => trim($data['Gender'] ?? '') ?: null,
                             ':yr'    => trim($data['Year'] ?? '') ?: null,
-                            ':specid' => null,
+                            ':cid'   => $cid, ':did' => $did, ':degid' => $degid, ':specid' => $specid,
                             ':raex'  => !empty($data['Ra Expiry Date']) ? date('Y-m-d', strtotime($data['Ra Expiry Date'])) : null,
                             ':rnk'   => trim($data['Rank'] ?? '') ?: null, ':btch'  => trim($data['Batch'] ?? '') ?: null,
                             ':cadre' => trim($data['Cadre'] ?? '') ?: null,
@@ -191,9 +241,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         $count++;
                     } catch (PDOException $e) {
                         if (strpos($e->getMessage(), 'Duplicate') !== false) {
-                            $errors++; // Skip duplicate
+                            $errors++; 
                         } else {
-                            throw $e; // Re-throw other errors
+                            throw $e;
                         }
                     }
                 }
