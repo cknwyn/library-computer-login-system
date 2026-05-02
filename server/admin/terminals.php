@@ -50,6 +50,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->prepare('UPDATE terminals SET status=:s WHERE id=:id')->execute([':s'=>$status,':id'=>$tid]);
             $flash = 'Terminal status updated.';
         }
+    }
+
     if ($action === 'delete') {
         $tid = (int)($_POST['id'] ?? 0);
         if ($tid) {
