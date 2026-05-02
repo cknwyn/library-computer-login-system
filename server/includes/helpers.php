@@ -161,3 +161,51 @@ function standardize_department(?string $text): ?string {
     $text = preg_replace('/^ms\s+/i', 'MS ', $text);
     return $text;
 }
+
+/**
+ * Find or create a college by name.
+ */
+function find_or_create_college(string $name): ?int {
+    if (!$name || $name === '-') return null;
+    $pdo = db();
+    $stmt = $pdo->prepare("SELECT id FROM colleges WHERE name = ?");
+    $stmt->execute([$name]);
+    $id = $stmt->fetchColumn();
+    if ($id) return (int)$id;
+
+    $stmt = $pdo->prepare("INSERT INTO colleges (name) VALUES (?)");
+    $stmt->execute([$name]);
+    return (int)$pdo->lastInsertId();
+}
+
+/**
+ * Find or create a department by name and college_id.
+ */
+function find_or_create_department(int $college_id, string $name): ?int {
+    if (!$name || $name === '-') return null;
+    $pdo = db();
+    $stmt = $pdo->prepare("SELECT id FROM departments WHERE college_id = ? AND name = ?");
+    $stmt->execute([$college_id, $name]);
+    $id = $stmt->fetchColumn();
+    if ($id) return (int)$id;
+
+    $stmt = $pdo->prepare("INSERT INTO departments (college_id, name) VALUES (?, ?)");
+    $stmt->execute([$college_id, $name]);
+    return (int)$pdo->lastInsertId();
+}
+
+/**
+ * Find or create a degree by name and department_id.
+ */
+function find_or_create_degree(int $department_id, string $name): ?int {
+    if (!$name || $name === '-') return null;
+    $pdo = db();
+    $stmt = $pdo->prepare("SELECT id FROM degrees WHERE department_id = ? AND name = ?");
+    $stmt->execute([$department_id, $name]);
+    $id = $stmt->fetchColumn();
+    if ($id) return (int)$id;
+
+    $stmt = $pdo->prepare("INSERT INTO degrees (department_id, name) VALUES (?, ?)");
+    $stmt->execute([$department_id, $name]);
+    return (int)$pdo->lastInsertId();
+}

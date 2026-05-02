@@ -2,7 +2,7 @@
 // ============================================================
 // POST /api/login.php
 // Authenticates a user and creates a session.
-// Body (JSON): { "user_id": "2021-00001", "password": "...", "terminal_code": "PC-01" }
+// Body (JSON): { "user_id": "2021-00001", "password": "...", "terminal_code": "PC-01", "pc_hostname": "..." }
 // Response:    { "success": true, "session_token": "...", "session_id": 1, "user": {...} }
 // ============================================================
 require_once __DIR__ . '/../includes/db.php';
@@ -20,7 +20,7 @@ $body = json_decode(file_get_contents('php://input'), true);
 $user_id_input   = trim($body['user_id']       ?? '');
 $password_input  = trim($body['password']       ?? '');
 $terminal_code   = trim($body['terminal_code']  ?? '');
-$pc_name         = trim($body['pc_name']         ?? '');
+$pc_hostname     = trim($body['pc_hostname']    ?? $body['pc_name'] ?? '');
 
 if (!$user_id_input || !$password_input || !$terminal_code) {
     json_response(['success' => false, 'error' => 'ID, password, and terminal code are required.'], 400);
@@ -54,14 +54,20 @@ $terminal = $stmt->fetch();
 
 if (!$terminal) {
     // Auto-register unknown terminals (convenient for local testing)
-    $stmt = db()->prepare('INSERT INTO terminals (terminal_code, pc_name, status) VALUES (:code, :pcn, :s)');
-    $stmt->execute([':code' => $terminal_code, ':pcn' => $pc_name ?: null, ':s' => 'online']);
+    $stmt = db()->prepare('INSERT INTO terminals (terminal_code, pc_hostname, status) VALUES (:code, :host, :s)');
+    $stmt->execute([':code' => $terminal_code, ':host' => $pc_hostname ?: null, ':s' => 'online']);
     $terminal_id = (int) db()->lastInsertId();
 } else {
     $terminal_id = (int) $terminal['id'];
-    // Update terminal status to online and sync PC Name if it changed
-    db()->prepare("UPDATE terminals SET status = 'online', pc_name = COALESCE(:pcn, pc_name), last_seen = NOW() WHERE id = :id")
-        ->execute([':id' => $terminal_id, ':pcn' => $pc_name ?: null]);
+    // Update terminal status to online and record hostname
+    $sql = "UPDATE terminals SET status = 'online', last_seen = NOW()";
+    if ($pc_hostname) $sql .= ", pc_hostname = :host";
+    $sql .= " WHERE id = :id";
+    
+    $params = [':id' => $terminal_id];
+    if ($pc_hostname) $params[':host'] = $pc_hostname;
+    
+    db()->prepare($sql)->execute($params);
 }
 
 // ── Create session ────────────────────────────────────────────

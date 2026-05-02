@@ -45,6 +45,9 @@
       <a href="websites.php" class="nav-item <?= $page==='websites' ? 'active' : '' ?>">
         <span class="nav-icon"><i data-lucide="globe"></i></span> Website Tracking
       </a>
+      <a href="classifications.php" class="nav-item <?= $page==='classifications' ? 'active' : '' ?>">
+        <span class="nav-icon"><i data-lucide="layers"></i></span> Classifications
+      </a>
 
       <span class="nav-section-label">Analytics</span>
       <a href="reports.php" class="nav-item <?= $page==='reports' ? 'active' : '' ?>">
