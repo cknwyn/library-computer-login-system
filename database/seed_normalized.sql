@@ -61,13 +61,13 @@ INSERT INTO degrees (name, department_id) VALUES
 
 -- 3. Users (AUF Identities)
 -- Passwords are set to 'admin' using the known compatible hash:
--- Jane Doe (CCS Student)
-INSERT INTO users (user_id, first_name, last_name, name, password_hash, role, college_id, department_id, degree_id, gender, year)
-VALUES ('24-1234-567', 'Jane', 'Reyes', 'Jane Reyes', '$2y$12$N9qo8uLOickgx2ZMRZoMyeIjZAgNo8U8y.X6E/eM0D6R.K9R7N3Sy', 'student', 1, 1, 1, 'Female', '1st');
+-- Jane Reyes (CCS Student)
+INSERT INTO users (user_id, first_name, last_name, name, password_hash, role, college_id, department_id, degree_id, gender, year, batch, cadre, speciality)
+VALUES ('24-1234-567', 'Jane', 'Reyes', 'Jane Reyes', '$2y$12$N9qo8uLOickgx2ZMRZoMyeIjZAgNo8U8y.X6E/eM0D6R.K9R7N3Sy', 'student', 1, 1, 1, 'Female', '1st', 3, 'Undergraduate', 'Infrastructure');
 
 -- John Santos (Nursing Student)
-INSERT INTO users (user_id, first_name, last_name, name, password_hash, role, college_id, department_id, degree_id, gender, year)
-VALUES ('22-0987-123', 'John', 'Santos', 'John Santos', '$2y$12$N9qo8uLOickgx2ZMRZoMyeIjZAgNo8U8y.X6E/eM0D6R.K9R7N3Sy', 'student', 2, 3, 3, 'Male', '3rd');
+INSERT INTO users (user_id, first_name, last_name, name, password_hash, role, college_id, department_id, degree_id, gender, year, batch, cadre, speciality)
+VALUES ('22-0987-123', 'John', 'Santos', 'John Santos', '$2y$12$N9qo8uLOickgx2ZMRZoMyeIjZAgNo8U8y.X6E/eM0D6R.K9R7N3Sy', 'student', 2, 3, 3, 'Male', '3rd', 1, 'Undergraduate', 'Clinical Nursing');
 
 -- Maria Dela Cruz (Faculty/Staff)
 INSERT INTO users (user_id, first_name, last_name, name, password_hash, role, college_id, department_id, designation, gender)

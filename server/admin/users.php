@@ -387,6 +387,13 @@ include __DIR__ . '/partials/header.php';
             <div class="form-group"><label class="form-label">Gender</label><select name="gender" class="form-control"><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
             <div class="form-group"><label class="form-label">Birth Date</label><input name="dob" type="date" class="form-control"></div>
         </div>
+        <div class="form-row">
+            <div class="form-group"><label class="form-label">Batch (Number Only)</label><input name="batch" type="number" class="form-control" placeholder="e.g. 3"></div>
+            <div class="form-group"><label class="form-label">Cadre</label><select name="cadre" class="form-control"><option value="Undergraduate">Undergraduate</option><option value="Postgraduate">Postgraduate</option><option value="Others">Others</option></select></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group" style="flex:1"><label class="form-label">Specialty / Specialization</label><input name="speciality" class="form-control" placeholder="e.g. Infrastructure (of Information Technology)"></div>
+        </div>
       </div>
       <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-create')">Cancel</button><button type="submit" class="btn btn-primary">Enroll User</button></div>
     </form>
@@ -416,6 +423,13 @@ include __DIR__ . '/partials/header.php';
         <div class="form-row">
           <div class="form-group"><label class="form-label">Degree</label><select name="degree_id" id="edit-degree" class="form-control" disabled><option value="">Select Degree</option></select></div>
           <div class="form-group"><label class="form-label">Gender</label><select name="gender" id="edit-gender" class="form-control"><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Batch</label><input name="batch" id="edit-batch" type="number" class="form-control"></div>
+          <div class="form-group"><label class="form-label">Cadre</label><select name="cadre" id="edit-cadre" class="form-control"><option value="Undergraduate">Undergraduate</option><option value="Postgraduate">Postgraduate</option><option value="Others">Others</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1"><label class="form-label">Specialty</label><input name="speciality" id="edit-speciality" class="form-control"></div>
         </div>
       </div>
       <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-edit')">Cancel</button><button type="submit" class="btn btn-primary">Save Changes</button></div>
@@ -492,6 +506,9 @@ async function editUser(u) {
     document.getElementById('edit-role').value = u.role;
     document.getElementById('edit-email').value = u.email || '';
     document.getElementById('edit-gender').value = u.gender || '';
+    document.getElementById('edit-batch').value  = u.batch  || '';
+    document.getElementById('edit-cadre').value  = u.cadre  || 'Undergraduate';
+    document.getElementById('edit-speciality').value = u.speciality || '';
     
     // Cascading loads for Edit
     document.getElementById('edit-college').value = u.college_id || '';
