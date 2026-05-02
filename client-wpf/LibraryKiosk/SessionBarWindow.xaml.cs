@@ -23,7 +23,8 @@ namespace LibraryKiosk
             _apiService = apiService;
 
             TerminalText.Text = _session.Terminal?.Code ?? "Terminal Session";
-            UserText.Text = $"Active User: {_session.User?.FullName ?? "Unknown"}";
+            string rankInfo = string.IsNullOrEmpty(_session.User?.Rank) ? "" : $" ({_session.User.Rank})";
+            UserText.Text = $"Active User: {_session.User?.FullName ?? "Unknown"}{rankInfo}";
 
             // Position bottom right
             this.Left = SystemParameters.WorkArea.Width - this.Width - 10;

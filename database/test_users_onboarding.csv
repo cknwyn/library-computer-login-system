@@ -1,5 +1,5 @@
 Staff Id,Username,User Type,Email,Contact Number,Designation,Gender,College,Department,Degree,Specialization,Ra Expiry Date,Rank,Batch,Cadre,Dob
-DB-0001,"Reyes, Jane",STUDENT,jane.reyes@auf.edu.ph,0917-123-4567,-,Female,CCS,Information Technology,BS in Information Technology,Infrastructure,2028-05-01,1st Year,3,Undergraduate,2005-05-15
-DB-0002,"Santos, John Mark",STUDENT,john.santos@auf.edu.ph,0918-765-4321,-,Male,CCS,Computer Science,BS in Computer Science,Software Development,2028-05-01,2nd Year,4,Undergraduate,2004-10-20
-DB-0003,"Dela Cruz, Maria",STAFF,maria.dc@auf.edu.ph,0920-555-0000,Associate Professor,Female,CON,Nursing Education,Bachelor of Science in Nursing,Clinical Nursing,2030-01-01,Faculty/Staff,-,Others,1985-03-12
-DB-0004,"Luna, Antonio P.",STUDENT,antonio.luna@auf.edu.ph,0919-999-1111,-,Male,CEA,Civil Engineering,BS in Civil Engineering,Structural Engineering,2026-12-31,4th Year,1,Postgraduate,2002-11-29
+21-1234-567,"Reyes, Jane",STUDENT,jane.reyes@auf.edu.ph,0917-123-4567,-,Female,CCS,Information Technology,BS in Information Technology,Infrastructure,2028-05-01,1st Year,3,Undergraduate,2005-05-15
+21-1234-568,"Santos, John Mark",STUDENT,john.santos@auf.edu.ph,0918-765-4321,-,Male,CCS,Computer Science,BS in Computer Science,Software Development,2028-05-01,2nd Year,4,Undergraduate,2004-10-20
+24-5641-001,"Dela Cruz, Maria",STAFF,maria.dc@auf.edu.ph,0920-555-0000,Associate Professor,Female,CON,Nursing Education,Bachelor of Science in Nursing,Clinical Nursing,2030-01-01,Faculty/Staff,-,Others,1985-03-12
+21-5641-002,"Luna, Antonio P.",STUDENT,antonio.luna@auf.edu.ph,0919-999-1111,-,Male,CEA,Civil Engineering,BS in Civil Engineering,Structural Engineering,2026-12-31,4th Year,1,Postgraduate,2002-11-29
