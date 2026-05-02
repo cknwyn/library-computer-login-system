@@ -50,6 +50,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $pdo->prepare('UPDATE terminals SET status=:s WHERE id=:id')->execute([':s'=>$status,':id'=>$tid]);
             $flash = 'Terminal status updated.';
         }
+    if ($action === 'delete') {
+        $tid = (int)($_POST['id'] ?? 0);
+        if ($tid) {
+            try {
+                $pdo->prepare('DELETE FROM terminals WHERE id = ?')->execute([$tid]);
+                $flash = 'Terminal removed from ecosystem.';
+            } catch (PDOException $e) {
+                $flash = 'Error: Cannot delete terminal with active session history.';
+            }
+        }
     }
 }
 
@@ -102,9 +112,16 @@ include __DIR__ . '/partials/header.php';
     <div class="terminal-info">
       <div style="display:flex; justify-content:space-between; align-items:flex-start">
         <h3 style="margin:0"><?= h($t['terminal_name'] ?: $t['terminal_code']) ?></h3>
-        <button class="btn btn-edit btn-sm" style="padding:4px" onclick="editTerminal(<?= h(json_encode($t)) ?>)">
-            <i data-lucide="edit-2" style="width:14px"></i>
-        </button>
+        <div style="display:flex; gap:4px">
+          <button class="btn btn-edit btn-sm" style="padding:4px" onclick="editTerminal(<?= h(json_encode($t)) ?>)">
+              <i data-lucide="edit-2" style="width:14px"></i>
+          </button>
+          <form method="POST" style="display:inline" onsubmit="return confirm('Completely remove this terminal?')">
+            <input type="hidden" name="action" value="delete">
+            <input type="hidden" name="id" value="<?= $t['id'] ?>">
+            <button type="submit" class="btn btn-delete btn-sm" style="padding:4px"><i data-lucide="trash-2" style="width:14px"></i></button>
+          </form>
+        </div>
       </div>
       <div class="td-muted mono" style="font-size:11px; margin-bottom:8px"><?= h($t['terminal_code']) ?></div>
       
