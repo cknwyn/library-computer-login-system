@@ -402,6 +402,7 @@ include __DIR__ . '/partials/header.php';
             <div class="form-group"><label class="form-label">Cadre</label><select name="cadre" class="form-control"><option value="Undergraduate">Undergraduate</option><option value="Postgraduate">Postgraduate</option><option value="Others">Others</option></select></div>
         </div>
         <div class="form-row">
+            <div class="form-group"><label class="form-label">Rank / Year Level</label><select name="rank" class="form-control"><option value="">Select Rank</option><option value="1st Year">1st Year</option><option value="2nd Year">2nd Year</option><option value="3rd Year">3rd Year</option><option value="4th Year">4th Year</option><option value="5th Year">5th Year</option><option value="Irregular">Irregular</option><option value="Faculty/Staff">Faculty/Staff</option></select></div>
             <div class="form-group"><label class="form-label">Initial Password</label><input name="password" type="password" class="form-control" placeholder="Default is Staff ID"></div>
         </div>
       </div>
@@ -442,6 +443,9 @@ include __DIR__ . '/partials/header.php';
         <div class="form-row">
           <div class="form-group"><label class="form-label">Batch</label><input name="batch" id="edit-batch" type="number" class="form-control"></div>
           <div class="form-group"><label class="form-label">Cadre</label><select name="cadre" id="edit-cadre" class="form-control"><option value="Undergraduate">Undergraduate</option><option value="Postgraduate">Postgraduate</option><option value="Others">Others</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group" style="flex:1"><label class="form-label">Rank / Year Level</label><select name="rank" id="edit-rank" class="form-control"><option value="">Select Rank</option><option value="1st Year">1st Year</option><option value="2nd Year">2nd Year</option><option value="3rd Year">3rd Year</option><option value="4th Year">4th Year</option><option value="5th Year">5th Year</option><option value="Irregular">Irregular</option><option value="Faculty/Staff">Faculty/Staff</option></select></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">Gender</label><select name="gender" id="edit-gender" class="form-control"><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
@@ -549,6 +553,7 @@ async function editUser(u) {
     document.getElementById('edit-dob').value = u.dob || '';
     document.getElementById('edit-batch').value  = u.batch  || '';
     document.getElementById('edit-cadre').value  = u.cadre  || 'Undergraduate';
+    document.getElementById('edit-rank').value   = u.rank   || '';
     document.getElementById('edit-cadre').value  = u.cadre  || 'Undergraduate';
     
     // Cascading loads for Edit
