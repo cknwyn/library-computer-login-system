@@ -17,25 +17,32 @@ $export    = isset($_GET['export']);
 $college_f = $_GET['college'] ?? '';
 $course_f  = $_GET['course']  ?? '';
 
-// ── Load filter options ──────────────────────────────────────
-$colleges = $pdo->query("SELECT DISTINCT affiliation FROM users WHERE affiliation IS NOT NULL AND affiliation != '' ORDER BY affiliation")->fetchAll(PDO::FETCH_COLUMN);
-
-$courses_sql = "SELECT DISTINCT department FROM users WHERE department IS NOT NULL AND department != ''";
-if ($college_f) {
-    $courses_sql .= " AND affiliation = " . $pdo->quote($college_f);
+// If college changes, clear course unless it belongs to that college
+if ($college_f && $course_f) {
+    $check = $pdo->prepare("SELECT COUNT(*) FROM departments WHERE id = ? AND college_id = ?");
+    $check->execute([$course_f, $college_f]);
+    if (!$check->fetchColumn()) $course_f = '';
 }
-$courses_sql .= " ORDER BY department";
-$courses = $pdo->query($courses_sql)->fetchAll(PDO::FETCH_COLUMN);
+
+// ── Load filter options ──────────────────────────────────────
+$colleges = $pdo->query("SELECT id, name FROM colleges ORDER BY name")->fetchAll();
+
+$courses_sql = "SELECT id, name FROM departments WHERE 1=1";
+if ($college_f) {
+    $courses_sql .= " AND college_id = " . (int)$college_f;
+}
+$courses_sql .= " ORDER BY name";
+$courses = $pdo->query($courses_sql)->fetchAll();
 
 $where_clauses = ["DATE(s.login_time) BETWEEN :df AND :dt", "s.status IN ('completed','force_ended','abandoned')"];
 $params = [':df' => $date_from, ':dt' => $date_to];
 
 if ($college_f) {
-    $where_clauses[] = "u.affiliation = :coll";
+    $where_clauses[] = "u.college_id = :coll";
     $params[':coll'] = $college_f;
 }
 if ($course_f) {
-    $where_clauses[] = "u.department = :course";
+    $where_clauses[] = "u.department_id = :course";
     $params[':course'] = $course_f;
 }
 $where_str = implode(" AND ", $where_clauses);
@@ -81,40 +88,43 @@ if ($group_by === 'day') {
             GROUP BY s.user_id
             ORDER BY sessions DESC";
 } elseif ($group_by === 'users_list') {
-    $u_where = ["DATE(creation_date) BETWEEN :df AND :dt"];
-    if ($college_f) $u_where[] = "affiliation = :coll";
-    if ($course_f)  $u_where[] = "department = :course";
+    $u_where = ["DATE(u.creation_date) BETWEEN :df AND :dt"];
+    if ($college_f) $u_where[] = "u.college_id = :coll";
+    if ($course_f)  $u_where[] = "u.department_id = :course";
     $u_where_str = implode(" AND ", $u_where);
-    $sql = "SELECT user_id AS label, name AS extra, role, email, creation_date
-            FROM users
+    $sql = "SELECT u.user_id AS label, u.name AS extra, u.role, u.email, u.creation_date, c.name AS college_name
+            FROM users u
+            LEFT JOIN colleges c ON u.college_id = c.id
             WHERE $u_where_str
-            ORDER BY creation_date DESC";
+            ORDER BY u.creation_date DESC";
 } elseif ($group_by === 'websites_list') {
-    $w_where = ["DATE(w.visited_at) BETWEEN :df AND :dt"];
-    if ($college_f) $w_where[] = "u.affiliation = :coll";
-    if ($course_f)  $w_where[] = "u.department = :course";
+    $w_where = ["DATE(wl.visited_at) BETWEEN :df AND :dt"];
+    if ($college_f) $w_where[] = "u.college_id = :coll";
+    if ($course_f)  $w_where[] = "u.department_id = :course";
     $w_where_str = implode(" AND ", $w_where);
-    $sql = "SELECT u.user_id AS label, u.name AS extra, w.title, w.url, w.visited_at, t.terminal_code
-            FROM website_logs w
-            JOIN users u ON u.id = w.user_id
-            JOIN sessions s ON s.id = w.session_id
+    $sql = "SELECT u.user_id AS label, u.name AS extra, w.title, w.url, wl.visited_at, t.terminal_code
+            FROM website_logs wl
+            JOIN websites w ON wl.website_id = w.id
+            JOIN users u ON u.id = wl.user_id
+            JOIN sessions s ON s.id = wl.session_id
             JOIN terminals t ON t.id = s.terminal_id
             WHERE $w_where_str
-            ORDER BY w.visited_at DESC";
+            ORDER BY wl.visited_at DESC";
 } elseif ($group_by === 'college') {
-    $sql = "SELECT COALESCE(u.affiliation, 'No Affiliation') AS label,
+    $sql = "SELECT COALESCE(c.name, 'No Affiliation') AS label,
                    COUNT(*) AS sessions,
                    COUNT(DISTINCT s.user_id) AS users,
                    AVG(s.duration_seconds) AS avg_dur,
                    SUM(s.duration_seconds) AS total_dur
             FROM sessions s
             JOIN users u ON u.id=s.user_id
+            LEFT JOIN colleges c ON u.college_id = c.id
             WHERE $where_str
-            GROUP BY u.affiliation
+            GROUP BY u.college_id
             ORDER BY sessions DESC";
 } else {
     $sql = "SELECT t.terminal_code AS label,
-                   COALESCE(r.room_name, 'Unknown') AS extra,
+                   COALESCE(r.name, 'Unknown') AS extra,
                    COUNT(*) AS sessions,
                    AVG(s.duration_seconds) AS avg_dur,
                    SUM(s.duration_seconds) AS total_dur
@@ -138,52 +148,59 @@ if ($export) {
     
     if ($group_by === 'users_list') {
         fputcsv($out, [
-            'Username', 'Email', 'Contact Number', 'Designation', 'Affiliation', 
+            'Username', 'Email', 'Contact Number', 'Designation', 'College', 
             'Gender', 'Year', 'Department', 'User Type', 'Degree', 
             'Speciality', 'Staff Id', 'Ra Expiry Date', 'Rank', 'Batch', 
             'Cadre', 'Dob', 'creation_date'
         ]);
-        $rows = $pdo->prepare("SELECT * FROM users WHERE $u_where_str ORDER BY creation_date DESC");
+        $rows = $pdo->prepare("SELECT u.*, c.name AS college_name, d.name AS dept_name, deg.name AS degree_name 
+                               FROM users u
+                               LEFT JOIN colleges c ON u.college_id = c.id
+                               LEFT JOIN departments d ON u.department_id = d.id
+                               LEFT JOIN degrees deg ON u.degree_id = deg.id
+                               WHERE $u_where_str ORDER BY u.creation_date DESC");
         $rows->execute($params);
         while ($u = $rows->fetch()) {
             fputcsv($out, [
                 $u['username'] ?? '-', $u['email'] ?? '-', $u['contact_number'] ?? '-',
-                $u['designation'] ?? '-', $u['affiliation'] ?? '-', $u['gender'] ?? '-',
-                $u['year'] ?? '-', $u['department'] ?? '-', $u['user_type'] ?? '-',
-                $u['degree'] ?? '-', $u['speciality'] ?? '-', $u['user_id'],
+                $u['designation'] ?? '-', $u['college_name'] ?? '-', $u['gender'] ?? '-',
+                $u['year'] ?? '-', $u['dept_name'] ?? '-', $u['user_type'] ?? '-',
+                $u['degree_name'] ?? '-', $u['speciality'] ?? '-', $u['user_id'],
                 $u['ra_expiry_date'] ?? '-', $u['rank'] ?? '-', $u['batch'] ?? '-',
                 $u['cadre'] ?? '-', $u['dob'] ?? '-', $u['creation_date']
             ]);
         }
     } elseif ($group_by === 'websites_list') {
         fputcsv($out, ['Staff Id', 'User Name', 'Terminal', 'Page Title', 'URL', 'Visited At']);
-        $rows = $pdo->prepare("SELECT u.user_id, u.name, t.terminal_code, w.title, w.url, w.visited_at
-                               FROM website_logs w
-                               JOIN users u ON u.id = w.user_id
-                               JOIN sessions s ON s.id = w.session_id
+        $rows = $pdo->prepare("SELECT u.user_id, u.name, t.terminal_code, w.title, w.url, wl.visited_at
+                               FROM website_logs wl
+                               JOIN websites w ON wl.website_id = w.id
+                               JOIN users u ON u.id = wl.user_id
+                               JOIN sessions s ON s.id = wl.session_id
                                JOIN terminals t ON t.id = s.terminal_id
                                WHERE $w_where_str
-                               ORDER BY w.visited_at DESC");
+                               ORDER BY wl.visited_at DESC");
         $rows->execute($params);
         while ($l = $rows->fetch()) {
             fputcsv($out, [$l['user_id'], $l['name'], $l['terminal_code'], $l['title'], $l['url'], $l['visited_at']]);
         }
     } else {
-        fputcsv($out, ['User ID','User Name','College/Affiliation','Terminal','Room','Campus','Login Time','Logout Time','Duration (s)','Duration','Status']);
+        fputcsv($out, ['User ID','User Name','College','Terminal','Room','Campus','Login Time','Logout Time','Duration (s)','Duration','Status']);
         $rows = $pdo->prepare(
-            "SELECT u.user_id, u.name, u.affiliation, t.terminal_code, r.room_name, c.name AS campus_name,
+            "SELECT u.user_id, u.name, coll.name AS college_name, t.terminal_code, r.name AS room_name, camp.name AS campus_name,
                     s.login_time, s.logout_time, s.duration_seconds, s.status
              FROM sessions s
              JOIN users     u ON u.id=s.user_id
+             LEFT JOIN colleges coll ON u.college_id = coll.id
              JOIN terminals t ON t.id=s.terminal_id
              LEFT JOIN rooms r ON r.id=t.room_id
-             LEFT JOIN campuses c ON c.id=r.campus_id
+             LEFT JOIN campuses camp ON camp.id=r.campus_id
              WHERE $where_str
              ORDER BY s.login_time DESC"
         );
         $rows->execute($params);
         while ($r = $rows->fetch()) {
-            fputcsv($out, [$r['user_id'],$r['name'],$r['affiliation']??'—',$r['terminal_code'],$r['room_name']??'—',$r['campus_name']??'—',$r['login_time'],$r['logout_time'],
+            fputcsv($out, [$r['user_id'],$r['name'],$r['college_name']??'—',$r['terminal_code'],$r['room_name']??'—',$r['campus_name']??'—',$r['login_time'],$r['logout_time'],
                            $r['duration_seconds'],format_duration((int)$r['duration_seconds']),$r['status']]);
         }
     }
@@ -213,7 +230,7 @@ include __DIR__ . '/partials/header.php';
         <option value="day"        <?= $group_by==='day'       ?'selected':'' ?>>Day</option>
         <option value="user"       <?= $group_by==='user'      ?'selected':'' ?>>User Stats</option>
         <option value="terminal"   <?= $group_by==='terminal'     ?'selected':'' ?>>Terminal</option>
-        <option value="college"    <?= $group_by==='college'      ?'selected':'' ?>>College / Affiliation</option>
+        <option value="college"    <?= $group_by==='college'      ?'selected':'' ?>>College</option>
         <option value="users_list" <?= $group_by==='users_list'   ?'selected':'' ?>>User Registry</option>
         <option value="websites_list" <?= $group_by==='websites_list' ?'selected':'' ?>>Website Tracking</option>
       </select>
@@ -225,7 +242,7 @@ include __DIR__ . '/partials/header.php';
       <select name="college" class="form-control" style="max-width:200px" onchange="this.form.submit()">
         <option value="">— All Colleges —</option>
         <?php foreach ($colleges as $c): ?>
-          <option value="<?= h($c) ?>" <?= $college_f===$c?'selected':'' ?>><?= h($c) ?></option>
+          <option value="<?= $c['id'] ?>" <?= $college_f==(string)$c['id']?'selected':'' ?>><?= h($c['name']) ?></option>
         <?php endforeach; ?>
       </select>
 
@@ -233,7 +250,7 @@ include __DIR__ . '/partials/header.php';
       <select name="course" class="form-control" style="max-width:200px">
         <option value="">— All Courses —</option>
         <?php foreach ($courses as $c): ?>
-          <option value="<?= h($c) ?>" <?= $course_f===$c?'selected':'' ?>><?= h($c) ?></option>
+          <option value="<?= $c['id'] ?>" <?= $course_f==(string)$c['id']?'selected':'' ?>><?= h($c['name']) ?></option>
         <?php endforeach; ?>
       </select>
 
@@ -310,7 +327,7 @@ include __DIR__ . '/partials/header.php';
 <!-- Breakdown Table -->
 <div class="card">
   <div class="card-header">
-    <span class="card-title"><i data-lucide="bar-chart-2" style="width:18px;vertical-align:middle;margin-right:4px"></i> Breakdown by <?= ucfirst($group_by) ?></span>
+    <span class="card-title"><i data-lucide="bar-chart-2" style="width:18px;vertical-align:middle;margin-right:4px"></i> Breakdown by <?= ucwords(str_replace('_', ' ', $group_by)) ?></span>
 
   </div>
   <?php if (empty($breakdown)): ?>

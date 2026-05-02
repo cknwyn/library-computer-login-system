@@ -26,12 +26,17 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $flash = 'ID and name are required.'; $flash_type='error';
         } else {
             try {
+                $college_id = !empty($_POST['college_id']) ? (int)$_POST['college_id'] : null;
+                $dept_id    = !empty($_POST['department_id']) ? (int)$_POST['department_id'] : null;
+                $deg_id     = !empty($_POST['degree_id']) ? (int)$_POST['degree_id'] : null;
+
                 $stmt = $pdo->prepare(
                     "UPDATE users SET 
                         user_id = :sid, name = :name, role = :role, username = :uname, 
                         email = :email, contact_number = :phone, designation = :desig, 
-                        affiliation = :affil, gender = :gen, year = :yr, department = :dept, 
-                        user_type = :utype, degree = :deg, speciality = :spec, 
+                        college_id = :cid, gender = :gen, year = :yr, 
+                        department_id = :did, user_type = :utype, 
+                        degree_id = :degid, speciality = :spec, 
                         ra_expiry_date = :raex, rank = :rnk, batch = :btch, 
                         cadre = :cadre, dob = :dob
                      WHERE id = :id"
@@ -44,12 +49,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     ':email' => trim($_POST['email'] ?? '') ?: null,
                     ':phone' => trim($_POST['contact_number'] ?? '') ?: null,
                     ':desig' => trim($_POST['designation'] ?? '') ?: null,
-                    ':affil' => trim($_POST['affiliation'] ?? '') ?: null,
+                    ':cid'   => $college_id,
                     ':gen'   => trim($_POST['gender'] ?? '') ?: null,
                     ':yr'    => trim($_POST['year'] ?? '') ?: null,
-                    ':dept'  => trim($_POST['department'] ?? '') ?: null,
+                    ':did'   => $dept_id,
                     ':utype' => strtoupper($role),
-                    ':deg'   => trim($_POST['degree'] ?? '') ?: null,
+                    ':degid' => $deg_id,
                     ':spec'  => trim($_POST['speciality'] ?? '') ?: null,
                     ':raex'  => trim($_POST['ra_expiry_date'] ?? '') ?: null,
                     ':rnk'   => trim($_POST['rank'] ?? '') ?: null,
@@ -89,56 +94,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $dept_id    = !empty($_POST['department_id']) ? (int)$_POST['department_id'] : null;
                 $deg_id     = !empty($_POST['degree_id']) ? (int)$_POST['degree_id'] : null;
 
-                $affil = null; $dept = null; $deg = null;
-                if ($college_id) {
-                    $stmt = $pdo->prepare("SELECT name FROM colleges WHERE id = ?");
-                    $stmt->execute([$college_id]);
-                    $affil = $stmt->fetchColumn();
-                }
-                if ($dept_id) {
-                    $stmt = $pdo->prepare("SELECT name FROM departments WHERE id = ?");
-                    $stmt->execute([$dept_id]);
-                    $dept = $stmt->fetchColumn();
-                }
-                if ($deg_id) {
-                    $stmt = $pdo->prepare("SELECT name FROM degrees WHERE id = ?");
-                    $stmt->execute([$deg_id]);
-                    $deg = $stmt->fetchColumn();
-                }
-
                 $stmt = $pdo->prepare(
                     "INSERT INTO users (user_id, first_name, middle_name, last_name, name, password_hash, role, username, email, contact_number, 
-                                      designation, affiliation, college_id, gender, year, department, department_id, 
-                                      user_type, degree, degree_id, speciality, ra_expiry_date, rank, batch, cadre, dob)
-                     VALUES (:sid, :fname, :mname, :lname, :name, :hash, :role, :uname, :email, :phone, :desig, :affil, :cid, :gen, :yr, :dept, :did, :utype, 
-                             :deg, :degid, :spec, :raex, :rnk, :btch, :cadre, :dob)"
+                                      designation, college_id, gender, year, department_id, 
+                                      user_type, degree_id, speciality, ra_expiry_date, rank, batch, cadre, dob)
+                     VALUES (:sid, :fname, :mname, :lname, :name, :hash, :role, :uname, :email, :phone, :desig, :cid, :gen, :yr, :did, :utype, 
+                             :degid, :spec, :raex, :rnk, :btch, :cadre, :dob)"
                 );
                 $stmt->execute([
-                    ':sid'    => $sid,
-                    ':fname'  => $fname,
-                    ':mname'  => $mname,
-                    ':lname'  => $lname,
-                    ':name'   => $name,
-                    ':hash'   => $hash,
-                    ':role'   => $role,
+                    ':sid'    => $sid, ':fname'  => $fname, ':mname'  => $mname, ':lname'  => $lname, ':name'   => $name, ':hash'   => $hash, ':role'   => $role,
                     ':uname' => trim($_POST['username'] ?? '') ?: null,
                     ':email' => trim($_POST['email'] ?? '') ?: null,
                     ':phone' => trim($_POST['contact_number'] ?? '') ?: null,
                     ':desig' => trim($_POST['designation'] ?? '') ?: null,
-                    ':affil' => $affil,
-                    ':cid'   => $college_id,
-                    ':gen'   => trim($_POST['gender'] ?? '') ?: null,
-                    ':yr'    => trim($_POST['year'] ?? '') ?: null,
-                    ':dept'  => $dept,
-                    ':did'   => $dept_id,
-                    ':utype' => strtoupper($role),
-                    ':deg'   => $deg,
-                    ':degid' => $deg_id,
-                    ':spec'  => trim($_POST['speciality'] ?? '') ?: null,
-                    ':raex'  => trim($_POST['ra_expiry_date'] ?? '') ?: null,
-                    ':rnk'   => trim($_POST['rank'] ?? '') ?: null,
-                    ':btch'  => trim($_POST['batch'] ?? '') ?: null,
-                    ':cadre' => trim($_POST['cadre'] ?? '') ?: null,
+                    ':cid'   => $college_id, ':gen'   => trim($_POST['gender'] ?? '') ?: null,
+                    ':yr'    => trim($_POST['year'] ?? '') ?: null, ':did'   => $dept_id, ':utype' => strtoupper($role),
+                    ':degid' => $deg_id, ':spec'  => trim($_POST['speciality'] ?? '') ?: null,
+                    ':raex'  => trim($_POST['ra_expiry_date'] ?? '') ?: null, ':rnk'   => trim($_POST['rank'] ?? '') ?: null,
+                    ':btch'  => trim($_POST['batch'] ?? '') ?: null, ':cadre' => trim($_POST['cadre'] ?? '') ?: null,
                     ':dob'   => trim($_POST['dob'] ?? '') ?: null
                 ]);
                 log_activity('ADMIN_CREATE_USER', "Created user {$sid}", null, $admin['id']);
@@ -184,15 +157,11 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         if (count($parts) > 2) $mname = $parts[1];
                     }
                     
-                    $affil = trim($data['Affiliation'] ?? '') ?: null;
-                    $dept  = trim($data['Department'] ?? '') ?: null;
-                    $deg   = trim($data['Degree'] ?? '') ?: null;
-
                     $stmt = $pdo->prepare(
                         "INSERT INTO users (user_id, first_name, middle_name, last_name, name, password_hash, role, username, email, contact_number, 
-                                          designation, affiliation, gender, year, department, user_type, degree, speciality, ra_expiry_date, rank, batch, cadre, dob)
-                         VALUES (:sid, :fname, :mname, :lname, :name, :hash, :role, :uname, :email, :phone, :desig, :affil, :gen, :yr, :dept, :utype, 
-                                 :deg, :spec, :raex, :rnk, :btch, :cadre, :dob)"
+                                          designation, gender, year, user_type, speciality, ra_expiry_date, rank, batch, cadre, dob)
+                         VALUES (:sid, :fname, :mname, :lname, :name, :hash, :role, :uname, :email, :phone, :desig, :gen, :yr, :utype, 
+                                 :spec, :raex, :rnk, :btch, :cadre, :dob)"
                     );
                     
                     $stmt->execute([
@@ -201,9 +170,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                         ':email' => ($data['Email'] !== '-'    ? $data['Email']    : null),
                         ':phone' => trim($data['Contact Number'] ?? '') ?: null,
                         ':desig' => trim($data['Designation'] ?? '') ?: null,
-                        ':affil' => $affil, ':gen'   => trim($data['Gender'] ?? '') ?: null,
-                        ':yr'    => trim($data['Year'] ?? '') ?: null, ':dept'  => $dept, ':utype' => strtoupper($role),
-                        ':deg'   => $deg, ':spec'  => trim($data['Speciality'] ?? '') ?: null,
+                        ':gen'   => trim($data['Gender'] ?? '') ?: null,
+                        ':yr'    => trim($data['Year'] ?? '') ?: null, ':utype' => strtoupper($role),
+                        ':spec'  => trim($data['Speciality'] ?? '') ?: null,
                         ':raex'  => !empty($data['Ra Expiry Date']) ? date('Y-m-d', strtotime($data['Ra Expiry Date'])) : null,
                         ':rnk'   => trim($data['Rank'] ?? '') ?: null, ':btch'  => trim($data['Batch'] ?? '') ?: null,
                         ':cadre' => trim($data['Cadre'] ?? '') ?: null,
@@ -212,7 +181,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $count++;
                 }
                 $pdo->commit();
-                $flash = "Successfully onboarded {$count} users. (Errors: {$errors})";
+                $flash = "Successfully onboarded {$count} users. (Note: Academic classifications must be assigned manually for CSV imports)";
             } catch (Exception $e) {
                 $pdo->rollBack();
                 $flash = "Import failed: " . $e->getMessage(); $flash_type = 'error';
@@ -227,6 +196,24 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if ($id && in_array($status, ['active','inactive','suspended'], true)) {
             $pdo->prepare('UPDATE users SET status=:s WHERE id=:id')->execute([':s'=>$status,':id'=>$id]);
             $flash = 'User status updated.';
+        }
+    }
+
+    if ($action === 'delete') {
+        $id = (int) ($_POST['id'] ?? 0);
+        if ($id) {
+            try {
+                $pdo->beginTransaction();
+                $pdo->prepare("DELETE FROM website_logs WHERE user_id = ?")->execute([$id]);
+                $pdo->prepare("DELETE FROM sessions WHERE user_id = ?")->execute([$id]);
+                $pdo->prepare("DELETE FROM users WHERE id = ?")->execute([$id]);
+                $pdo->commit();
+                $flash = "User and all associated history deleted successfully.";
+            } catch (Exception $e) {
+                $pdo->rollBack();
+                $flash = "Deletion failed: " . $e->getMessage();
+                $flash_type = 'error';
+            }
         }
     }
 
@@ -290,8 +277,8 @@ include __DIR__ . '/partials/header.php';
     <button type="submit" class="btn btn-outline">Filter</button>
   </form>
   <div style="display:flex; gap:8px">
-    <button class="btn btn-secondary" onclick="openModal('modal-bulk')"><i data-lucide="upload"></i> Bulk Onboarding</button>
-    <button class="btn btn-primary" onclick="openModal('modal-create')"><i data-lucide="user-plus"></i> Register User</button>
+    <button class="btn btn-secondary" onclick="openModal('modal-bulk')"><i data-lucide="upload" style="width:18px"></i> Bulk Onboarding</button>
+    <button class="btn btn-primary" onclick="openModal('modal-create')"><i data-lucide="user-plus" style="width:18px"></i> Register User</button>
   </div>
 </div>
 
@@ -304,22 +291,13 @@ include __DIR__ . '/partials/header.php';
         <?php foreach ($users as $u): ?>
         <tr>
           <td>
-            <div style="font-weight:700">
-                <?php 
-                if ($u['last_name']) {
-                    echo h($u['last_name']) . ', ' . h($u['first_name']);
-                    if ($u['middle_name']) echo ' ' . h(substr($u['middle_name'], 0, 1)) . '.';
-                } else {
-                    echo h($u['name']);
-                }
-                ?>
-            </div>
+            <div style="font-weight:700"><?= h($u['last_name'] ? "{$u['last_name']}, {$u['first_name']}" : $u['name']) ?></div>
             <div class="td-muted mono" style="font-size:11px"><?= h($u['user_id']) ?></div>
           </td>
           <td><span class="badge <?= $u['role']==='staff'?'badge-blue':'badge-yellow' ?>"><?= strtoupper($u['role']) ?></span></td>
           <td>
-            <div style="font-size:12px; font-weight:600"><?= h($u['college_name'] ?? $u['affiliation'] ?? '—') ?></div>
-            <div class="td-muted" style="font-size:11px"><?= h($u['department_name'] ?? $u['department'] ?? '—') ?></div>
+            <div style="font-size:12px; font-weight:600"><?= h($u['college_name'] ?? '—') ?></div>
+            <div class="td-muted" style="font-size:11px"><?= h($u['department_name'] ?? '—') ?></div>
           </td>
           <td><span style="font-weight:700"><?= $u['total_sessions'] ?></span></td>
           <td><span class="badge badge-<?= $u['status']==='active'?'green':($u['status']==='suspended'?'red':'gray') ?>"><span class="badge-dot"></span><?= ucfirst($u['status']) ?></span></td>
@@ -327,6 +305,20 @@ include __DIR__ . '/partials/header.php';
             <div style="display:flex;gap:4px">
               <button class="btn btn-info btn-sm" onclick='editUser(<?= json_encode($u) ?>)' title="Edit Profile"><i data-lucide="edit-3" style="width:14px"></i></button>
               <button class="btn btn-warning btn-sm" onclick="resetPw(<?= $u['id'] ?>,'<?= addslashes(h($u['name'])) ?>')" title="Reset Password"><i data-lucide="key" style="width:14px"></i></button>
+              <form method="POST" style="display:inline" onsubmit="return confirm('Delete this user and all history?')">
+                <input type="hidden" name="action" value="delete">
+                <input type="hidden" name="id" value="<?= $u['id'] ?>">
+                <button type="submit" class="btn btn-outline btn-sm" style="color:var(--error)" title="Delete"><i data-lucide="trash-2" style="width:14px"></i></button>
+              </form>
+              <form method="POST" style="display:inline" onsubmit="return confirm('Change status?')">
+                <input type="hidden" name="action" value="update_status">
+                <input type="hidden" name="id" value="<?= $u['id'] ?>">
+                <select name="status" class="form-control" style="font-size:10px; padding:2px" onchange="this.form.submit()">
+                  <option value="active" <?= $u['status']==='active'?'selected':'' ?>>Active</option>
+                  <option value="inactive" <?= $u['status']==='inactive'?'selected':'' ?>>Inactive</option>
+                  <option value="suspended" <?= $u['status']==='suspended'?'selected':'' ?>>Suspend</option>
+                </select>
+              </form>
             </div>
           </td>
         </tr>
@@ -336,15 +328,43 @@ include __DIR__ . '/partials/header.php';
   </div>
 </div>
 
-<!-- Modals (Add/Edit/Bulk/Reset) -->
+<!-- Bulk Modal -->
+<div class="modal-backdrop" id="modal-bulk">
+  <div class="modal">
+    <div class="modal-header">
+      <span class="modal-title">Bulk Onboarding (CSV)</span>
+      <button class="btn-close" onclick="closeModal('modal-bulk')"><i data-lucide="x" style="width:16px"></i></button>
+    </div>
+    <form method="POST" enctype="multipart/form-data">
+      <input type="hidden" name="action" value="bulk_import">
+      <div class="modal-body">
+        <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px">Upload a CSV file with headers: <strong>Username,Email,Contact Number,Designation,Affiliation,Gender,Year,Department,User Type,Degree,Speciality,Staff Id,Ra Expiry Date,Rank,Batch,Cadre,Dob</strong></p>
+        <div class="form-group">
+          <label class="form-label">Select CSV File</label>
+          <input type="file" name="csv_file" class="form-control" accept=".csv" required>
+        </div>
+        <div class="alert alert-info" style="font-size:12px; margin-top:12px; padding:12px; background:var(--secondary); border-radius:8px">
+          Passwords will be defaulted to the user's <strong>Staff Id</strong>.
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-outline" onclick="closeModal('modal-bulk')">Cancel</button>
+        <button type="submit" class="btn btn-primary">Start Onboarding</button>
+      </div>
+    </form>
+  </div>
+</div>
+
+<!-- Register Modal -->
 <div class="modal-backdrop" id="modal-create">
   <div class="modal" style="max-width:600px">
-    <div class="modal-header"><span class="modal-title">Register Identity</span><button class="btn-close" onclick="closeModal('modal-create')"><i data-lucide="x"></i></button></div>
+    <div class="modal-header"><span class="modal-title">Register Identity</span><button class="btn-close" onclick="closeModal('modal-create')"><i data-lucide="x" style="width:16px"></i></button></div>
     <form method="POST">
       <input type="hidden" name="action" value="create">
       <div class="modal-body" style="max-height:70vh; overflow-y:auto">
         <div class="form-row">
-            <div class="form-group"><label class="form-label">System/Staff ID *</label><input name="user_id" class="form-control" required></div>
+            <div class="form-group"><label class="form-label">Student/Staff ID *</label><input name="user_id" class="form-control" placeholder="24-0000-001" required></div>
+            <div class="form-group"><label class="form-label">Role</label><select name="role" class="form-control"><option value="student">Student</option><option value="staff">Staff</option></select></div>
         </div>
         <div class="form-row">
             <div class="form-group"><label class="form-label">First Name *</label><input name="first_name" class="form-control" required></div>
@@ -357,10 +377,59 @@ include __DIR__ . '/partials/header.php';
         </div>
         <div class="form-row">
             <div class="form-group"><label class="form-label">Degree</label><select name="degree_id" id="reg-degree" class="form-control" disabled><option value="">Select Degree</option></select></div>
-            <div class="form-group"><label class="form-label">Role</label><select name="role" class="form-control"><option value="student">Student</option><option value="staff">Staff</option></select></div>
+            <div class="form-group"><label class="form-label">Initial Password</label><input name="password" type="password" class="form-control" placeholder="Default is Staff ID"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label class="form-label">Email</label><input name="email" type="email" class="form-control"></div>
+            <div class="form-group"><label class="form-label">Contact Number</label><input name="contact_number" class="form-control"></div>
+        </div>
+        <div class="form-row">
+            <div class="form-group"><label class="form-label">Gender</label><select name="gender" class="form-control"><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
+            <div class="form-group"><label class="form-label">Birth Date</label><input name="dob" type="date" class="form-control"></div>
         </div>
       </div>
       <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-create')">Cancel</button><button type="submit" class="btn btn-primary">Enroll User</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- Edit Modal -->
+<div class="modal-backdrop" id="modal-edit">
+  <div class="modal" style="max-width:600px">
+    <div class="modal-header"><span class="modal-title">Edit Identity</span><button class="btn-close" onclick="closeModal('modal-edit')"><i data-lucide="x" style="width:16px"></i></button></div>
+    <form method="POST">
+      <input type="hidden" name="action" value="update">
+      <input type="hidden" name="id" id="edit-id">
+      <div class="modal-body" style="max-height:70vh; overflow-y:auto">
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Student/Staff ID *</label><input name="user_id" id="edit-user_id" class="form-control" required></div>
+          <div class="form-group"><label class="form-label">Full Name *</label><input name="name" id="edit-name" class="form-control" required></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Role</label><select name="role" id="edit-role" class="form-control"><option value="student">Student</option><option value="staff">Staff</option></select></div>
+          <div class="form-group"><label class="form-label">Email</label><input name="email" id="edit-email" type="email" class="form-control"></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">College</label><select name="college_id" id="edit-college" class="form-control" onchange="loadDepartmentsEdit(this.value)"><option value="">Select College</option></select></div>
+          <div class="form-group"><label class="form-label">Department</label><select name="department_id" id="edit-dept" class="form-control" onchange="loadDegreesEdit(this.value)" disabled><option value="">Select Dept</option></select></div>
+        </div>
+        <div class="form-row">
+          <div class="form-group"><label class="form-label">Degree</label><select name="degree_id" id="edit-degree" class="form-control" disabled><option value="">Select Degree</option></select></div>
+          <div class="form-group"><label class="form-label">Gender</label><select name="gender" id="edit-gender" class="form-control"><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
+        </div>
+      </div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-edit')">Cancel</button><button type="submit" class="btn btn-primary">Save Changes</button></div>
+    </form>
+  </div>
+</div>
+
+<!-- Reset PW Modal -->
+<div class="modal-backdrop" id="modal-reset-pw">
+  <div class="modal">
+    <div class="modal-header"><span class="modal-title">Reset - <span id="rp-name"></span></span><button class="btn-close" onclick="closeModal('modal-reset-pw')"><i data-lucide="x" style="width:16px"></i></button></div>
+    <form method="POST"><input type="hidden" name="action" value="reset_password"><input type="hidden" name="id" id="rp-uid">
+      <div class="modal-body"><div class="form-group"><label class="form-label">New Credential</label><input name="new_password" type="password" class="form-control" required minlength="6"></div></div>
+      <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-reset-pw')">Cancel</button><button type="submit" class="btn btn-primary">Update</button></div>
     </form>
   </div>
 </div>
@@ -369,18 +438,20 @@ include __DIR__ . '/partials/header.php';
 async function loadColleges() {
     const res = await fetch('../api/classifications.php?type=colleges');
     const json = await res.json();
-    const select = document.getElementById('reg-college');
-    select.innerHTML = '<option value="">Select College</option>';
-    json.data.forEach(c => {
-        const opt = document.createElement('option');
-        opt.value = c.id;
-        opt.textContent = c.name;
-        select.appendChild(opt);
-    });
+    const regSelect = document.getElementById('reg-college');
+    const editSelect = document.getElementById('edit-college');
+    
+    const options = '<option value="">Select College</option>' + json.data.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+    if(regSelect) regSelect.innerHTML = options;
+    if(editSelect) editSelect.innerHTML = options;
 }
-async function loadDepartments(collegeId) {
-    const dSelect = document.getElementById('reg-dept');
+
+async function loadDepartments(collegeId, targetId = 'reg-dept', degId = 'reg-degree') {
+    const dSelect = document.getElementById(targetId);
+    const degSelect = document.getElementById(degId);
     dSelect.innerHTML = '<option value="">Select Dept</option>';
+    degSelect.innerHTML = '<option value="">Select Degree</option>';
+    degSelect.disabled = true;
     if (!collegeId) { dSelect.disabled = true; return; }
     const res = await fetch(`../api/classifications.php?type=departments&college_id=${collegeId}`);
     const json = await res.json();
@@ -392,8 +463,11 @@ async function loadDepartments(collegeId) {
     });
     dSelect.disabled = false;
 }
-async function loadDegrees(deptId) {
-    const degSelect = document.getElementById('reg-degree');
+
+function loadDepartmentsEdit(cid) { return loadDepartments(cid, 'edit-dept', 'edit-degree'); }
+
+async function loadDegrees(deptId, targetId = 'reg-degree') {
+    const degSelect = document.getElementById(targetId);
     degSelect.innerHTML = '<option value="">Select Degree</option>';
     if (!deptId) { degSelect.disabled = true; return; }
     const res = await fetch(`../api/classifications.php?type=degrees&department_id=${deptId}`);
@@ -406,21 +480,36 @@ async function loadDegrees(deptId) {
     });
     degSelect.disabled = false;
 }
+
+function loadDegreesEdit(did) { return loadDegrees(did, 'edit-degree'); }
+
 loadColleges();
 
-function editUser(u) {
-    // Basic editing logic
-    alert('Editing logic for ' + u.name);
+async function editUser(u) {
+    document.getElementById('edit-id').value = u.id;
+    document.getElementById('edit-user_id').value = u.user_id;
+    document.getElementById('edit-name').value = u.name;
+    document.getElementById('edit-role').value = u.role;
+    document.getElementById('edit-email').value = u.email || '';
+    document.getElementById('edit-gender').value = u.gender || '';
+    
+    // Cascading loads for Edit
+    document.getElementById('edit-college').value = u.college_id || '';
+    if (u.college_id) {
+        await loadDepartments(u.college_id, 'edit-dept', 'edit-degree');
+        document.getElementById('edit-dept').value = u.department_id || '';
+        if (u.department_id) {
+            await loadDegrees(u.department_id, 'edit-degree');
+            document.getElementById('edit-degree').value = u.degree_id || '';
+        }
+    }
+    
+    openModal('modal-edit');
 }
 function resetPw(id, name) {
-    const pass = prompt('Enter new password for ' + name);
-    if (pass) {
-        const form = document.createElement('form');
-        form.method = 'POST';
-        form.innerHTML = `<input type="hidden" name="action" value="reset_password"><input type="hidden" name="id" value="${id}"><input type="hidden" name="new_password" value="${pass}">`;
-        document.body.appendChild(form);
-        form.submit();
-    }
+    document.getElementById('rp-uid').value = id;
+    document.getElementById('rp-name').textContent = name;
+    openModal('modal-reset-pw');
 }
 </script>
 

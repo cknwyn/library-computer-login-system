@@ -37,6 +37,18 @@ namespace LibraryKiosk.Models
 
         [JsonPropertyName("login_time")]
         public string? LoginTime { get; set; }
+
+        [JsonPropertyName("terminal")]
+        public TerminalInfo? Terminal { get; set; }
+    }
+
+    public class TerminalInfo
+    {
+        [JsonPropertyName("id")]
+        public int Id { get; set; }
+
+        [JsonPropertyName("code")]
+        public string Code { get; set; } = string.Empty;
     }
 
     public class UserInfo

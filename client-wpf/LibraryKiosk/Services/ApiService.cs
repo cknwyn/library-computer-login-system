@@ -22,6 +22,16 @@ namespace LibraryKiosk.Services
             PcName = pcName;
         }
 
+        public async Task<bool> PingAsync()
+        {
+            try
+            {
+                var response = await _httpClient.GetAsync($"{_apiBaseUrl}/ping.php");
+                return response.IsSuccessStatusCode;
+            }
+            catch { return false; }
+        }
+
         public async Task<ApiResponse<UserInfo>> LoginAsync(string userId, string password)
         {
             var request = new LoginRequest

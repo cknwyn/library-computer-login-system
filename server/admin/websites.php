@@ -14,14 +14,15 @@ $admin = current_admin();
 $search = trim($_GET['search'] ?? '');
 $date   = $_GET['date'] ?? date('Y-m-d');
 
-$query = "SELECT w.*, u.name AS user_name, u.user_id AS user_code, t.terminal_code
-          FROM website_logs w
-          JOIN users u ON u.id = w.user_id
-          JOIN sessions s ON s.id = w.session_id
+$query = "SELECT wl.*, ws.url, ws.title, u.name AS user_name, u.user_id AS user_code, t.terminal_code
+          FROM website_logs wl
+          JOIN websites ws ON wl.website_id = ws.id
+          JOIN users u ON u.id = wl.user_id
+          JOIN sessions s ON s.id = wl.session_id
           JOIN terminals t ON t.id = s.terminal_id
-          WHERE (DATE(w.visited_at) = :dt)
-          AND (:sh = '' OR w.url LIKE :sh2 OR u.name LIKE :sh3 OR u.user_id LIKE :sh4)
-          ORDER BY w.visited_at DESC";
+          WHERE (DATE(wl.visited_at) = :dt)
+          AND (:sh = '' OR ws.url LIKE :sh2 OR u.name LIKE :sh3 OR u.user_id LIKE :sh4)
+          ORDER BY wl.visited_at DESC";
 
 $stmt = $pdo->prepare($query);
 $stmt->execute([

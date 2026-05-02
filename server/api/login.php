@@ -27,7 +27,14 @@ if (!$user_id_input || !$password_input || !$terminal_code) {
 }
 
 // ── Find user ────────────────────────────────────────────────
-$stmt = db()->prepare('SELECT * FROM users WHERE user_id = :uid LIMIT 1');
+$stmt = db()->prepare("
+    SELECT u.*, c.name AS college_name, d.name AS department_name
+    FROM users u
+    LEFT JOIN colleges c ON u.college_id = c.id
+    LEFT JOIN departments d ON u.department_id = d.id
+    WHERE u.user_id = :uid 
+    LIMIT 1
+");
 $stmt->execute([':uid' => $user_id_input]);
 $user = $stmt->fetch();
 
@@ -90,7 +97,7 @@ json_response([
         'user_id'    => $user['user_id'],
         'name'       => $user['name'],
         'role'       => $user['role'],
-        'department' => $user['department'],
+        'department' => $user['department_name'],
     ],
     'terminal' => [
         'id'   => $terminal_id,

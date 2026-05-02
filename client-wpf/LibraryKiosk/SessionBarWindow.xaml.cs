@@ -22,7 +22,7 @@ namespace LibraryKiosk
             _session = session;
             _apiService = apiService;
 
-            TerminalText.Text = $"Terminal {_session.SessionId.ToString("D3")}";
+            TerminalText.Text = _session.Terminal?.Code ?? "Terminal Session";
             UserText.Text = $"Active User: {_session.User?.FullName ?? "Unknown"}";
 
             // Position bottom right

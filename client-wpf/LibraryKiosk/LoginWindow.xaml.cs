@@ -8,6 +8,7 @@ namespace LibraryKiosk
     {
         private readonly ApiService _apiService;
         private readonly string _terminalCode;
+        private readonly System.Windows.Threading.DispatcherTimer _statusTimer;
 
         public LoginWindow(ApiService apiService, string terminalCode)
         {
@@ -15,6 +16,34 @@ namespace LibraryKiosk
             _apiService = apiService;
             _terminalCode = terminalCode;
             TerminalNameTxt.Text = $"Terminal '{terminalCode}' Active";
+
+            // Initialize status timer
+            _statusTimer = new System.Windows.Threading.DispatcherTimer
+            {
+                Interval = TimeSpan.FromSeconds(10)
+            };
+            _statusTimer.Tick += async (s, e) => await CheckConnection();
+            _statusTimer.Start();
+            
+            // Initial check
+            _ = CheckConnection();
+        }
+
+        private async System.Threading.Tasks.Task CheckConnection()
+        {
+            bool isAlive = await _apiService.PingAsync();
+            if (isAlive)
+            {
+                StatusDot.Fill = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(74, 222, 128)); // Green
+                StatusTxt.Text = "CONNECTED TO SERVER";
+                StatusTxt.Opacity = 1.0;
+            }
+            else
+            {
+                StatusDot.Fill = new System.Windows.Media.SolidColorBrush(System.Windows.Media.Color.FromRgb(248, 113, 113)); // Red
+                StatusTxt.Text = "SERVER OFFLINE";
+                StatusTxt.Opacity = 0.8;
+            }
         }
 
         private async void LoginBtn_Click(object sender, RoutedEventArgs e)

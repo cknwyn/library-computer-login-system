@@ -25,19 +25,39 @@ if (empty($url)) {
     exit;
 }
 
-// ── Store log ─────────────────────────────────────────────────
+// ── Resolve Website ID ─────────────────────────────────────────
 $pdo = db();
-$stmt = $pdo->prepare(
-    "INSERT INTO website_logs (session_id, user_id, url, title) 
-     VALUES (:sid, :uid, :url, :title)"
-);
+try {
+    // Check if website exists
+    $stmt = $pdo->prepare("SELECT id FROM websites WHERE url = ? LIMIT 1");
+    $stmt->execute([$url]);
+    $website_id = $stmt->fetchColumn();
 
-$success = $stmt->execute([
-    ':sid'   => $session['id'],
-    ':uid'   => $session['user_id'],
-    ':url'   => $url,
-    ':title' => $title ?: null
-]);
+    if (!$website_id) {
+        // Create new website entry
+        $stmt = $pdo->prepare("INSERT INTO websites (url, title) VALUES (?, ?)");
+        $stmt->execute([$url, $title ?: null]);
+        $website_id = $pdo->lastInsertId();
+    } else if ($title) {
+        // Optional: Update title if it was missing before
+        $pdo->prepare("UPDATE websites SET title = ? WHERE id = ? AND (title IS NULL OR title = '')")->execute([$title, $website_id]);
+    }
+
+    // ── Store log ─────────────────────────────────────────────────
+    $stmt = $pdo->prepare(
+        "INSERT INTO website_logs (session_id, user_id, website_id) 
+         VALUES (:sid, :uid, :wid)"
+    );
+
+    $success = $stmt->execute([
+        ':sid' => $session['id'],
+        ':uid' => $session['user_id'],
+        ':wid' => $website_id
+    ]);
+} catch (Exception $e) {
+    $success = false;
+    $error_msg = $e->getMessage();
+}
 
 if ($success) {
     echo json_encode([

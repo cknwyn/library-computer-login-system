@@ -40,7 +40,7 @@
                     Effect="{StaticResource CardShadow}">
                 <StackPanel>
                     <!-- Student/Staff ID -->
-                    <TextBlock Text="SYSTEM ID" 
+                    <TextBlock Text="STUDENT/STAFF ID" 
                                FontSize="12" 
                                FontWeight="Bold" 
                                Foreground="{StaticResource TextLightBrush}" 
@@ -101,8 +101,8 @@
                 <!-- Status Pill -->
                 <Border Background="#22FFFFFF" CornerRadius="20" Padding="15,8">
                     <StackPanel Orientation="Horizontal">
-                        <Ellipse Width="8" Height="8" Fill="#4ADE80" Margin="0,0,10,0"/>
-                        <TextBlock Text="CONNECTED TO SERVER" 
+                        <Ellipse x:Name="StatusDot" Width="8" Height="8" Fill="#4ADE80" Margin="0,0,10,0"/>
+                        <TextBlock x:Name="StatusTxt" Text="CONNECTED TO SERVER" 
                                    FontSize="10" 
                                    FontWeight="Bold" 
                                    Foreground="White"/>

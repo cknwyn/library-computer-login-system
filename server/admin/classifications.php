@@ -168,165 +168,203 @@ $page = 'classifications';
 include __DIR__ . '/partials/header.php';
 ?>
 
-<div class="row" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;">
-    
-    <!-- Colleges Section -->
-    <section>
-        <div class="card">
-            <div class="card-header">
-                <span class="card-title">Colleges</span>
-                <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-college')"><i data-lucide="plus"></i> Add</button>
-            </div>
-            <div class="table-wrap">
-                <table>
-                    <thead><tr><th>Name</th><th style="width:80px">Code</th><th>Actions</th></tr></thead>
-                    <tbody>
-                        <?php foreach($colleges as $c): ?>
-                        <tr>
-                            <td><?= h($c['name']) ?></td>
-                            <td class="mono"><?= h($c['code']) ?></td>
-                            <td>
-                                <button class="btn btn-outline btn-sm" onclick="editCollege(<?= $c['id'] ?>, '<?= addslashes(h($c['name'])) ?>', '<?= addslashes(h($c['code'])) ?>')"><i data-lucide="edit-2" style="width:14px"></i></button>
-                                <form method="POST" style="display:inline" onsubmit="return confirm('Delete this college and all its departments?')">
-                                    <input type="hidden" name="action" value="delete_college">
-                                    <input type="hidden" name="id" value="<?= $c['id'] ?>">
-                                    <button class="btn btn-outline btn-sm" style="color:var(--error)"><i data-lucide="trash-2" style="width:14px"></i></button>
-                                </form>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
+<?php if ($flash): ?>
+  <div class="flash flash-<?= $flash_type ?> fade-in" style="margin-bottom: 32px">
+    <i data-lucide="<?= $flash_type==='error'?'alert-circle':'check-circle' ?>" style="width:18px"></i> <?= h($flash) ?>
+  </div>
+<?php endif; ?>
 
-    <!-- Departments Section -->
-    <section>
-        <div class="card">
-            <div class="card-header">
-                <span class="card-title">Departments</span>
-                <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-dept')"><i data-lucide="plus"></i> Add</button>
-            </div>
-            <div class="table-wrap">
-                <table>
-                    <thead><tr><th>Name</th><th>College</th><th>Actions</th></tr></thead>
-                    <tbody>
-                        <?php foreach($depts as $d): ?>
-                        <tr>
-                            <td><?= h($d['name']) ?></td>
-                            <td><span class="badge badge-gray"><?= h($d['college_name']) ?></span></td>
-                            <td>
-                                <button class="btn btn-outline btn-sm" onclick="editDept(<?= $d['id'] ?>, '<?= addslashes(h($d['name'])) ?>', <?= $d['college_id'] ?>)"><i data-lucide="edit-2" style="width:14px"></i></button>
-                                <form method="POST" style="display:inline" onsubmit="return confirm('Delete this department and all its degrees?')">
-                                    <input type="hidden" name="action" value="delete_dept">
-                                    <input type="hidden" name="id" value="<?= $d['id'] ?>">
-                                    <button class="btn btn-outline btn-sm" style="color:var(--error)"><i data-lucide="trash-2" style="width:14px"></i></button>
-                                </form>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
-
-    <!-- Degrees Section -->
-    <section>
-        <div class="card">
-            <div class="card-header">
-                <span class="card-title">Degrees / Programs</span>
-                <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-degree')"><i data-lucide="plus"></i> Add</button>
-            </div>
-            <div class="table-wrap">
-                <table>
-                    <thead><tr><th>Name</th><th>Dept</th><th>Actions</th></tr></thead>
-                    <tbody>
-                        <?php foreach($degrees as $deg): ?>
-                        <tr>
-                            <td><?= h($deg['name']) ?></td>
-                            <td><span class="badge badge-gray"><?= h($deg['dept_name']) ?></span></td>
-                            <td>
-                                <button class="btn btn-outline btn-sm" onclick="editDegree(<?= $deg['id'] ?>, '<?= addslashes(h($deg['name'])) ?>', <?= $deg['department_id'] ?>)"><i data-lucide="edit-2" style="width:14px"></i></button>
-                                <form method="POST" style="display:inline" onsubmit="return confirm('Delete this degree?')">
-                                    <input type="hidden" name="action" value="delete_degree">
-                                    <input type="hidden" name="id" value="<?= $deg['id'] ?>">
-                                    <button class="btn btn-outline btn-sm" style="color:var(--error)"><i data-lucide="trash-2" style="width:14px"></i></button>
-                                </form>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
+<!-- Tabs Navigation -->
+<div class="tabs-container" style="margin-bottom: 32px; border-bottom: 1px solid var(--border-light); display: flex; gap: 32px">
+    <button class="tab-link active" onclick="switchTab(event, 'academic')" style="padding: 12px 4px; border: none; background: none; font-weight: 700; color: var(--primary); border-bottom: 2px solid var(--primary); cursor: pointer; display: flex; align-items: center; gap: 8px">
+        <i data-lucide="graduation-cap" style="width:18px"></i> Academic
+    </button>
+    <button class="tab-link" onclick="switchTab(event, 'physical')" style="padding: 12px 4px; border: none; background: none; font-weight: 700; color: var(--text-muted); cursor: pointer; display: flex; align-items: center; gap: 8px">
+        <i data-lucide="map-pin" style="width:18px"></i> Physical Locations
+    </button>
 </div>
 
-<div class="row" style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px; margin-top: 32px;">
-    <!-- Campuses Section -->
-    <section>
-        <div class="card">
-            <div class="card-header">
-                <span class="card-title">Campuses</span>
-                <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-campus')"><i data-lucide="plus"></i> Add</button>
+<!-- Academic Tab -->
+<div id="academic" class="tab-content fade-in">
+    <div class="row" style="display:grid; grid-template-columns: 1fr 1fr 1fr; gap: 24px;">
+        <!-- Colleges Section -->
+        <section>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Colleges</span>
+                    <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-college')"><i data-lucide="plus"></i> Add</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Name</th><th>Actions</th></tr></thead>
+                        <tbody>
+                            <?php foreach($colleges as $c): ?>
+                            <tr>
+                                <td>
+                                    <div style="font-weight: 700"><?= h($c['name']) ?></div>
+                                    <?php if ($c['code']): ?><div class="td-muted mono" style="font-size: 11px"><?= h($c['code']) ?></div><?php endif; ?>
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 4px">
+                                        <button class="btn btn-outline btn-sm" onclick="editCollege(<?= $c['id'] ?>, '<?= addslashes(h($c['name'])) ?>', '<?= addslashes(h($c['code'])) ?>')"><i data-lucide="edit-2" style="width:14px"></i></button>
+                                        <form method="POST" onsubmit="return confirm('Delete this college and all its departments?')">
+                                            <input type="hidden" name="action" value="delete_college">
+                                            <input type="hidden" name="id" value="<?= $c['id'] ?>">
+                                            <button class="btn btn-outline btn-sm" style="color:var(--error)"><i data-lucide="trash-2" style="width:14px"></i></button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="table-wrap">
-                <table>
-                    <thead><tr><th>Campus Name</th><th>Actions</th></tr></thead>
-                    <tbody>
-                        <?php foreach($campuses as $cp): ?>
-                        <tr>
-                            <td><?= h($cp['name']) ?></td>
-                            <td>
-                                <button class="btn btn-outline btn-sm" onclick="editCampus(<?= $cp['id'] ?>, '<?= addslashes(h($cp['name'])) ?>')"><i data-lucide="edit-2" style="width:14px"></i></button>
-                                <form method="POST" style="display:inline" onsubmit="return confirm('Delete this campus and all its rooms?')">
-                                    <input type="hidden" name="action" value="delete_campus">
-                                    <input type="hidden" name="id" value="<?= $cp['id'] ?>">
-                                    <button class="btn btn-outline btn-sm" style="color:var(--error)"><i data-lucide="trash-2" style="width:14px"></i></button>
-                                </form>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
-            </div>
-        </div>
-    </section>
+        </section>
 
-    <!-- Rooms Section -->
-    <section>
-        <div class="card">
-            <div class="card-header">
-                <span class="card-title">Rooms</span>
-                <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-room')"><i data-lucide="plus"></i> Add</button>
+        <!-- Departments Section -->
+        <section>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Departments</span>
+                    <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-dept')"><i data-lucide="plus"></i> Add</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Name</th><th>Actions</th></tr></thead>
+                        <tbody>
+                            <?php foreach($depts as $d): ?>
+                            <tr>
+                                <td>
+                                    <div style="font-weight: 700"><?= h($d['name']) ?></div>
+                                    <div class="badge badge-gray" style="font-size: 10px"><?= h($d['college_name']) ?></div>
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 4px">
+                                        <button class="btn btn-outline btn-sm" onclick="editDept(<?= $d['id'] ?>, '<?= addslashes(h($d['name'])) ?>', <?= $d['college_id'] ?>)"><i data-lucide="edit-2" style="width:14px"></i></button>
+                                        <form method="POST" onsubmit="return confirm('Delete this department and all its degrees?')">
+                                            <input type="hidden" name="action" value="delete_dept">
+                                            <input type="hidden" name="id" value="<?= $d['id'] ?>">
+                                            <button class="btn btn-outline btn-sm" style="color:var(--error)"><i data-lucide="trash-2" style="width:14px"></i></button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-            <div class="table-wrap">
-                <table>
-                    <thead><tr><th>Room Name</th><th>Campus</th><th>Actions</th></tr></thead>
-                    <tbody>
-                        <?php foreach($rooms as $rm): ?>
-                        <tr>
-                            <td><?= h($rm['name']) ?></td>
-                            <td><span class="badge badge-gray"><?= h($rm['campus_name']) ?></span></td>
-                            <td>
-                                <button class="btn btn-outline btn-sm" onclick="editRoom(<?= $rm['id'] ?>, '<?= addslashes(h($rm['name'])) ?>', <?= $rm['campus_id'] ?>)"><i data-lucide="edit-2" style="width:14px"></i></button>
-                                <form method="POST" style="display:inline" onsubmit="return confirm('Delete this room?')">
-                                    <input type="hidden" name="action" value="delete_room">
-                                    <input type="hidden" name="id" value="<?= $rm['id'] ?>">
-                                    <button class="btn btn-outline btn-sm" style="color:var(--error)"><i data-lucide="trash-2" style="width:14px"></i></button>
-                                </form>
-                            </td>
-                        </tr>
-                        <?php endforeach; ?>
-                    </tbody>
-                </table>
+        </section>
+
+        <!-- Degrees Section -->
+        <section>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Degrees / Programs</span>
+                    <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-degree')"><i data-lucide="plus"></i> Add</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Program Name</th><th>Actions</th></tr></thead>
+                        <tbody>
+                            <?php foreach($degrees as $deg): ?>
+                            <tr>
+                                <td>
+                                    <div style="font-weight: 700"><?= h($deg['name']) ?></div>
+                                    <div class="td-muted" style="font-size: 10px"><?= h($deg['dept_name']) ?></div>
+                                </td>
+                                <td>
+                                    <div style="display: flex; gap: 4px">
+                                        <button class="btn btn-outline btn-sm" onclick="editDegree(<?= $deg['id'] ?>, '<?= addslashes(h($deg['name'])) ?>', <?= $deg['department_id'] ?>)"><i data-lucide="edit-2" style="width:14px"></i></button>
+                                        <form method="POST" onsubmit="return confirm('Delete this degree?')">
+                                            <input type="hidden" name="action" value="delete_degree">
+                                            <input type="hidden" name="id" value="<?= $deg['id'] ?>">
+                                            <button class="btn btn-outline btn-sm" style="color:var(--error)"><i data-lucide="trash-2" style="width:14px"></i></button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
             </div>
-        </div>
-    </section>
+        </section>
+    </div>
 </div>
 
+<!-- Physical Tab -->
+<div id="physical" class="tab-content fade-in" style="display: none">
+    <div class="row" style="display:grid; grid-template-columns: 1fr 1fr; gap: 24px;">
+        <!-- Campuses Section -->
+        <section>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Campuses</span>
+                    <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-campus')"><i data-lucide="plus"></i> Add</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Campus Name</th><th>Actions</th></tr></thead>
+                        <tbody>
+                            <?php foreach($campuses as $cp): ?>
+                            <tr>
+                                <td style="font-weight: 700"><?= h($cp['name']) ?></td>
+                                <td>
+                                    <div style="display: flex; gap: 4px">
+                                        <button class="btn btn-outline btn-sm" onclick="editCampus(<?= $cp['id'] ?>, '<?= addslashes(h($cp['name'])) ?>')"><i data-lucide="edit-2" style="width:14px"></i></button>
+                                        <form method="POST" onsubmit="return confirm('Delete this campus and all its rooms?')">
+                                            <input type="hidden" name="action" value="delete_campus">
+                                            <input type="hidden" name="id" value="<?= $cp['id'] ?>">
+                                            <button class="btn btn-outline btn-sm" style="color:var(--error)"><i data-lucide="trash-2" style="width:14px"></i></button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+
+        <!-- Rooms Section -->
+        <section>
+            <div class="card">
+                <div class="card-header">
+                    <span class="card-title">Rooms</span>
+                    <button class="btn btn-primary btn-sm" onclick="openModal('modal-add-room')"><i data-lucide="plus"></i> Add</button>
+                </div>
+                <div class="table-wrap">
+                    <table>
+                        <thead><tr><th>Room Name</th><th>Campus</th><th>Actions</th></tr></thead>
+                        <tbody>
+                            <?php foreach($rooms as $rm): ?>
+                            <tr>
+                                <td style="font-weight: 700"><?= h($rm['name']) ?></td>
+                                <td><span class="badge badge-gray"><?= h($rm['campus_name']) ?></span></td>
+                                <td>
+                                    <div style="display: flex; gap: 4px">
+                                        <button class="btn btn-outline btn-sm" onclick="editRoom(<?= $rm['id'] ?>, '<?= addslashes(h($rm['name'])) ?>', <?= $rm['campus_id'] ?>)"><i data-lucide="edit-2" style="width:14px"></i></button>
+                                        <form method="POST" onsubmit="return confirm('Delete this room?')">
+                                            <input type="hidden" name="action" value="delete_room">
+                                            <input type="hidden" name="id" value="<?= $rm['id'] ?>">
+                                            <button class="btn btn-outline btn-sm" style="color:var(--error)"><i data-lucide="trash-2" style="width:14px"></i></button>
+                                        </form>
+                                    </div>
+                                </td>
+                            </tr>
+                            <?php endforeach; ?>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </section>
+    </div>
+</div>
+
+<!-- Modals -->
 <!-- Modal: Add/Edit College -->
 <div class="modal-backdrop" id="modal-add-college">
     <div class="modal">
@@ -338,7 +376,7 @@ include __DIR__ . '/partials/header.php';
                 <div class="form-group"><label class="form-label">College Name</label><input name="name" id="college-name" class="form-control" placeholder="e.g. College of Computer Studies" required></div>
                 <div class="form-group"><label class="form-label">Abbreviation / Code</label><input name="code" id="college-code" class="form-control" placeholder="e.g. CCS"></div>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-add-college')">Cancel</button><button type="submit" class="btn btn-primary">Save</button></div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-add-college')">Cancel</button><button type="submit" class="btn btn-primary">Save College</button></div>
         </form>
     </div>
 </div>
@@ -358,7 +396,7 @@ include __DIR__ . '/partials/header.php';
                 </div>
                 <div class="form-group"><label class="form-label">Department Name</label><input name="name" id="dept-name" class="form-control" placeholder="e.g. Information Technology" required></div>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-add-dept')">Cancel</button><button type="submit" class="btn btn-primary">Save</button></div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-add-dept')">Cancel</button><button type="submit" class="btn btn-primary">Save Dept</button></div>
         </form>
     </div>
 </div>
@@ -378,7 +416,7 @@ include __DIR__ . '/partials/header.php';
                 </div>
                 <div class="form-group"><label class="form-label">Degree Name</label><input name="name" id="degree-name" class="form-control" placeholder="e.g. BS Information Technology" required></div>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-add-degree')">Cancel</button><button type="submit" class="btn btn-primary">Save</button></div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-add-degree')">Cancel</button><button type="submit" class="btn btn-primary">Save Degree</button></div>
         </form>
     </div>
 </div>
@@ -393,7 +431,7 @@ include __DIR__ . '/partials/header.php';
             <div class="modal-body">
                 <div class="form-group"><label class="form-label">Campus Name</label><input name="name" id="campus-name" class="form-control" placeholder="e.g. Main Campus" required></div>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-add-campus')">Cancel</button><button type="submit" class="btn btn-primary">Save</button></div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-add-campus')">Cancel</button><button type="submit" class="btn btn-primary">Save Campus</button></div>
         </form>
     </div>
 </div>
@@ -413,12 +451,29 @@ include __DIR__ . '/partials/header.php';
                 </div>
                 <div class="form-group"><label class="form-label">Room Name</label><input name="name" id="room-name" class="form-control" placeholder="e.g. Reading Room A" required></div>
             </div>
-            <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-add-room')">Cancel</button><button type="submit" class="btn btn-primary">Save</button></div>
+            <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-add-room')">Cancel</button><button type="submit" class="btn btn-primary">Save Room</button></div>
         </form>
     </div>
 </div>
 
 <script>
+function switchTab(evt, tabId) {
+    const contents = document.getElementsByClassName('tab-content');
+    for (let i = 0; i < contents.length; i++) contents[i].style.display = 'none';
+    
+    const links = document.getElementsByClassName('tab-link');
+    for (let i = 0; i < links.length; i++) {
+        links[i].classList.remove('active');
+        links[i].style.color = 'var(--text-muted)';
+        links[i].style.borderBottom = 'none';
+    }
+    
+    document.getElementById(tabId).style.display = 'block';
+    evt.currentTarget.classList.add('active');
+    evt.currentTarget.style.color = 'var(--primary)';
+    evt.currentTarget.style.borderBottom = '2px solid var(--primary)';
+}
+
 function editCollege(id, name, code) {
     document.getElementById('college-modal-title').textContent = 'Edit College';
     document.getElementById('college-action').value = 'update_college';

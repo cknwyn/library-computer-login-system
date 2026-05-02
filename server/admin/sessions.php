@@ -44,7 +44,7 @@ if ($search)   { $where[] = '(u.user_id LIKE :q OR u.name LIKE :q OR t.terminal_
 
 $sql = "SELECT s.*,
                u.name AS user_name, u.user_id AS user_code, u.role,
-               t.terminal_code, r.room_name, c.name AS campus_name
+               t.terminal_code, r.name AS room_name, c.name AS campus_name
         FROM sessions s
         JOIN users     u ON u.id = s.user_id
         JOIN terminals t ON t.id = s.terminal_id

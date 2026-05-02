@@ -1,6 +1,6 @@
 -- ============================================================
--- Library Computer Login System - Database Schema
--- XAMPP / MySQL 5.7+
+-- Library Computer Login System - Database Schema (Enterprise 3NF)
+-- Optimized for XAMPP / MySQL 5.7+ / MariaDB
 -- ============================================================
 
 CREATE DATABASE IF NOT EXISTS library_system
@@ -10,7 +10,7 @@ CREATE DATABASE IF NOT EXISTS library_system
 USE library_system;
 
 -- ============================================================
--- COLLEGES, DEPARTMENTS, DEGREES (Normalized classification)
+-- ACADEMIC CLASSIFICATIONS
 -- ============================================================
 CREATE TABLE colleges (
     id   INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -35,7 +35,7 @@ CREATE TABLE degrees (
 ) ENGINE=InnoDB;
 
 -- ============================================================
--- CAMPUSES (Collegiate sites)
+-- PHYSICAL INFRASTRUCTURE
 -- ============================================================
 CREATE TABLE campuses (
     id               INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -43,9 +43,6 @@ CREATE TABLE campuses (
     creation_date    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP
 ) ENGINE=InnoDB;
 
--- ============================================================
--- ROOMS (Physical locations for terminals)
--- ============================================================
 CREATE TABLE rooms (
     id               INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     campus_id        INT UNSIGNED NOT NULL,
@@ -57,7 +54,7 @@ CREATE TABLE rooms (
 ) ENGINE=InnoDB;
 
 -- ============================================================
--- USERS (Library patrons: students and staff)
+-- USERS (Patrons)
 -- ============================================================
 CREATE TABLE users (
     id               INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -65,29 +62,26 @@ CREATE TABLE users (
     first_name       VARCHAR(100) DEFAULT NULL,
     middle_name      VARCHAR(100) DEFAULT NULL,
     last_name        VARCHAR(100) DEFAULT NULL,
-    name             VARCHAR(100) NOT NULL,
+    name             VARCHAR(255) NOT NULL,
     username         VARCHAR(100) DEFAULT NULL,
     email            VARCHAR(150) DEFAULT NULL,
     password_hash    VARCHAR(255) NOT NULL,
-    role             ENUM('student', 'staff') NOT NULL DEFAULT 'student',
+    role             ENUM('student', 'staff', 'admin') NOT NULL DEFAULT 'student',
+    status           ENUM('active', 'inactive', 'suspended') NOT NULL DEFAULT 'active',
     contact_number   VARCHAR(50)  DEFAULT NULL,
     designation      VARCHAR(100) DEFAULT NULL,
-    affiliation      VARCHAR(150) DEFAULT NULL,
     college_id       INT UNSIGNED DEFAULT NULL,
-    gender           VARCHAR(20)  DEFAULT NULL,
+    gender           ENUM('Male', 'Female', 'Other') DEFAULT NULL,
     year             VARCHAR(10)  DEFAULT NULL,
-    department       VARCHAR(100) DEFAULT NULL,
     department_id    INT UNSIGNED DEFAULT NULL,
-    user_type        VARCHAR(50)  DEFAULT NULL COMMENT 'Raw string from import (e.g. STUDENT, FACULTY)',
-    degree           VARCHAR(150) DEFAULT NULL,
     degree_id        INT UNSIGNED DEFAULT NULL,
+    user_type        VARCHAR(50)  DEFAULT NULL COMMENT 'Legacy/Import category label',
     speciality       VARCHAR(150) DEFAULT NULL,
     ra_expiry_date   DATE         DEFAULT NULL,
     rank             VARCHAR(50)  DEFAULT NULL,
     batch            VARCHAR(50)  DEFAULT NULL,
     cadre            VARCHAR(100) DEFAULT NULL,
     dob              DATE         DEFAULT NULL,
-    status           ENUM('active', 'inactive', 'suspended') NOT NULL DEFAULT 'active',
     creation_date    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     updated_at       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
     FOREIGN KEY (college_id)    REFERENCES colleges(id)    ON UPDATE CASCADE ON DELETE SET NULL,
@@ -98,7 +92,7 @@ CREATE TABLE users (
 ) ENGINE=InnoDB;
 
 -- ============================================================
--- ADMINS (Librarians / IT staff who access the admin panel)
+-- ADMINISTRATION
 -- ============================================================
 CREATE TABLE admins (
     id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
@@ -110,14 +104,13 @@ CREATE TABLE admins (
 ) ENGINE=InnoDB;
 
 -- ============================================================
--- TERMINALS (nComputing thin-client stations)
+-- NETWORK ASSETS
 -- ============================================================
 CREATE TABLE terminals (
     id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-    terminal_code VARCHAR(30)  NOT NULL UNIQUE COMMENT 'e.g. PC-01, LIB-A-03',
+    terminal_code VARCHAR(30)  NOT NULL UNIQUE COMMENT 'e.g. PC-01',
     terminal_name VARCHAR(100) DEFAULT NULL,
     pc_hostname   VARCHAR(150) DEFAULT NULL,
-    location      VARCHAR(100) DEFAULT NULL  COMMENT 'Legacy text location',
     campus_id     INT UNSIGNED DEFAULT NULL,
     room_id       INT UNSIGNED DEFAULT NULL,
     status        ENUM('online', 'offline', 'maintenance') NOT NULL DEFAULT 'offline',
@@ -129,20 +122,31 @@ CREATE TABLE terminals (
 ) ENGINE=InnoDB;
 
 -- ============================================================
--- SESSIONS (Each user login event)
+-- ACTIVITY CATALOGS
+-- ============================================================
+CREATE TABLE websites (
+    id            INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
+    url           TEXT NOT NULL,
+    title         VARCHAR(255) DEFAULT NULL,
+    created_at    TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    UNIQUE INDEX idx_url_hash (url(255))
+) ENGINE=InnoDB;
+
+-- ============================================================
+-- SESSIONS & LOGS
 -- ============================================================
 CREATE TABLE sessions (
     id               INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id          INT UNSIGNED NOT NULL,
     terminal_id      INT UNSIGNED NOT NULL,
-    session_token    VARCHAR(64)  NOT NULL UNIQUE COMMENT 'Secure token sent to Electron client',
+    session_token    VARCHAR(64)  NOT NULL UNIQUE,
     login_time       TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     logout_time      TIMESTAMP NULL DEFAULT NULL,
-    duration_seconds INT UNSIGNED NULL DEFAULT NULL COMMENT 'Computed on logout',
+    duration_seconds INT UNSIGNED NULL DEFAULT NULL,
     last_heartbeat   TIMESTAMP NULL DEFAULT NULL,
     status           ENUM('active', 'completed', 'force_ended', 'abandoned') NOT NULL DEFAULT 'active',
     creation_date    TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (user_id)     REFERENCES users(id)     ON UPDATE CASCADE,
+    FOREIGN KEY (user_id)     REFERENCES users(id)     ON UPDATE CASCADE ON DELETE CASCADE,
     FOREIGN KEY (terminal_id) REFERENCES terminals(id) ON UPDATE CASCADE,
     INDEX idx_status (status),
     INDEX idx_user_id (user_id),
@@ -150,31 +154,25 @@ CREATE TABLE sessions (
     INDEX idx_login_time (login_time)
 ) ENGINE=InnoDB;
 
--- ============================================================
--- WEBSITE LOGS (Tracking URLs visited during sessions)
--- ============================================================
 CREATE TABLE website_logs (
     id           INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     session_id   INT UNSIGNED NOT NULL,
     user_id      INT UNSIGNED NOT NULL,
-    url          TEXT         NOT NULL,
-    title        VARCHAR(255) DEFAULT NULL,
+    website_id   INT UNSIGNED NOT NULL,
     visited_at   TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (session_id) REFERENCES sessions(id) ON UPDATE CASCADE ON DELETE CASCADE,
-    FOREIGN KEY (user_id)    REFERENCES users(id)    ON UPDATE CASCADE,
+    FOREIGN KEY (user_id)    REFERENCES users(id)    ON UPDATE CASCADE ON DELETE CASCADE,
+    FOREIGN KEY (website_id) REFERENCES websites(id) ON UPDATE CASCADE ON DELETE CASCADE,
     INDEX idx_session_id (session_id),
     INDEX idx_visited_at (visited_at)
 ) ENGINE=InnoDB;
 
--- ============================================================
--- ACTIVITY LOGS (Audit trail for all events)
--- ============================================================
 CREATE TABLE activity_logs (
     id          INT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
     user_id     INT UNSIGNED NULL DEFAULT NULL,
     admin_id    INT UNSIGNED NULL DEFAULT NULL,
     terminal_id INT UNSIGNED NULL DEFAULT NULL,
-    action      VARCHAR(100) NOT NULL COMMENT 'e.g. USER_LOGIN, USER_LOGOUT, APP_REQUEST',
+    action      VARCHAR(100) NOT NULL,
     details     TEXT         DEFAULT NULL,
     ip_address  VARCHAR(45)  DEFAULT NULL,
     creation_date TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
