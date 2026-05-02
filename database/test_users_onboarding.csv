@@ -1,6 +1,5 @@
-Username,Email,Contact Number,Designation,Affiliation,Gender,Year,Department,User Type,Degree,Speciality,Staff Id,Ra Expiry Date,Rank,Batch,Cadre,Dob,Creation Date
-Juan Dela Cruz,juan.delacruz@email.com,9123456789,Student,CCS,Male,3rd Year,BS Computer Science,STUDENT,BSCS,Software Engineering,24-0001-001,12/31/2028,1,2024,Main,5/15/2003,4/28/2026
-Maria Clara,maria.clara@email.com,9987654321,Instructor,CAS,Female,N/A,Psychology,STAFF,Ph.D.,Clinical Psychology,15-0123-456,1/1/2030,2,2015,Satellite,10/10/1990,4/28/2026
-Pepito Manaloto,test.user@email.com,9000000000,Student,CED,Female,1st Year,Elementary Education,STUDENT,BEEd,-,23-9999-999,12/31/2027,1,2023,Main,1/1/2005,4/28/2026
-Ricardo Dalisay,cardodalisay@email.com,9111111111,Student,CCJE,Male,4th Year,BS Criminology,STUDENT,BS Crim,Law Enforcement,21-5555-555,12/31/2026,Active,2021,Main,12/25/2002,4/28/2026
-Leonor Rivera,leonor.rivera@email.com,9222222222,Faculty,CED,Female,N/A,Professional Education,STAFF,MA Ed,Curriculum Development,10-8888-888,1/1/2035,Head,2010,Main,4/11/1985,4/28/2026
+Staff Id,Username,User Type,Email,Contact Number,Designation,Gender,College,Department,Degree,Specialization,Ra Expiry Date,Rank,Batch,Cadre,Dob
+DB-0001,"Reyes, Jane",STUDENT,jane.reyes@auf.edu.ph,0917-123-4567,-,Female,CCS,Information Technology,BS in Information Technology,Infrastructure,2028-05-01,1st Year,3,Undergraduate,2005-05-15
+DB-0002,"Santos, John Mark",STUDENT,john.santos@auf.edu.ph,0918-765-4321,-,Male,CCS,Computer Science,BS in Computer Science,Software Development,2028-05-01,2nd Year,4,Undergraduate,2004-10-20
+DB-0003,"Dela Cruz, Maria",STAFF,maria.dc@auf.edu.ph,0920-555-0000,Associate Professor,Female,CON,Nursing Education,Bachelor of Science in Nursing,Clinical Nursing,2030-01-01,Faculty/Staff,-,Others,1985-03-12
+DB-0004,"Luna, Antonio P.",STUDENT,antonio.luna@auf.edu.ph,0919-999-1111,-,Male,CEA,Civil Engineering,BS in Civil Engineering,Structural Engineering,2026-12-31,4th Year,1,Postgraduate,2002-11-29

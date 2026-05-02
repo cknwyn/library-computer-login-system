@@ -176,8 +176,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $coll_name = trim($data['Affiliation'] ?? $data['College'] ?? '');
                     if ($coll_name && $coll_name !== '-') {
                         if (!isset($cache_coll[$coll_name])) {
-                            $st = $pdo->prepare("SELECT id FROM colleges WHERE name = ? OR code = ? LIMIT 1");
-                            $st->execute([$coll_name, $coll_name]);
+                            $st = $pdo->prepare("SELECT id FROM colleges WHERE name LIKE ? OR code = ? LIMIT 1");
+                            $st->execute(["%$coll_name%", $coll_name]);
                             $cache_coll[$coll_name] = $st->fetchColumn() ?: null;
                         }
                         $cid = $cache_coll[$coll_name];
@@ -187,8 +187,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $dept_name = trim($data['Department'] ?? '');
                     if ($dept_name && $dept_name !== '-') {
                         if (!isset($cache_dept[$dept_name])) {
-                            $st = $pdo->prepare("SELECT id FROM departments WHERE name = ? LIMIT 1");
-                            $st->execute([$dept_name]);
+                            $st = $pdo->prepare("SELECT id FROM departments WHERE name LIKE ? LIMIT 1");
+                            $st->execute(["%$dept_name%"]);
                             $cache_dept[$dept_name] = $st->fetchColumn() ?: null;
                         }
                         $did = $cache_dept[$dept_name];
@@ -198,8 +198,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $deg_name = trim($data['Degree'] ?? '');
                     if ($deg_name && $deg_name !== '-') {
                         if (!isset($cache_deg[$deg_name])) {
-                            $st = $pdo->prepare("SELECT id FROM degrees WHERE name = ? LIMIT 1");
-                            $st->execute([$deg_name]);
+                            $st = $pdo->prepare("SELECT id FROM degrees WHERE name LIKE ? OR name = ? LIMIT 1");
+                            $st->execute(["%$deg_name%", $deg_name]);
                             $cache_deg[$deg_name] = $st->fetchColumn() ?: null;
                         }
                         $degid = $cache_deg[$deg_name];
@@ -209,8 +209,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                     $spec_name = trim($data['Speciality'] ?? $data['Specialization'] ?? '');
                     if ($spec_name && $spec_name !== '-') {
                         if (!isset($cache_spec[$spec_name])) {
-                            $st = $pdo->prepare("SELECT id FROM specializations WHERE name = ? LIMIT 1");
-                            $st->execute([$spec_name]);
+                            $st = $pdo->prepare("SELECT id FROM specializations WHERE name LIKE ? LIMIT 1");
+                            $st->execute(["%$spec_name%"]);
                             $cache_spec[$spec_name] = $st->fetchColumn() ?: null;
                         }
                         $specid = $cache_spec[$spec_name];
