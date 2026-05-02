@@ -16,6 +16,9 @@ This ecosystem features a high-performance **C# WPF/XAML Kiosk Client** for term
 - **💂 Native Watchdog**: A background `KioskGuard` service that ensures the kiosk is always running and automatically recovers from crashes.
 - **🎨 Modern Admin UI**: A premium, "SaaS-style" light theme dashboard featuring **Lucide** icons and responsive design.
 - **📊 Advanced Analytics**: Real-time session feed, usage heatmaps, CSV exports, and detailed user/terminal management.
+- **📜 System Audit Trail**: Complete activity logging of user/admin actions, including IP tracking and forensic history.
+- **📧 Password Recovery**: Automated 6-digit verification code system for secure user password resets.
+- **🌐 Website Monitoring**: Detailed tracking of URLs visited during active sessions for security and auditing.
 - **🛡️ Security First**: PDO-secured API, Bcrypt-hashed credentials, and cryptographically secure session tokens.
 
 ---
@@ -50,7 +53,8 @@ library-computer-login-system/
 │
 └── database/
     ├── schema.sql       # Optimized DB Structure
-    └── seed.sql         # Default credentials & Sample Data
+    ├── seed.sql         # Default credentials & Sample Data
+    └── oracle_ddl.sql   # Clean DDL for SQL Data Modeler
 ```
 
 ---
@@ -100,13 +104,12 @@ The WPF client implements advanced Windows-native security:
 
 ---
 
-## 📈 Data Insight & Reports
-
-The system tracks **Live Session Metadata** including:
-- Real-time heartbeat monitoring.
-- Automated "Abandoned Session" detection (>2 min silence).
-- User role classification (Student/Staff differentiation).
-- CSV Exporting for institutional auditing and spreadsheet integration.
+The system tracks **Live Session Metadata** and **Audit Trails** including:
+- **Activity Logs**: Every login, logout, and admin modification is timestamped and IP-tracked.
+- **Website Logs**: Records every URL visited by patrons during their session.
+- **Heartbeat Monitoring**: Real-time "Abandoned Session" detection (>2 min silence).
+- **Academic Classification**: Automated grouping by College, Department, and Degree.
+- **Export Engine**: CSV and specialized DDL exports for institutional auditing and data modeling.
 
 ---
 
