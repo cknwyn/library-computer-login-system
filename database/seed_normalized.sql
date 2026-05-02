@@ -1,79 +1,118 @@
 -- ============================================================
--- NORMALIZED SEED DATA (Enterprise 3NF)
+-- ANGELES UNIVERSITY FOUNDATION (AUF) - NORMALIZED SEED DATA
+-- Enterprise 3NF / AUF Identity Context
 -- ============================================================
 
--- 1. Locations
-INSERT INTO campuses (name) VALUES ('Main Campus'), ('West Campus'), ('Medical Center');
+-- 1. AUF Campus Locations
+INSERT INTO campuses (name) VALUES 
+('Main Campus'), 
+('Medical Center Campus');
 
 INSERT INTO rooms (name, campus_id) VALUES 
-('Library Hall A', 1), ('Library Hall B', 1), ('Cyber Zone', 1),
-('Reading Room', 2), ('Medical Library', 3);
+('University Library (Main)', 1),
+('Cyberzone - Information Commons', 1),
+('High School Library', 1),
+('Nursing Virtual Lab', 1),
+('Medical Library (AUFMC)', 2),
+('HS Cyberzone', 1);
 
--- 2. Academic Hierarchy
-INSERT INTO colleges (name) VALUES 
-('College of Engineering'), ('College of Arts & Sciences'), ('School of Medicine'), ('College of Business');
+-- 2. AUF Academic Hierarchy
+INSERT INTO colleges (name, code) VALUES 
+('College of Computer Studies', 'CCS'),
+('College of Nursing', 'CON'),
+('College of Engineering and Architecture', 'CEA'),
+('College of Business and Accountancy', 'CBA'),
+('College of Arts and Sciences', 'CAS'),
+('College of Allied Medical Professions', 'CAMP'),
+('College of Criminal Justice Education', 'CCJE'),
+('College of Education', 'CED'),
+('School of Medicine', 'SOM'),
+('School of Law', 'SOL'),
+('Graduate School', 'GS');
 
+-- CCS Departments
 INSERT INTO departments (name, college_id) VALUES 
-('Computer Science', 1), ('Electrical Engineering', 1),
-('Psychology', 2), ('Biology', 2),
-('Nursing', 3), ('Pharmacy', 3),
-('Accountancy', 4), ('Marketing', 4);
+('Information Technology', 1), 
+('Computer Science', 1);
 
+-- CON Departments
+INSERT INTO departments (name, college_id) VALUES 
+('Nursing Education', 2);
+
+-- CEA Departments
+INSERT INTO departments (name, college_id) VALUES 
+('Civil Engineering', 3), 
+('Electrical Engineering', 3), 
+('Architecture', 3);
+
+-- CBA Departments
+INSERT INTO departments (name, college_id) VALUES 
+('Accountancy', 4), 
+('Management and Marketing', 4);
+
+-- Degrees (Sample AUF Programs)
 INSERT INTO degrees (name, department_id) VALUES 
-('BS in Computer Science', 1), ('BS in Information Technology', 1),
-('BS in Psychology', 3),
-('BS in Nursing', 5),
+('BS in Information Technology', 1),
+('BS in Computer Science', 2),
+('Bachelor of Science in Nursing', 3),
+('BS in Civil Engineering', 4),
+('BS in Architecture', 6),
 ('BS in Accountancy', 7);
 
--- 3. Users
--- Default passwords are same as user_id for convenience
--- Jane Doe (Student)
+-- 3. Users (AUF Identities)
+-- Passwords are set to 'admin' using the known compatible hash:
+-- Jane Doe (CCS Student)
 INSERT INTO users (user_id, first_name, last_name, name, password_hash, role, college_id, department_id, degree_id, gender, year)
-VALUES ('2024-00001', 'Jane', 'Doe', 'Jane Doe', '$2y$12$N9qo8uLOickgx2ZMRZoMyeIjZAgNo8U8y.X6E/eM0D6R.K9R7N3Sy', 'student', 1, 1, 1, 'Female', '3rd');
+VALUES ('24-1234-567', 'Jane', 'Reyes', 'Jane Reyes', '$2y$12$N9qo8uLOickgx2ZMRZoMyeIjZAgNo8U8y.X6E/eM0D6R.K9R7N3Sy', 'student', 1, 1, 1, 'Female', '1st');
 
--- John Smith (Staff)
+-- John Santos (Nursing Student)
+INSERT INTO users (user_id, first_name, last_name, name, password_hash, role, college_id, department_id, degree_id, gender, year)
+VALUES ('22-0987-123', 'John', 'Santos', 'John Santos', '$2y$12$N9qo8uLOickgx2ZMRZoMyeIjZAgNo8U8y.X6E/eM0D6R.K9R7N3Sy', 'student', 2, 3, 3, 'Male', '3rd');
+
+-- Maria Dela Cruz (Faculty/Staff)
 INSERT INTO users (user_id, first_name, last_name, name, password_hash, role, college_id, department_id, designation, gender)
-VALUES ('STAFF-101', 'John', 'Smith', 'John Smith', '$2y$12$N9qo8uLOickgx2ZMRZoMyeIjZAgNo8U8y.X6E/eM0D6R.K9R7N3Sy', 'staff', 1, 2, 'Lab Technician', 'Male');
+VALUES ('F-99001', 'Maria', 'Dela Cruz', 'Maria Dela Cruz', '$2y$12$N9qo8uLOickgx2ZMRZoMyeIjZAgNo8U8y.X6E/eM0D6R.K9R7N3Sy', 'staff', 1, 1, 'Associate Professor', 'Female');
 
--- Admin User (PATRON ACCOUNT)
+-- Admin Account (Dashboard & Patron)
 INSERT INTO users (user_id, first_name, last_name, name, password_hash, role)
-VALUES ('admin', 'System', 'Admin', 'System Admin', '$2y$12$N9qo8uLOickgx2ZMRZoMyeIjZAgNo8U8y.X6E/eM0D6R.K9R7N3Sy', 'admin');
+VALUES ('admin', 'System', 'Administrator', 'System Administrator', '$2y$12$N9qo8uLOickgx2ZMRZoMyeIjZAgNo8U8y.X6E/eM0D6R.K9R7N3Sy', 'admin');
 
--- Dashboard Administrator (STAFF ACCOUNT)
 INSERT INTO admins (username, password_hash, name, email)
-VALUES ('admin', '$2y$12$N9qo8uLOickgx2ZMRZoMyeIjZAgNo8U8y.X6E/eM0D6R.K9R7N3Sy', 'System Administrator', 'admin@auf.edu.ph');
+VALUES ('admin', '$2y$12$N9qo8uLOickgx2ZMRZoMyeIjZAgNo8U8y.X6E/eM0D6R.K9R7N3Sy', 'AUF System Admin', 'admin@auf.edu.ph');
 
--- 4. Terminals
+-- 4. Terminals (AUF Catalog)
 INSERT INTO terminals (terminal_code, terminal_name, campus_id, room_id, status) VALUES 
-('PC-01', 'Reference Desk A', 1, 1, 'online'),
-('PC-02', 'Reference Desk B', 1, 1, 'online'),
-('LIB-C-01', 'Cyber Corner 1', 1, 3, 'online'),
-('MED-01', 'Medical Lab Station', 3, 5, 'online');
+('AUF-MAIN-LIB-01', 'Reference Desk PC 1', 1, 1, 'online'),
+('AUF-MAIN-LIB-02', 'Reference Desk PC 2', 1, 1, 'online'),
+('AUF-CYBER-01', 'Cyberzone Workstation 01', 1, 2, 'online'),
+('AUF-CYBER-02', 'Cyberzone Workstation 02', 1, 2, 'online'),
+('AUF-MC-LIB-01', 'Med-Lib Search Terminal', 2, 5, 'online'),
+('AUF-HS-LIB-01', 'HS Library Terminal 1', 1, 3, 'maintenance');
 
--- 5. Websites
+-- 5. Standard Research Websites
 INSERT INTO websites (url, title) VALUES 
-('https://google.com', 'Google'),
+('https://www.auf.edu.ph', 'Angeles University Foundation'),
+('https://library.auf.edu.ph', 'AUF University Library'),
+('https://canvas.auf.edu.ph', 'AUF Canvas LMS'),
+('https://google.com', 'Google Search'),
 ('https://wikipedia.org', 'Wikipedia'),
 ('https://github.com', 'GitHub'),
-('https://stackoverflow.com', 'Stack Overflow'),
-('https://library.auf.edu.ph', 'University Library');
+('https://sciencedirect.com', 'ScienceDirect Research');
 
--- 6. Sessions & Logs (Simulated History)
--- Session for Jane Doe
+-- 6. Simulated Session History (Realistic AUF Context)
+-- Jane Reyes (CCS Student) on Cyberzone Station
 INSERT INTO sessions (user_id, terminal_id, session_token, login_time, logout_time, duration_seconds, status)
-VALUES (1, 1, 'mock-token-jane-1', NOW() - INTERVAL 2 HOUR, NOW() - INTERVAL 1 HOUR, 3600, 'completed');
+VALUES (1, 3, 'token-jane-ccs', NOW() - INTERVAL 4 HOUR, NOW() - INTERVAL 3 HOUR, 3600, 'completed');
 
--- Website logs for Jane's session
 INSERT INTO website_logs (session_id, user_id, website_id, visited_at) VALUES 
-(1, 1, 1, NOW() - INTERVAL 115 MINUTE),
-(1, 1, 5, NOW() - INTERVAL 110 MINUTE),
-(1, 1, 2, NOW() - INTERVAL 90 MINUTE);
+(1, 1, 3, NOW() - INTERVAL 235 MINUTE),
+(1, 1, 6, NOW() - INTERVAL 220 MINUTE),
+(1, 1, 4, NOW() - INTERVAL 200 MINUTE);
 
--- Session for John Smith
+-- John Santos (CON Student) on Main Library Terminal
 INSERT INTO sessions (user_id, terminal_id, session_token, login_time, logout_time, duration_seconds, status)
-VALUES (2, 2, 'mock-token-john-1', NOW() - INTERVAL 30 MINUTE, NULL, NULL, 'active');
+VALUES (2, 1, 'token-john-con', NOW() - INTERVAL 45 MINUTE, NULL, NULL, 'active');
 
--- Website logs for John's active session
 INSERT INTO website_logs (session_id, user_id, website_id, visited_at) VALUES 
-(2, 2, 3, NOW() - INTERVAL 20 MINUTE),
-(2, 2, 4, NOW() - INTERVAL 15 MINUTE);
+(2, 2, 7, NOW() - INTERVAL 30 MINUTE),
+(2, 2, 2, NOW() - INTERVAL 10 MINUTE);
