@@ -67,5 +67,17 @@ namespace LibraryKiosk.Models
 
         [JsonPropertyName("department")]
         public string? Department { get; set; }
+
+        [JsonPropertyName("rank")]
+        public string? Rank { get; set; }
+
+        [JsonPropertyName("batch")]
+        public string? Batch { get; set; }
+
+        [JsonPropertyName("cadre")]
+        public string? Cadre { get; set; }
+
+        [JsonPropertyName("specialization")]
+        public string? Specialization { get; set; }
     }
 }
