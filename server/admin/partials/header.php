@@ -26,45 +26,51 @@
   </style>
 </head>
 <body>
-<div class="layout">
+<div class="layout" id="app-layout">
 
   <!-- Sidebar -->
-  <aside class="sidebar">
-    <div class="sidebar-logo" style="justify-content: center; padding: 40px 24px;">
+  <aside class="sidebar" id="main-sidebar">
+    <div class="sidebar-header" style="display: flex; justify-content: flex-end; padding: 12px 12px 0;">
+      <button class="btn-toggle-sidebar" onclick="toggleSidebar()" title="Toggle Sidebar">
+        <i data-lucide="menu"></i>
+      </button>
+    </div>
+    <div class="sidebar-logo" style="justify-content: center; padding: 10px 24px 40px;">
       <div class="logo-image" style="width: 210px; height: auto; flex-shrink: 0;">
-        <img src="<?= ASSETS_URL ?>/img/auf_ul_logo.png" alt="AUF Logo" style="width: 100%; height: auto; object-fit: contain;">
+        <img src="<?= ASSETS_URL ?>/img/auf_ul_logo.png" alt="AUF Logo" class="logo-wide" style="width: 100%; height: auto; object-fit: contain;">
+        <img src="<?= ASSETS_URL ?>/img/logo.png" alt="AUF Logo" class="logo-compact">
       </div>
     </div>
 
     <nav class="sidebar-nav">
       <span class="nav-section-label">Overview</span>
       <a href="dashboard.php" class="nav-item <?= $page==='dashboard' ? 'active' : '' ?>">
-        <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span> Dashboard
+        <span class="nav-icon"><i data-lucide="layout-dashboard"></i></span> <span>Dashboard</span>
       </a>
 
       <span class="nav-section-label">Management</span>
       <a href="users.php" class="nav-item <?= $page==='users' ? 'active' : '' ?>">
-        <span class="nav-icon"><i data-lucide="users"></i></span> Users
+        <span class="nav-icon"><i data-lucide="users"></i></span> <span>Users</span>
       </a>
       <a href="sessions.php" class="nav-item <?= $page==='sessions' ? 'active' : '' ?>">
-        <span class="nav-icon"><i data-lucide="monitor"></i></span> Sessions
+        <span class="nav-icon"><i data-lucide="monitor"></i></span> <span>Sessions</span>
       </a>
       <a href="terminals.php" class="nav-item <?= $page==='terminals' ? 'active' : '' ?>">
-        <span class="nav-icon"><i data-lucide="monitor-dot"></i></span> Terminals
+        <span class="nav-icon"><i data-lucide="monitor-dot"></i></span> <span>Terminals</span>
       </a>
       <a href="websites.php" class="nav-item <?= $page==='websites' ? 'active' : '' ?>">
-        <span class="nav-icon"><i data-lucide="globe"></i></span> Website Tracking
+        <span class="nav-icon"><i data-lucide="globe"></i></span> <span>Website Tracking</span>
       </a>
       <a href="classifications.php" class="nav-item <?= $page==='classifications' ? 'active' : '' ?>">
-        <span class="nav-icon"><i data-lucide="layers"></i></span> Classifications
+        <span class="nav-icon"><i data-lucide="layers"></i></span> <span>Classifications</span>
       </a>
 
       <span class="nav-section-label">Analytics</span>
       <a href="reports.php" class="nav-item <?= $page==='reports' ? 'active' : '' ?>">
-        <span class="nav-icon"><i data-lucide="bar-chart-3"></i></span> Reports
+        <span class="nav-icon"><i data-lucide="bar-chart-3"></i></span> <span>Reports</span>
       </a>
       <a href="logs.php" class="nav-item <?= $page==='logs' ? 'active' : '' ?>">
-        <span class="nav-icon"><i data-lucide="history"></i></span> System Logs
+        <span class="nav-icon"><i data-lucide="history"></i></span> <span>System Logs</span>
       </a>
     </nav>
 
@@ -77,7 +83,7 @@
         </div>
       </div>
       <a href="logout.php" class="btn-logout">
-        <i data-lucide="log-out" style="width:18px"></i> Sign Out
+        <i data-lucide="log-out" style="width:18px"></i> <span>Sign Out</span>
       </a>
     </div>
   </aside>
@@ -94,6 +100,33 @@
         <div class="live-badge"><span class="live-dot"></span> System Live</div>
       </div>
     </div>
+
+    <script>
+      function toggleSidebar() {
+          const sidebar = document.getElementById('main-sidebar');
+          const layout = document.getElementById('app-layout');
+          
+          if (window.innerWidth <= 640) {
+              sidebar.classList.toggle('open');
+          } else {
+              sidebar.classList.toggle('collapsed');
+              layout.classList.toggle('collapsed-sidebar');
+              // Save preference
+              localStorage.setItem('sidebar-collapsed', sidebar.classList.contains('collapsed'));
+          }
+      }
+
+      // Apply saved preference on load
+      (function() {
+          if (window.innerWidth > 1024) {
+              const isCollapsed = localStorage.getItem('sidebar-collapsed') === 'true';
+              if (isCollapsed) {
+                  document.getElementById('main-sidebar').classList.add('collapsed');
+                  document.getElementById('app-layout').classList.add('collapsed-sidebar');
+              }
+          }
+      })();
+    </script>
 
     <div class="page-content fade-in">
 

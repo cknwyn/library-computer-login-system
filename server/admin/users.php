@@ -421,30 +421,101 @@ include __DIR__ . '/partials/header.php';
 
 <!-- Bulk Modal -->
 <div class="modal-backdrop" id="modal-bulk">
-  <div class="modal">
+  <div class="modal" style="max-width: 650px;">
     <div class="modal-header">
-      <span class="modal-title">Bulk Onboarding (CSV)</span>
+      <span class="modal-title">Bulk Onboarding</span>
       <button class="btn-close" onclick="closeModal('modal-bulk')"><i data-lucide="x" style="width:16px"></i></button>
     </div>
-    <form method="POST" enctype="multipart/form-data">
+    <form method="POST" enctype="multipart/form-data" id="bulkOnboardingForm">
       <input type="hidden" name="action" value="bulk_import">
       <div class="modal-body">
-        <p style="font-size:13px; color:var(--text-muted); margin-bottom:16px">Upload a CSV file with headers: <strong>Username,Email,Contact Number,Designation,Affiliation,Gender,Year,Department,User Type,Degree,Speciality,Staff Id,Ra Expiry Date,Rank,Batch,Cadre,Dob</strong></p>
-        <div class="form-group">
-          <label class="form-label">Select CSV File</label>
-          <input type="file" name="csv_file" class="form-control" accept=".csv" required>
+        <div class="onboarding-desc">
+          Quickly onboard multiple users by uploading a CSV file. This feature streamlines the registration process, allowing you to onboard a large number of users at once.
         </div>
-        <div class="alert alert-info" style="font-size:12px; margin-top:12px; padding:12px; background:var(--secondary); border-radius:8px">
-          Passwords will be defaulted to the user's <strong>Staff Id</strong>.
+        <div class="onboarding-note">
+          Note: A maximum of 5000 users can be added at a time by uploading a .csv file. In case of non-english data, please upload a UTF-8 encoded .csv file only.
+        </div>
+
+        <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+          <span style="font-size: 13px; font-weight: 700; color: #1e293b;">UPLOAD FILE</span>
+          <a href="../../database/test_users_onboarding.csv" download class="link" style="font-size: 13px; color: #3b82f6; text-decoration: none;">Download Sample CSV</a>
+        </div>
+
+        <div class="drop-zone" id="dropZone" onclick="document.getElementById('csv_file').click()">
+          <div class="drop-zone-icon">
+            <i data-lucide="upload-cloud" style="width: 48px; height: 48px;"></i>
+          </div>
+          <div class="drop-zone-text">Choose a file or drag & drop it here</div>
+          <div class="drop-zone-subtext">Maximum 5,000 users at a time<br>CSV format only</div>
+          <button type="button" class="btn-browse">Browse File</button>
+          <input type="file" name="csv_file" id="csv_file" hidden accept=".csv" required onchange="handleFileSelect(this)">
+        </div>
+
+        <div style="font-size: 13px; font-weight: 700; color: #1e293b; margin-top: 24px;">ONBOARDING DEFAULTS</div>
+        <div class="group-details-grid">
+          <div class="custom-select-wrap">
+            <div class="custom-select-label">Target Campus</div>
+            <select name="default_campus" class="custom-select">
+              <option value="">Auto-detect from CSV</option>
+              <?php 
+              $all_campuses = db()->query("SELECT id, name FROM campuses ORDER BY name")->fetchAll();
+              foreach ($all_campuses as $c): ?>
+                <option value="<?= $c['id'] ?>"><?= h($c['name']) ?></option>
+              <?php endforeach; ?>
+            </select>
+          </div>
+          <div class="custom-select-wrap">
+            <div class="custom-select-label">Default Role</div>
+            <select name="default_role" class="custom-select">
+              <option value="student">Student</option>
+              <option value="staff">Staff / Faculty</option>
+            </select>
+          </div>
         </div>
       </div>
-      <div class="modal-footer">
-        <button type="button" class="btn btn-outline" onclick="closeModal('modal-bulk')">Cancel</button>
-        <button type="submit" class="btn btn-primary">Start Onboarding</button>
+      <div class="modal-footer" style="justify-content: center; padding-bottom: 32px; border-top: none;">
+        <button type="submit" class="btn-save-onboarding">Save</button>
       </div>
     </form>
   </div>
 </div>
+
+<script>
+const dropZone = document.getElementById('dropZone');
+const fileInput = document.getElementById('csv_file');
+
+// Handle Drag Events
+['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, e => {
+        e.preventDefault();
+        e.stopPropagation();
+    }, false);
+});
+
+['dragenter', 'dragover'].forEach(eventName => {
+    dropZone.addEventListener(eventName, () => dropZone.classList.add('active'), false);
+});
+
+['dragleave', 'drop'].forEach(eventName => {
+    dropZone.addEventListener(eventName, () => dropZone.classList.remove('active'), false);
+});
+
+dropZone.addEventListener('drop', e => {
+    const dt = e.dataTransfer;
+    const files = dt.files;
+    fileInput.files = files;
+    handleFileSelect(fileInput);
+});
+
+function handleFileSelect(input) {
+    if (input.files && input.files[0]) {
+        const fileName = input.files[0].name;
+        const dropZoneText = dropZone.querySelector('.drop-zone-text');
+        dropZoneText.innerText = "Selected: " + fileName;
+        dropZoneText.style.color = "#059669"; // Success green
+    }
+}
+</script>
 
 <!-- Register Modal -->
 <div class="modal-backdrop" id="modal-create">
