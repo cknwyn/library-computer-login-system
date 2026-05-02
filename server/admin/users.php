@@ -32,6 +32,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
             $flash = 'ID, first name, and last name are required.'; $flash_type='error';
         } else {
             try {
+                $college_id = !empty($_POST['college_id']) ? (int)$_POST['college_id'] : null;
+                $dept_id    = !empty($_POST['department_id']) ? (int)$_POST['department_id'] : null;
+                $deg_id     = !empty($_POST['degree_id']) ? (int)$_POST['degree_id'] : null;
+
                 $stmt = $pdo->prepare(
                     "UPDATE users SET 
                         user_id = :sid, first_name = :fname, middle_name = :mname, last_name = :lname,
@@ -46,6 +50,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 );
                 $stmt->execute([
                     ':sid'   => $sid,
+                    ':fname' => $fname,
+                    ':mname' => $mname,
+                    ':lname' => $lname,
                     ':name'  => $name,
                     ':role'  => $role,
                     ':uname' => trim($_POST['username'] ?? '') ?: null,
