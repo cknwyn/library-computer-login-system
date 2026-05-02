@@ -17,22 +17,25 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $action = $_POST['action'] ?? '';
 
     if ($action === 'update') {
-        $id    = (int) ($_POST['id'] ?? 0);
-        $sid   = trim($_POST['user_id']    ?? '');
-        $name  = trim($_POST['name']       ?? '');
-        $role  = $_POST['role']            ?? 'student';
+        $id     = (int) ($_POST['id'] ?? 0);
+        $sid    = trim($_POST['user_id']    ?? '');
+        $fname  = trim($_POST['first_name'] ?? '');
+        $mname  = trim($_POST['middle_name']?? '');
+        $lname  = trim($_POST['last_name']  ?? '');
+        $role   = $_POST['role']            ?? 'student';
         
-        if (!$id || !$sid || !$name) {
-            $flash = 'ID and name are required.'; $flash_type='error';
+        $nameParts = array_filter([$fname, $mname, $lname]);
+        $name = implode(' ', $nameParts);
+        if (!$name) $name = $sid;
+        
+        if (!$id || !$sid || !$fname || !$lname) {
+            $flash = 'ID, first name, and last name are required.'; $flash_type='error';
         } else {
             try {
-                $college_id = !empty($_POST['college_id']) ? (int)$_POST['college_id'] : null;
-                $dept_id    = !empty($_POST['department_id']) ? (int)$_POST['department_id'] : null;
-                $deg_id     = !empty($_POST['degree_id']) ? (int)$_POST['degree_id'] : null;
-
                 $stmt = $pdo->prepare(
                     "UPDATE users SET 
-                        user_id = :sid, name = :name, role = :role, username = :uname, 
+                        user_id = :sid, first_name = :fname, middle_name = :mname, last_name = :lname,
+                        name = :name, role = :role, username = :uname, 
                         email = :email, contact_number = :phone, designation = :desig, 
                         college_id = :cid, gender = :gen, year = :yr, 
                         department_id = :did, user_type = :utype, 
@@ -410,11 +413,16 @@ include __DIR__ . '/partials/header.php';
       <div class="modal-body" style="max-height:70vh; overflow-y:auto">
         <div class="form-row">
           <div class="form-group"><label class="form-label">Student/Staff ID *</label><input name="user_id" id="edit-user_id" class="form-control" required></div>
-          <div class="form-group"><label class="form-label">Full Name *</label><input name="name" id="edit-name" class="form-control" required></div>
+          <div class="form-group"><label class="form-label">Role</label><select name="role" id="edit-role" class="form-control"><option value="student">Student</option><option value="staff">Staff</option></select></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label class="form-label">Role</label><select name="role" id="edit-role" class="form-control"><option value="student">Student</option><option value="staff">Staff</option></select></div>
+          <div class="form-group"><label class="form-label">First Name *</label><input name="first_name" id="edit-first_name" class="form-control" required></div>
+          <div class="form-group"><label class="form-label">Middle Name</label><input name="middle_name" id="edit-middle_name" class="form-control"></div>
+          <div class="form-group"><label class="form-label">Last Name *</label><input name="last_name" id="edit-last_name" class="form-control" required></div>
+        </div>
+        <div class="form-row">
           <div class="form-group"><label class="form-label">Email</label><input name="email" id="edit-email" type="email" class="form-control"></div>
+          <div class="form-group"><label class="form-label">Contact Number</label><input name="contact_number" id="edit-contact_number" class="form-control"></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">College</label><select name="college_id" id="edit-college" class="form-control" onchange="loadDepartmentsEdit(this.value)"><option value="">Select College</option></select></div>
@@ -430,6 +438,7 @@ include __DIR__ . '/partials/header.php';
         </div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">Gender</label><select name="gender" id="edit-gender" class="form-control"><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option></select></div>
+          <div class="form-group"><label class="form-label">Birth Date</label><input name="dob" id="edit-dob" type="date" class="form-control"></div>
         </div>
       </div>
       <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-edit')">Cancel</button><button type="submit" class="btn btn-primary">Save Changes</button></div>
@@ -523,10 +532,14 @@ loadColleges();
 async function editUser(u) {
     document.getElementById('edit-id').value = u.id;
     document.getElementById('edit-user_id').value = u.user_id;
-    document.getElementById('edit-name').value = u.name;
+    document.getElementById('edit-first_name').value = u.first_name || '';
+    document.getElementById('edit-middle_name').value = u.middle_name || '';
+    document.getElementById('edit-last_name').value = u.last_name || '';
     document.getElementById('edit-role').value = u.role;
     document.getElementById('edit-email').value = u.email || '';
+    document.getElementById('edit-contact_number').value = u.contact_number || '';
     document.getElementById('edit-gender').value = u.gender || '';
+    document.getElementById('edit-dob').value = u.dob || '';
     document.getElementById('edit-batch').value  = u.batch  || '';
     document.getElementById('edit-cadre').value  = u.cadre  || 'Undergraduate';
     document.getElementById('edit-cadre').value  = u.cadre  || 'Undergraduate';
