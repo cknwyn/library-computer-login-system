@@ -24,22 +24,23 @@ $where = ["1=1"];
 $params = [];
 
 if ($action_f) {
-    $where[] = "action = :action";
+    $where[] = "al.action = :action";
     $params[':action'] = $action_f;
 }
 if ($date_f) {
-    $where[] = "DATE(creation_date) = :date";
+    $where[] = "DATE(al.creation_date) = :date";
     $params[':date'] = $date_f;
 }
 if ($search) {
-    $where[] = "(details LIKE :search OR user_id IN (SELECT id FROM users WHERE user_id LIKE :search))";
-    $params[':search'] = "%$search%";
+    $where[] = "(al.details LIKE :search1 OR al.user_id IN (SELECT id FROM users WHERE user_id LIKE :search2))";
+    $params[':search1'] = "%$search%";
+    $params[':search2'] = "%$search%";
 }
 
 $where_str = implode(" AND ", $where);
 
 // Count total for pagination
-$count_stmt = $pdo->prepare("SELECT COUNT(*) FROM activity_logs WHERE $where_str");
+$count_stmt = $pdo->prepare("SELECT COUNT(*) FROM activity_logs al WHERE $where_str");
 $count_stmt->execute($params);
 $total_rows = (int)$count_stmt->fetchColumn();
 $total_pages = ceil($total_rows / $limit);

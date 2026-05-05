@@ -40,7 +40,12 @@ $search     = trim($_GET['q']    ?? '');
 $where = ["DATE(s.login_time) BETWEEN :df AND :dt"];
 $params = [':df'=>$date_from, ':dt'=>$date_to];
 if ($status_f) { $where[] = 's.status=:st'; $params[':st']=$status_f; }
-if ($search)   { $where[] = '(u.user_id LIKE :q OR u.name LIKE :q OR t.terminal_code LIKE :q)'; $params[':q']="%{$search}%"; }
+if ($search) { 
+    $where[] = '(u.user_id LIKE :q1 OR u.name LIKE :q2 OR t.terminal_code LIKE :q3)'; 
+    $params[':q1'] = "%{$search}%"; 
+    $params[':q2'] = "%{$search}%"; 
+    $params[':q3'] = "%{$search}%"; 
+}
 
 $sql = "SELECT s.*,
                u.name, u.first_name, u.middle_name, u.last_name, u.user_id AS user_code, u.role,
