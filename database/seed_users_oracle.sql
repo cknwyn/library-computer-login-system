@@ -50,6 +50,19 @@ BEGIN
         (SELECT id FROM specializations WHERE name = 'Structural Engineering' AND ROWNUM = 1),
         'Male', '5th Year', '0921-555-6666', 'College of Engineering and Architecture', TO_DATE('2026-03-10','YYYY-MM-DD'), '1', 'Undergraduate', TO_DATE('2001-02-15','YYYY-MM-DD'), '$2y$10$dPErZCxWf7Ifp5PiFL67OuXsJaxDiCbGCsDfUGg5TvF46AQhLfE/2');
 
+    -- User 6 (Grade School)
+    INSERT INTO users (user_id, first_name, last_name, name, email, role, college_id, gender, rank, cadre, dob, password_hash)
+    VALUES ('24-0006-001', 'Lucas', 'Reyes', 'Reyes, Lucas', 'lucas.reyes@auf.edu.ph', 'student', 
+        (SELECT id FROM colleges WHERE code = 'GS' AND ROWNUM = 1),
+        'Male', 'Grade 4', 'Elementary', TO_DATE('2014-05-10','YYYY-MM-DD'), '$2y$10$dPErZCxWf7Ifp5PiFL67OuXsJaxDiCbGCsDfUGg5TvF46AQhLfE/2');
+
+    -- User 7 (High School)
+    INSERT INTO users (user_id, first_name, last_name, name, email, role, college_id, gender, rank, cadre, dob, password_hash)
+    VALUES ('24-0007-001', 'Sophia', 'Santos', 'Santos, Sophia', 'sophia.santos@auf.edu.ph', 'student', 
+        (SELECT id FROM colleges WHERE code = 'JHS' AND ROWNUM = 1),
+        'Female', 'Grade 10', 'Junior High', TO_DATE('2008-11-20','YYYY-MM-DD'), '$2y$10$dPErZCxWf7Ifp5PiFL67OuXsJaxDiCbGCsDfUGg5TvF46AQhLfE/2');
+
     COMMIT;
 END;
+
 /

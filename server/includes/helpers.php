@@ -268,3 +268,30 @@ function send_email(string $to, string $subject, string $message): bool {
         return false;
     }
 }
+/**
+ * Formats a user's name consistently as "First Last" or "First M. Last".
+ */
+function format_user_name($user): string {
+    if (!$user) return 'Unknown';
+    $u = (array)$user;
+    $fname = $u['first_name'] ?? '';
+    $mname = $u['middle_name'] ?? '';
+    $lname = $u['last_name'] ?? '';
+    $raw   = $u['name'] ?? '';
+
+    // If we have proper structured names, use them
+    if ($fname || $lname) {
+        $res = $fname;
+        if ($mname) $res .= ' ' . substr($mname, 0, 1) . '.';
+        if ($lname) $res .= ' ' . $lname;
+        return trim($res);
+    }
+
+    // Fallback: If it's "LName, FName", swap it
+    if (strpos($raw, ',') !== false) {
+        $parts = explode(',', $raw);
+        return trim(($parts[1] ?? '') . ' ' . ($parts[0] ?? ''));
+    }
+
+    return $raw ?: 'Unknown User';
+}

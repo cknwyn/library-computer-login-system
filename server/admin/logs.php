@@ -46,9 +46,10 @@ $total_pages = ceil($total_rows / $limit);
 
 // Fetch logs
 $sql = "SELECT al.*, 
-               u.user_id AS student_id, u.name AS student_name,
+               u.user_id AS student_id, u.name AS student_name, u.first_name, u.middle_name, u.last_name,
                a.username AS admin_user, a.name AS admin_name,
                t.terminal_code
+
         FROM activity_logs al
         LEFT JOIN users u ON al.user_id = u.id
         LEFT JOIN admins a ON al.admin_id = a.id
@@ -64,9 +65,54 @@ $logs = $stmt->fetchAll();
 // Get distinct actions for filter
 $actions = $pdo->query("SELECT DISTINCT action FROM activity_logs ORDER BY action")->fetchAll(PDO::FETCH_COLUMN);
 
+// ── CSV Export ────────────────────────────────────────────────
+if (isset($_GET['export'])) {
+    header('Content-Type: text/csv');
+    header('Content-Disposition: attachment; filename="audit-trail-' . date('Ymd') . '.csv"');
+    $out = fopen('php://output', 'w');
+    fputcsv($out, ['Timestamp', 'Action', 'Actor Name', 'Actor Type', 'Terminal', 'Details', 'IP Address']);
+    
+    $stmt = $pdo->prepare("SELECT al.*, 
+                   u.user_id AS student_id, u.name AS student_name, u.first_name, u.middle_name, u.last_name,
+                   a.username AS admin_user, a.name AS admin_name,
+                   t.terminal_code
+            FROM activity_logs al
+            LEFT JOIN users u ON al.user_id = u.id
+            LEFT JOIN admins a ON al.admin_id = a.id
+            LEFT JOIN terminals t ON al.terminal_id = t.id
+            WHERE $where_str
+            ORDER BY al.creation_date DESC");
+    $stmt->execute($params);
+    
+    while ($l = $stmt->fetch()) {
+        $actor_name = 'System';
+        $actor_type = 'System';
+        if ($l['admin_id']) {
+            $actor_name = $l['admin_name'];
+            $actor_type = 'Admin';
+        } elseif ($l['user_id']) {
+            $actor_name = format_user_name([
+                'first_name' => $l['first_name'],
+                'middle_name' => $l['middle_name'],
+                'last_name' => $l['last_name'],
+                'name' => $l['student_name']
+            ]);
+            $actor_type = "Student ({$l['student_id']})";
+        }
+        fputcsv($out, [
+            $l['creation_date'], $l['action'], $actor_name, $actor_type, 
+            $l['terminal_code'] ?? '-', $l['details'], $l['ip_address'] ?? '-'
+
+        ]);
+    }
+    fclose($out);
+    exit;
+}
+
 $page = 'logs';
 include __DIR__ . '/partials/header.php';
 ?>
+
 
 <div class="card" style="margin-bottom:24px">
     <div class="card-body" style="padding:20px">
@@ -93,17 +139,24 @@ include __DIR__ . '/partials/header.php';
 
             <button type="submit" class="btn btn-create" style="height:42px">Filter</button>
             <?php if ($action_f || $search || $date_f): ?>
-                <a href="logs.php" class="btn btn-secondary" style="height:42px; line-height:28px">Reset</a>
+                <a href="logs.php" class="btn btn-outline" style="height:42px; line-height:28px">Reset</a>
             <?php endif; ?>
+            
+            <a href="?export=1&action=<?= h($action_f) ?>&search=<?= h($search) ?>&date=<?= h($date_f) ?>" 
+               class="btn btn-secondary" style="height:42px; line-height:28px; margin-left:auto">
+                <i data-lucide="download" style="width:16px;vertical-align:middle;margin-right:4px"></i> Export CSV
+            </a>
         </form>
+
     </div>
 </div>
 
 <div class="card">
     <div class="card-header">
-        <span class="card-title"><i data-lucide="history" style="width:18px;vertical-align:middle;margin-right:4px"></i> System Audit Trail</span>
-        <span style="font-size:13px; color:var(--text-muted); margin-left:12px"><?= number_format($total_rows) ?> events found</span>
+        <span class="card-title"><i data-lucide="history" style="width:18px;vertical-align:middle;margin-right:4px"></i> System Audit Trail <span style="font-size:13px; color:var(--text-muted); margin-left:12px; font-weight:400"><?= number_format($total_rows) ?> events found</span></span>
     </div>
+
+
 
     <?php if (empty($logs)): ?>
         <div class="empty-state">
@@ -137,8 +190,14 @@ include __DIR__ . '/partials/header.php';
                                 <div style="font-weight:600; color:#6366F1"><i data-lucide="shield" style="width:12px; display:inline-block"></i> <?= h($l['admin_name']) ?></div>
                                 <div class="td-muted" style="font-size:11px">Admin</div>
                             <?php elseif ($l['user_id']): ?>
-                                <div style="font-weight:600"><?= h($l['student_name']) ?></div>
+                                <div style="font-weight:600"><?= h(format_user_name([
+                                    'first_name' => $l['first_name'],
+                                    'middle_name' => $l['middle_name'],
+                                    'last_name' => $l['last_name'],
+                                    'name' => $l['student_name']
+                                ])) ?></div>
                                 <div class="td-muted" style="font-size:11px">ID: <?= h($l['student_id']) ?></div>
+
                             <?php else: ?>
                                 <span class="td-muted">System / Unknown</span>
                             <?php endif; ?>

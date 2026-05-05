@@ -434,7 +434,7 @@ include __DIR__ . '/partials/header.php';
         <?php foreach ($users as $u): ?>
         <tr>
           <td>
-            <div style="font-weight:700"><?= h($u['last_name'] ? "{$u['first_name']} " . ($u['middle_name'] ? substr($u['middle_name'],0,1).'. ' : '') . $u['last_name'] : $u['name']) ?></div>
+            <div style="font-weight:700"><?= h(format_user_name($u)) ?></div>
             <div class="td-muted mono" style="font-size:11px"><?= h($u['user_id']) ?></div>
           </td>
           <td>

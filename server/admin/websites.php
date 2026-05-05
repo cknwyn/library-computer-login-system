@@ -14,7 +14,7 @@ $admin = current_admin();
 $search = trim($_GET['search'] ?? '');
 $date   = $_GET['date'] ?? date('Y-m-d');
 
-$query = "SELECT wl.*, ws.url, ws.title, u.name AS user_name, u.user_id AS user_code, t.terminal_code
+$query = "SELECT wl.*, ws.url, ws.title, u.name, u.first_name, u.middle_name, u.last_name, u.user_id AS user_code, t.terminal_code
           FROM website_logs wl
           JOIN websites ws ON wl.website_id = ws.id
           JOIN users u ON u.id = wl.user_id
@@ -23,6 +23,7 @@ $query = "SELECT wl.*, ws.url, ws.title, u.name AS user_name, u.user_id AS user_
           WHERE (DATE(wl.visited_at) = :dt)
           AND (:sh = '' OR ws.url LIKE :sh2 OR u.name LIKE :sh3 OR u.user_id LIKE :sh4)
           ORDER BY wl.visited_at DESC";
+
 
 $stmt = $pdo->prepare($query);
 $stmt->execute([
@@ -82,9 +83,10 @@ include __DIR__ . '/partials/header.php';
           <?php foreach ($logs as $l): ?>
           <tr>
             <td>
-              <div style="font-weight:700"><?= h($l['user_name']) ?></div>
+              <div style="font-weight:700"><?= h(format_user_name($l)) ?></div>
               <div class="mono td-muted" style="font-size:11px"><?= h($l['user_code']) ?></div>
             </td>
+
             <td>
               <span class="badge badge-blue"><?= h($l['terminal_code']) ?></span>
             </td>

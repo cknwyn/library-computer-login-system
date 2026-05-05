@@ -43,8 +43,9 @@ if ($status_f) { $where[] = 's.status=:st'; $params[':st']=$status_f; }
 if ($search)   { $where[] = '(u.user_id LIKE :q OR u.name LIKE :q OR t.terminal_code LIKE :q)'; $params[':q']="%{$search}%"; }
 
 $sql = "SELECT s.*,
-               u.name AS user_name, u.user_id AS user_code, u.role,
+               u.name, u.first_name, u.middle_name, u.last_name, u.user_id AS user_code, u.role,
                t.terminal_code, r.name AS room_name, c.name AS campus_name
+
         FROM sessions s
         JOIN users     u ON u.id = s.user_id
         JOIN terminals t ON t.id = s.terminal_id
@@ -124,9 +125,10 @@ include __DIR__ . '/partials/header.php';
         <?php $status_badges = ['active'=>'badge-green','completed'=>'badge-gray','force_ended'=>'badge-red','abandoned'=>'badge-yellow']; ?>
         <tr>
           <td>
-            <div style="font-weight:700"><?= h($s['user_name']) ?></div>
+            <div style="font-weight:700"><?= h(format_user_name($s)) ?></div>
             <div class="mono td-muted" style="font-size:11px"><?= h($s['user_code']) ?></div>
           </td>
+
           <td><span class="badge <?= $s['role']==='staff'?'badge-blue':'badge-yellow' ?>"><?= ucfirst($s['role']) ?></span></td>
           <td>
              <div style="font-weight:700"><?= h($s['terminal_code']) ?></div>

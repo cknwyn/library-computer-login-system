@@ -210,7 +210,7 @@ if ($export) {
     
     if ($group_by === 'users_list') {
         fputcsv($out, [
-            'Username', 'Email', 'Contact Number', 'Designation', 'College', 
+            'Full Name', 'Email', 'Contact Number', 'Designation', 'College', 
             'Gender', 'Year', 'Department', 'Degree', 
             'Specialization', 'Staff Id', 'Ra Expiry Date', 'Rank', 'Batch', 
             'Cadre', 'Dob', 'creation_date'
@@ -225,7 +225,7 @@ if ($export) {
         $rows->execute($params);
         while ($u = $rows->fetch()) {
             fputcsv($out, [
-                $u['username'] ?? '-', $u['email'] ?? '-', $u['contact_number'] ?? '-',
+                format_user_name($u), $u['email'] ?? '-', $u['contact_number'] ?? '-',
                 $u['designation'] ?? '-', $u['college_name'] ?? '-', $u['gender'] ?? '-',
                 $u['year'] ?? '-', $u['dept_name'] ?? '-',
                 $u['degree_name'] ?? '-', $u['spec_name'] ?? '-', $u['user_id'],
@@ -233,9 +233,10 @@ if ($export) {
                 $u['cadre'] ?? '-', $u['dob'] ?? '-', $u['creation_date']
             ]);
         }
+
     } elseif ($group_by === 'websites_list') {
-        fputcsv($out, ['Staff Id', 'User Name', 'Terminal', 'Page Title', 'URL', 'Visited At']);
-        $rows = $pdo->prepare("SELECT u.user_id, u.name, t.terminal_code, w.title, w.url, wl.visited_at
+        fputcsv($out, ['Staff Id', 'Full Name', 'Terminal', 'Page Title', 'URL', 'Visited At']);
+        $rows = $pdo->prepare("SELECT u.*, t.terminal_code, w.title, w.url, wl.visited_at
                                FROM website_logs wl
                                JOIN websites w ON wl.website_id = w.id
                                JOIN users u ON u.id = wl.user_id
@@ -245,12 +246,14 @@ if ($export) {
                                ORDER BY wl.visited_at DESC");
         $rows->execute($params);
         while ($l = $rows->fetch()) {
-            fputcsv($out, [$l['user_id'], $l['name'], $l['terminal_code'], $l['title'], $l['url'], $l['visited_at']]);
+            fputcsv($out, [$l['user_id'], format_user_name($l), $l['terminal_code'], $l['title'], $l['url'], $l['visited_at']]);
         }
+
     } else {
-        fputcsv($out, ['User ID','User Name','College','Department','Degree','Terminal','Room','Campus','Login Time','Logout Time','Duration (s)','Duration','Status']);
+        fputcsv($out, ['User ID','Full Name','College','Department','Degree','Terminal','Room','Campus','Login Time','Logout Time','Duration (s)','Duration','Status']);
+
         $rows = $pdo->prepare(
-            "SELECT u.user_id, u.name, coll.name AS college_name, d.name AS dept_name, deg.name AS degree_name,
+            "SELECT u.*, coll.name AS college_name, d.name AS dept_name, deg.name AS degree_name,
                     t.terminal_code, r.name AS room_name, camp.name AS campus_name,
                     s.login_time, s.logout_time, s.duration_seconds, s.status
              FROM sessions s
@@ -264,15 +267,18 @@ if ($export) {
              WHERE $where_str
              ORDER BY s.login_time DESC"
         );
+
         $rows->execute($params);
         while ($r = $rows->fetch()) {
             fputcsv($out, [
-                $r['user_id'],$r['name'],$r['college_name']??'—',$r['dept_name']??'—',$r['degree_name']??'—',
-                $r['terminal_code'],$r['room_name']??'—',$r['campus_name']??'—',
+                $r['user_id'],format_user_name($r),$r['college_name']??'-',$r['dept_name']??'-',$r['degree_name']??'-',
+                $r['terminal_code'],$r['room_name']??'-',$r['campus_name']??'-',
                 $r['login_time'],$r['logout_time'],$r['duration_seconds'],
                 format_duration((int)$r['duration_seconds']),$r['status']
             ]);
         }
+
+
     }
     fclose($out);
     exit;
@@ -342,8 +348,9 @@ include __DIR__ . '/partials/header.php';
         <?php endforeach; ?>
       </select>
 
-      <a href="?date_from=<?= $date_from ?>&date_to=<?= $date_to ?>&group_by=<?= $group_by ?>&college=<?= h($college_f) ?>&course=<?= h($course_f) ?>&degree=<?= h($degree_f) ?>&export=1"
+      <a href="?date_from=<?= $date_from ?>&date_to=<?= $date_to ?>&group_by=<?= $group_by ?>&college=<?= h($college_f) ?>&course=<?= h($course_f) ?>&degree=<?= h($degree_f) ?>&rank=<?= urlencode($rank_f) ?>&export=1"
          class="btn btn-secondary"><i data-lucide="download" style="width:16px;vertical-align:middle;margin-right:4px"></i> Export CSV</a>
+
 
     </form>
   </div>

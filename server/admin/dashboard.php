@@ -22,7 +22,7 @@ $avg_duration = (int) ($pdo->query("SELECT AVG(duration_seconds) FROM sessions W
 // ── Recent active sessions ────────────────────────────────────
 $active_rows = $pdo->query(
     "SELECT s.id, s.login_time, s.last_heartbeat,
-            u.name AS user_name, u.user_id AS user_code, u.role,
+            u.name, u.first_name, u.middle_name, u.last_name, u.user_id AS user_code, u.role,
             t.terminal_code, r.name AS room_name, c.name AS campus_name
      FROM   sessions s
      JOIN   users     u ON u.id = s.user_id
@@ -37,7 +37,7 @@ $active_rows = $pdo->query(
 // ── Recent sessions log ───────────────────────────────────────
 $recent_rows = $pdo->query(
     "SELECT s.id, s.login_time, s.logout_time, s.duration_seconds, s.status,
-            u.name AS user_name, u.user_id AS user_code,
+            u.name, u.first_name, u.middle_name, u.last_name, u.user_id AS user_code,
             t.terminal_code
      FROM   sessions s
      JOIN   users     u ON u.id = s.user_id
@@ -45,6 +45,7 @@ $recent_rows = $pdo->query(
      ORDER  BY s.login_time DESC
      LIMIT  8"
 )->fetchAll();
+
 
 $page = 'dashboard';
 include __DIR__ . '/partials/header.php';
@@ -112,7 +113,8 @@ include __DIR__ . '/partials/header.php';
           <div class="feed-item">
             <div class="feed-icon"><i data-lucide="<?= $r['role']==='staff' ? 'user-check' : 'user' ?>"></i></div>
             <div class="feed-content">
-              <div class="feed-title"><?= h($r['user_name']) ?> <span class="td-muted" style="font-weight:400; font-size:12px">• <?= h($r['terminal_code']) ?></span></div>
+              <div class="feed-title"><?= h(format_user_name($r)) ?> <span class="td-muted" style="font-weight:400; font-size:12px">• <?= h($r['terminal_code']) ?></span></div>
+
               <div class="feed-meta"><?= ucfirst($r['role']) ?> • <?= h($r['room_name'] ?? 'Unassigned') ?> • In session for <?= format_duration(elapsed_since($r['login_time'])) ?></div>
             </div>
             <div class="feed-actions">
@@ -154,9 +156,10 @@ include __DIR__ . '/partials/header.php';
             <?php foreach ($recent_rows as $r): ?>
             <tr style="border-bottom: 1px solid var(--border-light)">
               <td style="padding-left: 32px">
-                <div style="font-weight:700"><?= h($r['user_name']) ?></div>
+                <div style="font-weight:700"><?= h(format_user_name($r)) ?></div>
                 <div class="td-muted mono" style="font-size:11px"><?= h($r['user_code']) ?></div>
               </td>
+
               <td>
                 <?php
                   $badges = ['active'=>'badge-green','completed'=>'badge-gray','force_ended'=>'badge-red','abandoned'=>'badge-yellow'];

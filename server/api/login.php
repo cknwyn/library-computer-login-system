@@ -26,6 +26,11 @@ if (!$user_id_input || !$password_input || !$terminal_code) {
     json_response(['success' => false, 'error' => 'ID, password, and terminal code are required.'], 400);
 }
 
+// ── Resolve terminal early to log failures accurately ──────────
+$stmt = db()->prepare('SELECT id FROM terminals WHERE terminal_code = :code LIMIT 1');
+$stmt->execute([':code' => $terminal_code]);
+$tid_for_log = $stmt->fetchColumn();
+
 // ── Find user ────────────────────────────────────────────────
 $stmt = db()->prepare("
     SELECT u.*, c.name AS college_name, d.name AS department_name, spec.name AS specialization_name
@@ -36,13 +41,15 @@ $stmt = db()->prepare("
     WHERE u.user_id = :uid 
     LIMIT 1
 ");
+
 $stmt->execute([':uid' => $user_id_input]);
 $user = $stmt->fetch();
 
 if (!$user || !password_verify($password_input, $user['password_hash'])) {
-    log_activity('LOGIN_FAILED', "User ID: {$user_id_input} | Terminal: {$terminal_code}");
+    log_activity('LOGIN_FAILED', "User ID: {$user_id_input} | Terminal: {$terminal_code}", null, null, $tid_for_log ?: null);
     json_response(['success' => false, 'error' => 'Invalid ID or password.'], 401);
 }
+
 
 if ($user['status'] !== 'active') {
     json_response(['success' => false, 'error' => 'Your account has been ' . $user['status'] . '. Please see the librarian.'], 403);
