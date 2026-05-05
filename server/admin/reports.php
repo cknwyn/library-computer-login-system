@@ -33,7 +33,16 @@ if ($course_f && $degree_f) {
 
 // ── Load filter options ──────────────────────────────────────
 $colleges = $pdo->query("SELECT id, name FROM colleges ORDER BY name")->fetchAll();
-$ranks    = $pdo->query("SELECT DISTINCT rank FROM users WHERE rank IS NOT NULL AND rank != '' ORDER BY rank")->fetchAll(PDO::FETCH_COLUMN);
+$ranks = [
+    'Grade 1', 'Grade 2', 'Grade 3', 'Grade 4', 'Grade 5', 'Grade 6',
+    'Grade 7', 'Grade 8', 'Grade 9', 'Grade 10', 'Grade 11', 'Grade 12',
+    '1st Year', '2nd Year', '3rd Year', '4th Year', '5th Year', 'Irregular', 'Faculty/Staff'
+];
+// Optionally merge with any custom ranks found in DB
+$db_ranks = $pdo->query("SELECT DISTINCT rank FROM users WHERE rank IS NOT NULL AND rank != ''")->fetchAll(PDO::FETCH_COLUMN);
+foreach ($db_ranks as $dbr) {
+    if (!in_array($dbr, $ranks)) $ranks[] = $dbr;
+}
 
 $courses_sql = "SELECT id, name FROM departments WHERE 1=1";
 if ($college_f) {

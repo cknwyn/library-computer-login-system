@@ -98,7 +98,7 @@ include __DIR__ . '/partials/header.php';
 
 <div class="terminal-grid fade-in">
   <?php foreach ($terminals as $t): ?>
-  <div class="terminal-card">
+  <div class="terminal-card <?= $t['status']==='online' ? 'status-glow-online' : '' ?>">
     <div class="terminal-header">
       <div class="feed-icon" style="background: var(--bg-base); box-shadow: none">
         <i data-lucide="<?= $t['active_sessions'] > 0 ? 'monitor-play' : 'monitor' ?>"></i>
@@ -192,7 +192,7 @@ include __DIR__ . '/partials/header.php';
       <input type="hidden" name="id" id="terminal-id">
       <div class="modal-body" style="max-height:65vh; overflow-y:auto">
         <div class="form-group">
-          <label class="form-label">Terminal ID (Code) *</label>
+          <label class="form-label">Terminal ID (Code) <span class="required-star">*</span></label>
           <input name="terminal_code" id="terminal-code" class="form-control" placeholder="e.g. TERM-15-HSLIB" required>
         </div>
         <div class="form-group">

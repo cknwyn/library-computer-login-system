@@ -198,7 +198,7 @@ include __DIR__ . '/partials/header.php';
         <section>
             <div class="card">
                 <div class="card-header">
-                    <span class="card-title">Colleges</span>
+                    <span class="card-title">Colleges / Units</span>
                     <button class="btn btn-create btn-sm" onclick="openModal('modal-add-college')"><i data-lucide="plus"></i> Add</button>
                 </div>
                 <div class="table-wrap" style="max-height: 500px; overflow-y: auto;">
@@ -375,12 +375,12 @@ include __DIR__ . '/partials/header.php';
 <!-- Modal: Add/Edit College -->
 <div class="modal-backdrop" id="modal-add-college">
     <div class="modal">
-        <div class="modal-header"><span class="modal-title" id="college-modal-title">Add College</span><button class="btn-close" onclick="closeModal('modal-add-college')"><i data-lucide="x"></i></button></div>
+        <div class="modal-header"><span class="modal-title" id="college-modal-title">Add College / Unit</span><button class="btn-close" onclick="closeModal('modal-add-college')"><i data-lucide="x"></i></button></div>
         <form method="POST">
             <input type="hidden" name="action" id="college-action" value="create_college">
             <input type="hidden" name="id" id="college-id">
             <div class="modal-body">
-                <div class="form-group"><label class="form-label">College Name</label><input name="name" id="college-name" class="form-control" placeholder="e.g. College of Computer Studies" required></div>
+                <div class="form-group"><label class="form-label">College / Unit Name <span class="required-star">*</span></label><input name="name" id="college-name" class="form-control" placeholder="e.g. College of Computer Studies" required></div>
                 <div class="form-group"><label class="form-label">Abbreviation / Code</label><input name="code" id="college-code" class="form-control" placeholder="e.g. CCS"></div>
             </div>
             <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-add-college')">Cancel</button><button type="submit" class="btn btn-create">Save College</button></div>
@@ -396,12 +396,12 @@ include __DIR__ . '/partials/header.php';
             <input type="hidden" name="action" id="dept-action" value="create_dept">
             <input type="hidden" name="id" id="dept-id">
             <div class="modal-body">
-                <div class="form-group"><label class="form-label">College</label>
+                <div class="form-group"><label class="form-label">College / Unit <span class="required-star">*</span></label>
                     <select name="college_id" id="dept-college" class="form-control" required>
                         <?php foreach($colleges as $c): ?><option value="<?= $c['id'] ?>"><?= h($c['name']) ?></option><?php endforeach; ?>
                     </select>
                 </div>
-                <div class="form-group"><label class="form-label">Department Name</label><input name="name" id="dept-name" class="form-control" placeholder="e.g. Information Technology" required></div>
+                <div class="form-group"><label class="form-label">Department Name <span class="required-star">*</span></label><input name="name" id="dept-name" class="form-control" placeholder="e.g. Information Technology" required></div>
             </div>
             <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-add-dept')">Cancel</button><button type="submit" class="btn btn-create">Save Dept</button></div>
         </form>
@@ -416,12 +416,12 @@ include __DIR__ . '/partials/header.php';
             <input type="hidden" name="action" id="degree-action" value="create_degree">
             <input type="hidden" name="id" id="degree-id">
             <div class="modal-body">
-                <div class="form-group"><label class="form-label">Department</label>
+                <div class="form-group"><label class="form-label">Department <span class="required-star">*</span></label>
                     <select name="department_id" id="degree-dept" class="form-control" required>
                         <?php foreach($depts as $d): ?><option value="<?= $d['id'] ?>"><?= h($d['name']) ?> (<?= h($d['college_name']) ?>)</option><?php endforeach; ?>
                     </select>
                 </div>
-                <div class="form-group"><label class="form-label">Degree Name</label><input name="name" id="degree-name" class="form-control" placeholder="e.g. BS Information Technology" required></div>
+                <div class="form-group"><label class="form-label">Degree Name <span class="required-star">*</span></label><input name="name" id="degree-name" class="form-control" placeholder="e.g. BS Information Technology" required></div>
             </div>
             <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-add-degree')">Cancel</button><button type="submit" class="btn btn-create">Save Degree</button></div>
         </form>
@@ -436,7 +436,7 @@ include __DIR__ . '/partials/header.php';
             <input type="hidden" name="action" id="campus-action" value="create_campus">
             <input type="hidden" name="id" id="campus-id">
             <div class="modal-body">
-                <div class="form-group"><label class="form-label">Campus Name</label><input name="name" id="campus-name" class="form-control" placeholder="e.g. Main Campus" required></div>
+                <div class="form-group"><label class="form-label">Campus Name <span class="required-star">*</span></label><input name="name" id="campus-name" class="form-control" placeholder="e.g. Main Campus" required></div>
             </div>
             <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-add-campus')">Cancel</button><button type="submit" class="btn btn-create">Save Campus</button></div>
         </form>
@@ -451,12 +451,12 @@ include __DIR__ . '/partials/header.php';
             <input type="hidden" name="action" id="room-action" value="create_room">
             <input type="hidden" name="id" id="room-id">
             <div class="modal-body">
-                <div class="form-group"><label class="form-label">Campus</label>
+                <div class="form-group"><label class="form-label">Campus <span class="required-star">*</span></label>
                     <select name="campus_id" id="room-campus" class="form-control" required>
                         <?php foreach($campuses as $cp): ?><option value="<?= $cp['id'] ?>"><?= h($cp['name']) ?></option><?php endforeach; ?>
                     </select>
                 </div>
-                <div class="form-group"><label class="form-label">Room Name</label><input name="name" id="room-name" class="form-control" placeholder="e.g. Reading Room A" required></div>
+                <div class="form-group"><label class="form-label">Room Name <span class="required-star">*</span></label><input name="name" id="room-name" class="form-control" placeholder="e.g. Reading Room A" required></div>
             </div>
             <div class="modal-footer"><button type="button" class="btn btn-outline" onclick="closeModal('modal-add-room')">Cancel</button><button type="submit" class="btn btn-create">Save Room</button></div>
         </form>

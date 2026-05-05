@@ -50,6 +50,25 @@ $page = 'dashboard';
 include __DIR__ . '/partials/header.php';
 ?>
 
+<!-- Quick Identity Search -->
+<div class="card" style="margin-bottom: 24px; background: linear-gradient(135deg, var(--primary) 0%, #1e40af 100%); color: white; border: none;">
+  <div class="card-body" style="padding: 24px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; flex-wrap: wrap; gap: 16px;">
+      <div>
+        <h2 style="margin: 0; font-size: 20px; font-weight: 800;">Quick Identity Check</h2>
+        <p style="margin: 4px 0 0; opacity: 0.8; font-size: 13px;">Verify student or staff status and active sessions instantly.</p>
+      </div>
+      <div style="flex: 1; max-width: 400px; position: relative;">
+        <form action="users.php" method="GET" style="margin: 0;">
+          <i data-lucide="search" style="position: absolute; left: 16px; top: 50%; transform: translateY(-50%); color: #94a3b8; width: 18px;"></i>
+          <input type="text" name="q" class="form-control" placeholder="Type ID or Name..." style="padding-left: 48px; height: 48px; border-radius: 12px; border: none; box-shadow: 0 4px 12px rgba(0,0,0,0.1); width: 100%;">
+          <button type="submit" style="position: absolute; right: 8px; top: 8px; bottom: 8px; background: var(--primary); color: white; border: none; padding: 0 16px; border-radius: 8px; font-weight: 700; font-size: 13px; cursor: pointer;">Search</button>
+        </form>
+      </div>
+    </div>
+  </div>
+</div>
+
 <!-- Stats Grid -->
 <div class="stats-grid">
   <div class="stat-card">

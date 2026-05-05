@@ -135,136 +135,196 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($action === 'bulk_import' && isset($_FILES['csv_file'])) {
         $file = $_FILES['csv_file']['tmp_name'];
         if ($file && ($handle = fopen($file, 'r')) !== false) {
-            $headers = fgetcsv($handle);
-            $count = 0; $errors = 0;
-            $pdo->beginTransaction();
-            // Cache lookups to minimize queries
-            $cache_coll = []; $cache_dept = []; $cache_deg = []; $cache_spec = [];
-
-            try {
-                while (($row = fgetcsv($handle)) !== false) {
-                    if (count($row) < 5) continue; // Safety check
-                    $data = array_combine($headers, $row);
-                    $sid = trim($data['Staff Id'] ?? $data['User ID'] ?? '');
-                    if (!$sid) { $errors++; continue; }
-                    
-                    $role  = (stripos($data['User Type'] ?? '', 'STUDENT') !== false) ? 'student' : 'staff';
-                    $hash  = password_hash($sid, PASSWORD_BCRYPT, ['cost' => 10]);
-                    
-                    $rawName = trim($data['Username'] ?? $data['Name'] ?? '');
-                    if ($rawName === '-' || !$rawName) $rawName = $sid;
-
-                    $fname = $rawName; $mname = null; $lname = null;
-                    if (strpos($rawName, ',') !== false) {
-                        $parts = explode(',', $rawName);
-                        $lname = trim($parts[0]);
-                        $rest  = trim($parts[1] ?? '');
-                        $restParts = explode(' ', $rest);
-                        $fname = $restParts[0];
-                        $mname = $restParts[1] ?? null;
-                    } elseif (strpos($rawName, ' ') !== false) {
-                        $parts = explode(' ', $rawName);
-                        $fname = $parts[0];
-                        $lname = end($parts);
-                        if (count($parts) > 2) $mname = $parts[1];
-                    }
-
-                    // --- Auto-resolve Academic Units (Enhanced Fuzzy Matching) ---
-                    $cid = null; $did = null; $degid = null; $specid = null;
-
-                    // 1. Resolve College
-                    $coll_name = trim($data['Affiliation'] ?? $data['College'] ?? '');
-                    if ($coll_name && $coll_name !== '-') {
-                        // Strip "College of " prefix if present for cleaner matching
-                        $clean_coll = preg_replace('/^College of /i', '', $coll_name);
-                        if (!isset($cache_coll[$coll_name])) {
-                            $st = $pdo->prepare("SELECT id FROM colleges WHERE name LIKE ? OR code = ? OR ? LIKE CONCAT('%', name, '%') LIMIT 1");
-                            $st->execute(["%$clean_coll%", $coll_name, $coll_name]);
-                            $cache_coll[$coll_name] = $st->fetchColumn() ?: null;
-                        }
-                        $cid = $cache_coll[$coll_name];
-                    }
-
-                    // 2. Resolve Department
-                    $dept_name = trim($data['Department'] ?? '');
-                    if ($dept_name && $dept_name !== '-') {
-                        $clean_dept = preg_replace('/^Department of /i', '', $dept_name);
-                        if (!isset($cache_dept[$dept_name])) {
-                            $st = $pdo->prepare("SELECT id FROM departments WHERE name LIKE ? OR name LIKE ? OR ? LIKE CONCAT('%', name, '%') LIMIT 1");
-                            $st->execute(["%$dept_name%", "%$clean_dept%", $dept_name]);
-                            $cache_dept[$dept_name] = $st->fetchColumn() ?: null;
-                        }
-                        $did = $cache_dept[$dept_name];
-                    }
-
-                    // 3. Resolve Degree
-                    $deg_name = trim($data['Degree'] ?? '');
-                    if ($deg_name && $deg_name !== '-') {
-                        $clean_deg = preg_replace('/^(BS in |AB in |Bachelor of Science in |Bachelor of Arts in )/i', '', $deg_name);
-                        if (!isset($cache_deg[$deg_name])) {
-                            $st = $pdo->prepare("SELECT id FROM degrees WHERE name LIKE ? OR name LIKE ? OR ? LIKE CONCAT('%', name, '%') LIMIT 1");
-                            $st->execute(["%$deg_name%", "%$clean_deg%", $deg_name]);
-                            $cache_deg[$deg_name] = $st->fetchColumn() ?: null;
-                        }
-                        $degid = $cache_deg[$deg_name];
-                    }
-
-                    // 4. Resolve Specialization
-                    $spec_name = trim($data['Speciality'] ?? $data['Specialization'] ?? '');
-                    if ($spec_name && $spec_name !== '-') {
-                        if (!isset($cache_spec[$spec_name])) {
-                            $st = $pdo->prepare("SELECT id FROM specializations WHERE name LIKE ? OR ? LIKE CONCAT('%', name, '%') LIMIT 1");
-                            $st->execute(["%$spec_name%", $spec_name]);
-                            $cache_spec[$spec_name] = $st->fetchColumn() ?: null;
-                        }
-                        $specid = $cache_spec[$spec_name];
-                    }
-                    
-                    $stmt = $pdo->prepare(
-                        "INSERT INTO users (user_id, first_name, middle_name, last_name, name, password_hash, role, username, email, contact_number, 
-                                          designation, gender, year, college_id, department_id, degree_id, specialization_id, ra_expiry_date, rank, batch, cadre, dob)
-                         VALUES (:sid, :fname, :mname, :lname, :name, :hash, :role, :uname, :email, :phone, :desig, :gen, :yr, :cid, :did, :degid,
-                                 :specid, :raex, :rnk, :btch, :cadre, :dob)
-                         ON DUPLICATE KEY UPDATE
-                            first_name = VALUES(first_name), middle_name = VALUES(middle_name), last_name = VALUES(last_name),
-                            name = VALUES(name), role = VALUES(role), email = VALUES(email), contact_number = VALUES(contact_number),
-                            designation = VALUES(designation), gender = VALUES(gender), year = VALUES(year),
-                            college_id = VALUES(college_id), department_id = VALUES(department_id), 
-                            degree_id = VALUES(degree_id), specialization_id = VALUES(specialization_id),
-                            ra_expiry_date = VALUES(ra_expiry_date), rank = VALUES(rank), batch = VALUES(batch),
-                            cadre = VALUES(cadre), dob = VALUES(dob)"
-                    );
-                    
-                    try {
-                        $stmt->execute([
-                            ':sid'    => $sid, ':fname'  => $fname, ':mname'  => $mname, ':lname'  => $lname, ':name'   => $rawName,
-                            ':hash'   => $hash, ':role'   => $role, ':uname' => ($data['Username'] ?? $data['Name'] ?? null),
-                            ':email' => ($data['Email'] !== '-'    ? $data['Email']    : null),
-                            ':phone' => trim($data['Contact Number'] ?? '') ?: null,
-                            ':desig' => trim($data['Designation'] ?? '') ?: null,
-                            ':gen'   => trim($data['Gender'] ?? '') ?: null,
-                            ':yr'    => trim($data['Year'] ?? '') ?: null,
-                            ':cid'   => $cid, ':did' => $did, ':degid' => $degid, ':specid' => $specid,
-                            ':raex'  => !empty($data['Ra Expiry Date']) ? date('Y-m-d', strtotime($data['Ra Expiry Date'])) : null,
-                            ':rnk'   => trim($data['Rank'] ?? '') ?: null, ':btch'  => trim($data['Batch'] ?? '') ?: null,
-                            ':cadre' => trim($data['Cadre'] ?? '') ?: null,
-                            ':dob'   => !empty($data['Dob']) ? date('Y-m-d', strtotime($data['Dob'])) : null
-                        ]);
-                        $count++;
-                    } catch (PDOException $e) {
-                        $errors++;
-                    }
+            $raw_headers = fgetcsv($handle);
+            if (!$raw_headers) { $flash = "Empty CSV file."; $flash_type = "error"; }
+            else {
+                // Normalize headers for foolproof matching
+                $header_map = [];
+                $norm = function($s) { return strtolower(preg_replace('/[^a-z0-9]/', '', $s)); };
+                foreach ($raw_headers as $idx => $h) {
+                    $header_map[$norm($h)] = $idx;
                 }
-                $pdo->commit();
-                $flash = "Successfully onboarded {$count} users. ";
-                if ($errors > 0) $flash .= "Skipped {$errors} duplicate or invalid records.";
-            } catch (Exception $e) {
-                $pdo->rollBack();
-                $flash = "Import failed: " . $e->getMessage(); $flash_type = 'error';
+
+                $get_val = function($row, $keys) use ($header_map, $norm) {
+                    foreach ($keys as $k) {
+                        $n = $norm($k);
+                        if (isset($header_map[$n])) return trim($row[$header_map[$n]] ?? '');
+                    }
+                    return null;
+                };
+
+                $count = 0; $errors = 0; $error_details = []; $row_num = 1;
+                $pdo->beginTransaction();
+                $cache_coll = []; $cache_dept = []; $cache_deg = []; $cache_spec = [];
+
+                try {
+                    while (($row = fgetcsv($handle)) !== false) {
+                        $row_num++;
+                        if (count($row) < 2) continue; 
+                        
+                        // Extract with fuzzy matching
+                        $sid   = $get_val($row, ['Staff Id', 'User ID', 'ID', 'Student ID']);
+                        $rawName = $get_val($row, ['Username', 'Name', 'Full Name', 'Display Name']);
+                        if (!$sid) { 
+                            $errors++; 
+                            $error_details[] = "Row {$row_num}: Missing Staff/Student ID";
+                            continue; 
+                        }
+                        
+                        $role  = (stripos($get_val($row, ['User Type', 'Role', 'Type']) ?? '', 'STUDENT') !== false) ? 'student' : 'staff';
+                        $email = $get_val($row, ['Email', 'Email Address']);
+                        $phone = $get_val($row, ['Contact Number', 'Phone', 'Mobile', 'Contact']);
+                        $desig = $get_val($row, ['Designation', 'Position']);
+                        $gen   = $get_val($row, ['Gender', 'Sex']);
+                        $yr    = $get_val($row, ['Year', 'Year Level']);
+                        $rnk   = $get_val($row, ['Rank', 'Level', 'Year Level']);
+                        $btch  = $get_val($row, ['Batch']);
+                        $cadre = $get_val($row, ['Cadre']);
+                        $dob_raw = $get_val($row, ['Dob', 'Birth Date', 'Birthday']);
+                        
+                        // --- Validations & Standardization ---
+                        
+                        // 1. Email Validation
+                        if ($email && !filter_var($email, FILTER_VALIDATE_EMAIL)) { $email = null; }
+
+                        // 2. Gender Standardization
+                        if ($gen) {
+                            $gen_low = strtolower($gen);
+                            if (in_array($gen_low, ['m', 'male', 'boy', 'man'])) $gen = 'Male';
+                            elseif (in_array($gen_low, ['f', 'female', 'girl', 'woman'])) $gen = 'Female';
+                            else $gen = null;
+                        }
+
+                        // 3. Numeric Cleanup (Batch & Year)
+                        $btch = $btch ? preg_replace('/[^0-9]/', '', $btch) : null;
+                        $yr   = $yr   ? preg_replace('/[^0-9]/', '', $yr) : null;
+
+                        // 4. Date Validation
+                        $val_date = function($d) {
+                            if (!$d || $d === '-' || strlen($d) < 5) return null;
+                            $ts = strtotime($d);
+                            return ($ts && $ts > 100000000) ? date('Y-m-d', $ts) : null;
+                        };
+                        $dob = $val_date($dob_raw);
+                        $ra_exp = $val_date($get_val($row, ['Ra Expiry Date', 'Expiry']));
+                        
+                        $hash  = password_hash($sid, PASSWORD_BCRYPT, ['cost' => 10]);
+                        if ($rawName === '-' || !$rawName) $rawName = $sid;
+
+                        $fname = $rawName; $mname = null; $lname = null;
+                        if (strpos($rawName, ',') !== false) {
+                            $parts = explode(',', $rawName);
+                            $lname = trim($parts[0]);
+                            $rest  = trim($parts[1] ?? '');
+                            $restParts = explode(' ', $rest);
+                            $fname = $restParts[0];
+                            $mname = $restParts[1] ?? null;
+                        } elseif (strpos($rawName, ' ') !== false) {
+                            $parts = explode(' ', $rawName);
+                            $fname = $parts[0];
+                            $lname = end($parts);
+                            if (count($parts) > 2) $mname = $parts[1];
+                        }
+
+                        // --- Academic Resolution ---
+                        $cid = null; $did = null; $degid = null; $specid = null;
+
+                        $coll_name = $get_val($row, ['Affiliation', 'College', 'Unit', 'Academic Unit']);
+                        if ($coll_name && $coll_name !== '-') {
+                            $clean_coll = preg_replace('/^College of /i', '', $coll_name);
+                            if (!isset($cache_coll[$coll_name])) {
+                                $st = $pdo->prepare("SELECT id FROM colleges WHERE name LIKE ? OR code = ? OR ? LIKE CONCAT('%', name, '%') LIMIT 1");
+                                $st->execute(["%$clean_coll%", $coll_name, $coll_name]);
+                                $cache_coll[$coll_name] = $st->fetchColumn() ?: null;
+                            }
+                            $cid = $cache_coll[$coll_name];
+                        }
+
+                        $dept_name = $get_val($row, ['Department', 'Dept']);
+                        if ($dept_name && $dept_name !== '-') {
+                            $clean_dept = preg_replace('/^Department of /i', '', $dept_name);
+                            if (!isset($cache_dept[$dept_name])) {
+                                $st = $pdo->prepare("SELECT id FROM departments WHERE name LIKE ? OR name LIKE ? OR ? LIKE CONCAT('%', name, '%') LIMIT 1");
+                                $st->execute(["%$dept_name%", "%$clean_dept%", $dept_name]);
+                                $cache_dept[$dept_name] = $st->fetchColumn() ?: null;
+                            }
+                            $did = $cache_dept[$dept_name];
+                        }
+
+                        $deg_name = $get_val($row, ['Degree', 'Program']);
+                        if ($deg_name && $deg_name !== '-') {
+                            $clean_deg = preg_replace('/^(BS in |AB in |Bachelor of Science in |Bachelor of Arts in )/i', '', $deg_name);
+                            if (!isset($cache_deg[$deg_name])) {
+                                $st = $pdo->prepare("SELECT id FROM degrees WHERE name LIKE ? OR name LIKE ? OR ? LIKE CONCAT('%', name, '%') LIMIT 1");
+                                $st->execute(["%$deg_name%", "%$clean_deg%", $deg_name]);
+                                $cache_deg[$deg_name] = $st->fetchColumn() ?: null;
+                            }
+                            $degid = $cache_deg[$deg_name];
+                        }
+
+                        $spec_name = $get_val($row, ['Speciality', 'Specialization', 'Track']);
+                        if ($spec_name && $spec_name !== '-') {
+                            if (!isset($cache_spec[$spec_name])) {
+                                $st = $pdo->prepare("SELECT id FROM specializations WHERE name LIKE ? OR ? LIKE CONCAT('%', name, '%') LIMIT 1");
+                                $st->execute(["%$spec_name%", $spec_name]);
+                                $cache_spec[$spec_name] = $st->fetchColumn() ?: null;
+                            }
+                            $specid = $cache_spec[$spec_name];
+                        }
+                        
+                        $stmt = $pdo->prepare(
+                            "INSERT INTO users (user_id, first_name, middle_name, last_name, name, password_hash, role, email, contact_number, 
+                                              designation, gender, year, college_id, department_id, degree_id, specialization_id, ra_expiry_date, rank, batch, cadre, dob)
+                             VALUES (:sid, :fname, :mname, :lname, :name, :hash, :role, :email, :phone, :desig, :gen, :yr, :cid, :did, :degid,
+                                     :specid, :raex, :rnk, :btch, :cadre, :dob)
+                             ON DUPLICATE KEY UPDATE
+                                first_name = VALUES(first_name), middle_name = VALUES(middle_name), last_name = VALUES(last_name),
+                                name = VALUES(name), role = VALUES(role), email = VALUES(email), contact_number = VALUES(contact_number),
+                                designation = VALUES(designation), gender = VALUES(gender), year = VALUES(year),
+                                college_id = VALUES(college_id), department_id = VALUES(department_id), 
+                                degree_id = VALUES(degree_id), specialization_id = VALUES(specialization_id),
+                                rank = VALUES(rank), batch = VALUES(batch), cadre = VALUES(cadre), dob = VALUES(dob)"
+                        );
+                        
+                        try {
+                            $stmt->execute([
+                                ':sid'    => $sid, ':fname'  => $fname, ':mname'  => $mname, ':lname'  => $lname, ':name'   => $rawName,
+                                ':hash'   => $hash, ':role'   => $role, 
+                                ':email'  => $email,
+                                ':phone'  => $phone ?: null,
+                                ':desig'  => $desig ?: null,
+                                ':gen'    => $gen ?: null,
+                                ':yr'     => $yr ?: null,
+                                ':cid'    => $cid, ':did' => $did, ':degid' => $degid, ':specid' => $specid,
+                                ':raex'   => $ra_exp,
+                                ':rnk'    => $rnk ?: null, ':btch'  => $btch ?: null,
+                                ':cadre'  => $cadre ?: null,
+                                ':dob'    => $dob
+                            ]);
+                            $count++;
+                        } catch (PDOException $e) { 
+                            $errors++; 
+                            $error_details[] = "Row {$row_num}: Database error ({$e->getCode()})";
+                        }
+
+                    }
+                    $pdo->commit();
+                    $flash = "Successfully onboarded {$count} users.";
+                    if ($errors > 0) {
+                        $flash .= " Found {$errors} issues: " . implode(" | ", array_slice($error_details, 0, 3));
+                        if (count($error_details) > 3) $flash .= " ...and " . (count($error_details)-3) . " more.";
+                        $flash_type = 'warning';
+                    }
+                } catch (Exception $e) {
+                    $pdo->rollBack();
+                    $flash = 'Import failed: ' . $e->getMessage();
+                    $flash_type = 'error';
+                }
             }
             fclose($handle);
         }
     }
+
 
     if ($action === 'update_status') {
         $id    = (int) ($_POST['id'] ?? 0);
@@ -438,7 +498,7 @@ include __DIR__ . '/partials/header.php';
 
         <div style="display:flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
           <span style="font-size: 13px; font-weight: 700; color: #1e293b;">UPLOAD FILE</span>
-          <a href="../../database/test_users_onboarding.csv" download class="link" style="font-size: 13px; color: #3b82f6; text-decoration: none;">Download Sample CSV</a>
+          <a href="<?= ASSETS_URL ?>/templates/user_import_template.csv" download class="link" style="font-size: 13px; color: #3b82f6; text-decoration: none;">Download Sample CSV</a>
         </div>
 
         <div class="drop-zone" id="dropZone" onclick="document.getElementById('csv_file').click()">
@@ -453,17 +513,6 @@ include __DIR__ . '/partials/header.php';
 
         <div style="font-size: 13px; font-weight: 700; color: #1e293b; margin-top: 24px;">ONBOARDING DEFAULTS</div>
         <div class="group-details-grid">
-          <div class="custom-select-wrap">
-            <div class="custom-select-label">Target Campus</div>
-            <select name="default_campus" class="custom-select">
-              <option value="">Auto-detect from CSV</option>
-              <?php 
-              $all_campuses = db()->query("SELECT id, name FROM campuses ORDER BY name")->fetchAll();
-              foreach ($all_campuses as $c): ?>
-                <option value="<?= $c['id'] ?>"><?= h($c['name']) ?></option>
-              <?php endforeach; ?>
-            </select>
-          </div>
           <div class="custom-select-wrap">
             <div class="custom-select-label">Default Role</div>
             <select name="default_role" class="custom-select">
@@ -525,16 +574,16 @@ function handleFileSelect(input) {
       <input type="hidden" name="action" value="create">
       <div class="modal-body" style="max-height:70vh; overflow-y:auto">
         <div class="form-row">
-            <div class="form-group"><label class="form-label">Student/Staff ID *</label><input name="user_id" class="form-control" placeholder="24-0000-001" required></div>
+            <div class="form-group"><label class="form-label">Student/Staff ID <span class="required-star">*</span></label><input name="user_id" class="form-control" placeholder="24-0000-001" required></div>
             <div class="form-group"><label class="form-label">Role</label><select name="role" class="form-control"><option value="student">Student</option><option value="staff">Staff</option></select></div>
         </div>
         <div class="form-row">
-            <div class="form-group"><label class="form-label">First Name *</label><input name="first_name" class="form-control" required></div>
+            <div class="form-group"><label class="form-label">First Name <span class="required-star">*</span></label><input name="first_name" class="form-control" required></div>
             <div class="form-group"><label class="form-label">Middle Name</label><input name="middle_name" class="form-control"></div>
-            <div class="form-group"><label class="form-label">Last Name *</label><input name="last_name" class="form-control" required></div>
+            <div class="form-group"><label class="form-label">Last Name <span class="required-star">*</span></label><input name="last_name" class="form-control" required></div>
         </div>
         <div class="form-row">
-            <div class="form-group"><label class="form-label">College</label><select name="college_id" id="reg-college" class="form-control" onchange="loadDepartments(this.value)"><option value="">Select College</option></select></div>
+            <div class="form-group"><label class="form-label">College / Academic Unit</label><select name="college_id" id="reg-college" class="form-control" onchange="loadDepartments(this.value)"><option value="">Select Unit</option></select></div>
             <div class="form-group"><label class="form-label">Department</label><select name="department_id" id="reg-dept" class="form-control" onchange="loadDegrees(this.value)" disabled><option value="">Select Dept</option></select></div>
         </div>
         <div class="form-row">
@@ -554,7 +603,34 @@ function handleFileSelect(input) {
             <div class="form-group"><label class="form-label">Cadre</label><select name="cadre" class="form-control"><option value="Undergraduate">Undergraduate</option><option value="Postgraduate">Postgraduate</option><option value="Others">Others</option></select></div>
         </div>
         <div class="form-row">
-            <div class="form-group"><label class="form-label">Rank / Year Level</label><select name="rank" class="form-control"><option value="">Select Rank</option><option value="1st Year">1st Year</option><option value="2nd Year">2nd Year</option><option value="3rd Year">3rd Year</option><option value="4th Year">4th Year</option><option value="5th Year">5th Year</option><option value="Irregular">Irregular</option><option value="Faculty/Staff">Faculty/Staff</option></select></div>
+            <div class="form-group"><label class="form-label">Rank / Year Level</label><select name="rank" class="form-control">
+                <option value="">Select Rank</option>
+                <optgroup label="Elementary">
+                  <option value="Grade 1">Grade 1</option>
+                  <option value="Grade 2">Grade 2</option>
+                  <option value="Grade 3">Grade 3</option>
+                  <option value="Grade 4">Grade 4</option>
+                  <option value="Grade 5">Grade 5</option>
+                  <option value="Grade 6">Grade 6</option>
+                </optgroup>
+                <optgroup label="Secondary">
+                  <option value="Grade 7">Grade 7</option>
+                  <option value="Grade 8">Grade 8</option>
+                  <option value="Grade 9">Grade 9</option>
+                  <option value="Grade 10">Grade 10</option>
+                  <option value="Grade 11">Grade 11</option>
+                  <option value="Grade 12">Grade 12</option>
+                </optgroup>
+                <optgroup label="Higher Education">
+                  <option value="1st Year">1st Year</option>
+                  <option value="2nd Year">2nd Year</option>
+                  <option value="3rd Year">3rd Year</option>
+                  <option value="4th Year">4th Year</option>
+                  <option value="5th Year">5th Year</option>
+                  <option value="Irregular">Irregular</option>
+                </optgroup>
+                <option value="Faculty/Staff">Faculty/Staff</option>
+            </select></div>
             <div class="form-group"><label class="form-label">Initial Password</label><input name="password" type="password" class="form-control" placeholder="Default is Staff ID"></div>
         </div>
       </div>
@@ -572,20 +648,20 @@ function handleFileSelect(input) {
       <input type="hidden" name="id" id="edit-id">
       <div class="modal-body" style="max-height:70vh; overflow-y:auto">
         <div class="form-row">
-          <div class="form-group"><label class="form-label">Student/Staff ID *</label><input name="user_id" id="edit-user_id" class="form-control" required></div>
+          <div class="form-group"><label class="form-label">Student/Staff ID <span class="required-star">*</span></label><input name="user_id" id="edit-user_id" class="form-control" required></div>
           <div class="form-group"><label class="form-label">Role</label><select name="role" id="edit-role" class="form-control"><option value="student">Student</option><option value="staff">Staff</option></select></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label class="form-label">First Name *</label><input name="first_name" id="edit-first_name" class="form-control" required></div>
+          <div class="form-group"><label class="form-label">First Name <span class="required-star">*</span></label><input name="first_name" id="edit-first_name" class="form-control" required></div>
           <div class="form-group"><label class="form-label">Middle Name</label><input name="middle_name" id="edit-middle_name" class="form-control"></div>
-          <div class="form-group"><label class="form-label">Last Name *</label><input name="last_name" id="edit-last_name" class="form-control" required></div>
+          <div class="form-group"><label class="form-label">Last Name <span class="required-star">*</span></label><input name="last_name" id="edit-last_name" class="form-control" required></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">Email</label><input name="email" id="edit-email" type="email" class="form-control"></div>
           <div class="form-group"><label class="form-label">Contact Number</label><input name="contact_number" id="edit-contact_number" class="form-control"></div>
         </div>
         <div class="form-row">
-          <div class="form-group"><label class="form-label">College</label><select name="college_id" id="edit-college" class="form-control" onchange="loadDepartmentsEdit(this.value)"><option value="">Select College</option></select></div>
+          <div class="form-group"><label class="form-label">College / Academic Unit</label><select name="college_id" id="edit-college" class="form-control" onchange="loadDepartmentsEdit(this.value)"><option value="">Select Unit</option></select></div>
           <div class="form-group"><label class="form-label">Department</label><select name="department_id" id="edit-dept" class="form-control" onchange="loadDegreesEdit(this.value)" disabled><option value="">Select Dept</option></select></div>
         </div>
         <div class="form-row">
@@ -597,7 +673,34 @@ function handleFileSelect(input) {
           <div class="form-group"><label class="form-label">Cadre</label><select name="cadre" id="edit-cadre" class="form-control"><option value="Undergraduate">Undergraduate</option><option value="Postgraduate">Postgraduate</option><option value="Others">Others</option></select></div>
         </div>
         <div class="form-row">
-          <div class="form-group" style="flex:1"><label class="form-label">Rank / Year Level</label><select name="rank" id="edit-rank" class="form-control"><option value="">Select Rank</option><option value="1st Year">1st Year</option><option value="2nd Year">2nd Year</option><option value="3rd Year">3rd Year</option><option value="4th Year">4th Year</option><option value="5th Year">5th Year</option><option value="Irregular">Irregular</option><option value="Faculty/Staff">Faculty/Staff</option></select></div>
+          <div class="form-group" style="flex:1"><label class="form-label">Rank / Year Level</label><select name="rank" id="edit-rank" class="form-control">
+              <option value="">Select Rank</option>
+              <optgroup label="Elementary">
+                <option value="Grade 1">Grade 1</option>
+                <option value="Grade 2">Grade 2</option>
+                <option value="Grade 3">Grade 3</option>
+                <option value="Grade 4">Grade 4</option>
+                <option value="Grade 5">Grade 5</option>
+                <option value="Grade 6">Grade 6</option>
+              </optgroup>
+              <optgroup label="Secondary">
+                <option value="Grade 7">Grade 7</option>
+                <option value="Grade 8">Grade 8</option>
+                <option value="Grade 9">Grade 9</option>
+                <option value="Grade 10">Grade 10</option>
+                <option value="Grade 11">Grade 11</option>
+                <option value="Grade 12">Grade 12</option>
+              </optgroup>
+              <optgroup label="Higher Education">
+                <option value="1st Year">1st Year</option>
+                <option value="2nd Year">2nd Year</option>
+                <option value="3rd Year">3rd Year</option>
+                <option value="4th Year">4th Year</option>
+                <option value="5th Year">5th Year</option>
+                <option value="Irregular">Irregular</option>
+              </optgroup>
+              <option value="Faculty/Staff">Faculty/Staff</option>
+          </select></div>
         </div>
         <div class="form-row">
           <div class="form-group"><label class="form-label">Gender</label><select name="gender" id="edit-gender" class="form-control"><option value="">Select</option><option value="Male">Male</option><option value="Female">Female</option></select></div>

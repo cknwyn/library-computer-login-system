@@ -129,9 +129,9 @@ INSERT INTO terminals (terminal_code, terminal_name, campus_id, room_id, status)
 
 -- 8. ADMIN ACCOUNT
 INSERT INTO users (user_id, first_name, last_name, name, password_hash, role)
-VALUES ('admin', 'Library', 'Admin', 'Library Admin', '$2y$10$8K9O6O1qX9O6O1qX9O6O1uJ9O6O1qX9O6O1qX9O6O1qX9O6O1qX9O', 'admin');
+VALUES ('admin', 'Library', 'Admin', 'Library Admin', '$2y$10$0i2fBEtTfw6YspniXA0cme.MQ63jnMnOqY9wJa/rz3De2.ASBQMkm', 'admin');
 
 INSERT INTO admins (username, password_hash, name, email)
-VALUES ('admin', '$2y$10$8K9O6O1qX9O6O1qX9O6O1uJ9O6O1qX9O6O1qX9O6O1qX9O6O1qX9O', 'Library System Admin', 'admin@auf.edu.ph');
+VALUES ('admin', '$2y$10$0i2fBEtTfw6YspniXA0cme.MQ63jnMnOqY9wJa/rz3De2.ASBQMkm', 'Library System Admin', 'admin@auf.edu.ph');
 
 SET FOREIGN_KEY_CHECKS = 1;
