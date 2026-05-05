@@ -90,8 +90,8 @@ library-computer-login-system/
 | Role | Username / ID | Default Password |
 |---|---|---|
 | **System Administrator** | `admin` | `Admin@1234` |
-| **Student (Sample)** | `2021-00001` | `Password@123` |
-| **Staff (Sample)** | `STAFF-001` | `Password@123` |
+| **Student (Sample)** | `26-0000-001` | `Password@123` |
+| **Staff (Sample)** | `10-0000-001` | `Password@123` |
 
 ---
 
